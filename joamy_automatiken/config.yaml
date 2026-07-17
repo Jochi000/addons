@@ -1,0 +1,22 @@
+# JoAmy Automatiken — Home-Assistant-Add-on.
+# Läuft die vom Kunden gekauften Automatik-Bausteine (Steckdosen-Zeitpläne,
+# Licht-Automatik) direkt auf dem Home Assistant des Kunden.
+# Konfiguration kommt aus /config/www/joamy/joamy-automatiken.json —
+# der JoAmy-Assistent legt sie bei der Übertragung an. KEINE Optionen nötig.
+name: JoAmy Automatiken
+version: "1.0.0"
+slug: joamy_automatiken
+description: Automatik-Bausteine für dein JoAmy-Dashboard (Zeitpläne, Licht-Automatik)
+url: https://joamy.example
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+homeassistant_api: true
+map:
+  - homeassistant_config:ro
+options: {}
+schema: {}
+startup: services
+boot: auto
