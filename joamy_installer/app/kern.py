@@ -38,7 +38,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.9"
+ADDON_VERSION = "0.1.10"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -610,6 +610,33 @@ class Installer:
         except Exception as e:
             LOG.debug("Core-API nicht erreichbar (%s %s): %s", methode, pfad, e)
             return None
+
+    async def entitaeten_fuer_konfig(self) -> dict:
+        """Kamera-/Türklingel-/Knopf-Entitäten für den Karten-Konfigurator.
+
+        Liest /states über den Core-Proxy und gruppiert nach Domain. Der
+        Konfigurator (Ingress-Seite) baut daraus den YAML-Kopiercode.
+        """
+        states = await self._core_api("GET", "/states")
+        if not isinstance(states, list):
+            return {"cameras": [], "binary_sensors": [], "buttons": [],
+                    "fehler": "Home Assistant nicht erreichbar."}
+
+        def liste(prefix: str) -> list:
+            out = []
+            for s in states:
+                eid = s.get("entity_id", "")
+                if isinstance(eid, str) and eid.startswith(prefix):
+                    name = (s.get("attributes") or {}).get("friendly_name") or eid
+                    out.append({"entity": eid, "name": str(name)})
+            out.sort(key=lambda x: x["name"].lower())
+            return out
+
+        return {
+            "cameras": liste("camera."),
+            "binary_sensors": liste("binary_sensor."),
+            "buttons": liste("button."),
+        }
 
     # ------------------------------------------------------------------
     # Status für die Ingress-Seite

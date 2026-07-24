@@ -90,6 +90,26 @@ SEITE = """<!doctype html>
     white-space: pre-wrap; word-break: break-word;
   }
   #fehler { color: var(--rot); font-size: .9rem; margin-top: 8px; }
+  /* Kamera-Konfigurator */
+  .kf-intro { color: #7a6a56; margin-bottom: 12px; }
+  #kf-body { display: grid; gap: 16px; margin-top: 14px; }
+  .kf-abschnitt { display: grid; gap: 8px; }
+  .kf-titel { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--bronze-hell); }
+  .kf-cam { display: grid; grid-template-columns: auto 1fr 1.2fr; gap: 8px; align-items: center;
+            border: 1px solid var(--linie); border-radius: 8px; padding: 8px 10px; background: #fffaf0; }
+  .kf-cam .eid { font: .78rem/1.4 ui-monospace, monospace; color: #8a7a63; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kf-cam input[type=text] { width: 100%; }
+  .kf-abschnitt label { display: flex; align-items: center; gap: 8px; }
+  .kf-abschnitt select, .kf-abschnitt input[type=text] {
+    font: inherit; font-size: .92rem; padding: 7px 10px; border: 1px solid var(--linie);
+    border-radius: 8px; background: var(--karte); color: var(--tinte); }
+  #kf-tk-body { display: grid; gap: 10px; margin-top: 6px; padding-left: 24px; }
+  #kf-tk-body label { display: grid; gap: 4px; align-items: start; }
+  #kf-ergebnis { display: grid; gap: 10px; }
+  pre#kf-yaml { font: .82rem/1.5 ui-monospace, 'Courier New', monospace; color: var(--tinte);
+    background: #fbf7ee; border: 1px solid var(--linie); border-radius: 8px; padding: 12px 14px;
+    overflow-x: auto; white-space: pre; }
+  #kf-meldung { text-align: center; font-size: .9rem; color: var(--gruen); min-height: 1.3em; }
   footer { text-align: center; color: #b3a48d; font-size: .8rem; font-style: italic; }
 </style>
 </head>
@@ -127,6 +147,56 @@ SEITE = """<!doctype html>
     <h2>Von Hand</h2>
     <button id="suchen">Jetzt nach Käufen suchen</button>
     <div id="such-meldung"></div>
+  </section>
+
+  <section class="karte" id="konfig-karte">
+    <h2>Kamera-Karte einrichten</h2>
+    <p class="kf-intro">Wähle deine Kameras — wir bauen dir den fertigen Code. Den fügst du beim
+      Hinzufügen der Karte („Karte hinzufügen“ → ganz unten „Manuell“) einfach ein.</p>
+    <button id="kf-laden" type="button">Meine Kameras laden</button>
+    <div id="kf-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel">Kameras (anhaken + Namen vergeben)</span>
+        <div id="kf-cams"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="kf-stil">Style (kannst du später jederzeit über 🎨 wechseln)</label>
+        <select id="kf-stil">
+          <option value="skizze">Skizze</option><option value="comic">Comic</option>
+          <option value="pinnwand">Pinnwand</option><option value="frost">Frost</option>
+          <option value="terminal">Terminal</option><option value="riso">Riso</option>
+          <option value="almanach">Almanach</option><option value="keramik">Keramik</option>
+          <option value="pigment">Pigment</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <span class="kf-titel">Name vorne auf der Karte</span>
+        <input id="kf-name" type="text" maxlength="40" placeholder="z. B. Familie Sommer">
+      </div>
+      <div class="kf-abschnitt">
+        <label><input type="checkbox" id="kf-tk-an"> <b>Türklingel</b> — Meldung „Jemand klingelt gerade“</label>
+        <div id="kf-tk-body" hidden>
+          <label>Klingel-Sensor (schaltet beim Klingeln auf „an“)
+            <select id="kf-tk-sensor"></select></label>
+          <label>Kamera an der Tür
+            <select id="kf-tk-cam"></select></label>
+          <label>Tür-öffnen-Knopf (optional)
+            <select id="kf-tk-knopf"><option value="">— keiner —</option></select></label>
+        </div>
+      </div>
+      <div class="kf-abschnitt">
+        <label><input type="checkbox" id="kf-ev-an" checked> „Letzte Ereignisse“ anzeigen (sofern die Kamera Aufzeichnungen liefert)</label>
+      </div>
+      <button id="kf-erzeugen" type="button">Code erzeugen</button>
+      <div id="kf-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel">Fertiger Code — beim Hinzufügen der Karte einfügen</span>
+          <pre id="kf-yaml"></pre>
+        </div>
+        <button id="kf-kopieren" type="button">Code kopieren</button>
+        <div id="kf-meldung"></div>
+      </div>
+    </div>
   </section>
 
   <section class="karte">
@@ -217,6 +287,86 @@ el('suchen').addEventListener('click', function () {
     .finally(function () { knopf.disabled = false; lade(); });
 });
 
+// ---- Kamera-Karten-Konfigurator ----
+(function () {
+  var ent = { cameras: [], binary_sensors: [], buttons: [] };
+  function fuelle(sel, arr, leer) {
+    sel.innerHTML = '';
+    if (leer) { var o = document.createElement('option'); o.value = ''; o.textContent = leer; sel.appendChild(o); }
+    arr.forEach(function (e) { var o = document.createElement('option'); o.value = e.entity; o.textContent = e.name + ' (' + e.entity + ')'; sel.appendChild(o); });
+  }
+  function nameVon(entity) { var f = ent.cameras.filter(function (c) { return c.entity === entity; })[0]; return f ? f.name : entity.replace('camera.', ''); }
+  function yamlEscape(s) {
+    s = String(s == null ? '' : s);
+    var c = s.charAt(0);
+    var braucht = s === '' || s !== s.trim() || s.indexOf(':') >= 0 || s.indexOf('#') >= 0 ||
+      c === '"' || c === "'" || c === '@' || c === '&' || c === '*' || c === '-' ||
+      c === '[' || c === '{' || c === '!' || c === '|' || c === '>' || c === '%' || c === '?';
+    if (!braucht) return s;
+    return "'" + s.split("'").join("''") + "'";
+  }
+  if (el('kf-laden')) {
+    el('kf-laden').addEventListener('click', function () {
+      var b = el('kf-laden'); b.disabled = true; b.textContent = 'lädt …';
+      fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+        ent = d || { cameras: [], binary_sensors: [], buttons: [] };
+        var cams = el('kf-cams'); cams.innerHTML = '';
+        if (!(ent.cameras || []).length) {
+          cams.innerHTML = '<p style="color:#a04338">Keine camera.*-Entitäten gefunden' + (ent.fehler ? ': ' + ent.fehler : '') + '. (Kameras erst in Home Assistant einrichten.)</p>';
+        }
+        (ent.cameras || []).forEach(function (c) {
+          var row = document.createElement('div'); row.className = 'kf-cam';
+          var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true;
+          var eid = document.createElement('span'); eid.className = 'eid'; eid.textContent = c.entity;
+          var nm = document.createElement('input'); nm.type = 'text'; nm.value = c.name; nm.setAttribute('data-entity', c.entity); nm.placeholder = 'Name';
+          cb.setAttribute('data-entity', c.entity);
+          row.appendChild(cb); row.appendChild(eid); row.appendChild(nm); cams.appendChild(row);
+        });
+        fuelle(el('kf-tk-sensor'), ent.binary_sensors || [], '— wählen —');
+        fuelle(el('kf-tk-cam'), ent.cameras || [], '— wählen —');
+        fuelle(el('kf-tk-knopf'), ent.buttons || [], '— keiner —');
+        el('kf-body').hidden = false;
+      }).catch(function () {
+        el('kf-cams').innerHTML = '<p style="color:#a04338">Konnte Home Assistant nicht erreichen.</p>'; el('kf-body').hidden = false;
+      }).finally(function () { b.disabled = false; b.textContent = 'Kameras neu laden'; });
+    });
+    el('kf-tk-an').addEventListener('change', function () { el('kf-tk-body').hidden = !this.checked; });
+    el('kf-erzeugen').addEventListener('click', function () {
+      var cams = [];
+      var rows = document.querySelectorAll('#kf-cams .kf-cam');
+      for (var i = 0; i < rows.length; i++) {
+        var cb = rows[i].querySelector('input[type=checkbox]'); if (!cb.checked) continue;
+        var nm = rows[i].querySelector('input[type=text]');
+        cams.push({ entity: cb.getAttribute('data-entity'), name: (nm.value.trim() || nameVon(cb.getAttribute('data-entity'))) });
+      }
+      el('kf-ergebnis').hidden = false; el('kf-meldung').textContent = '';
+      if (!cams.length) { el('kf-yaml').textContent = '# Bitte mindestens eine Kamera anhaken.'; return; }
+      var L = [];
+      L.push('type: custom:joamy-kamera-card');
+      L.push('stil: ' + el('kf-stil').value);
+      var nm2 = el('kf-name').value.trim();
+      if (nm2) L.push('title: ' + yamlEscape(nm2));
+      L.push('cameras:');
+      cams.forEach(function (c) { L.push('  - entity: ' + c.entity); L.push('    name: ' + yamlEscape(c.name)); });
+      if (el('kf-tk-an').checked) {
+        L.push('doorbell:'); L.push('  enabled: true');
+        var rs = el('kf-tk-sensor').value; if (rs) L.push('  ringEntity: ' + rs);
+        var rc = el('kf-tk-cam').value; if (rc) L.push('  camera: ' + rc);
+        var rk = el('kf-tk-knopf').value; if (rk) L.push('  unlockButton: ' + rk);
+      }
+      L.push('events:'); L.push('  enabled: ' + (el('kf-ev-an').checked ? 'true' : 'false'));
+      if (el('kf-ev-an').checked) L.push('  count: 20');
+      el('kf-yaml').textContent = L.join('\\n');
+    });
+    el('kf-kopieren').addEventListener('click', function () {
+      var t = el('kf-yaml').textContent;
+      var fertig = function () { el('kf-meldung').style.color = 'var(--gruen)'; el('kf-meldung').textContent = 'Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'; };
+      var fallback = function () { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(fertig).catch(fallback); } else { fallback(); }
+    });
+  }
+})();
+
 male(stand);
 setInterval(lade, 5000);
 </script>
@@ -255,9 +405,18 @@ def baue_web_app(installer: Installer) -> web.Application:
         return web.Response(text="\n".join(LOG_PUFFER) or "—", content_type="text/plain",
                             charset="utf-8")
 
+    async def entities(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.entitaeten_fuer_konfig())
+        except Exception as e:
+            LOG.error("Entities-Endpunkt fehlgeschlagen: %s", e)
+            return web.json_response(
+                {"cameras": [], "binary_sensors": [], "buttons": [], "fehler": str(e)}, status=500)
+
     app = web.Application()
     app.router.add_get("/", seite)
     app.router.add_get("/status", status)
     app.router.add_post("/suchen", suchen)
     app.router.add_get("/logs", logs)
+    app.router.add_get("/entities", entities)
     return app
