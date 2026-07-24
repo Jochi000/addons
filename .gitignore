@@ -1,0 +1,6 @@
+# joamy_automatiken ist ein SEPARATES Produkt (Automatik-Bausteine) — NICHT in
+# den öffentlichen Installer-Add-on-Store-Repo. Bewusst ausgeschlossen.
+joamy_automatiken/
+**/__pycache__/
+*.pyc
+**/_test/
