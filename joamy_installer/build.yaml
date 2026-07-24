@@ -1,0 +1,5 @@
+# Basis-Images je Architektur — der Supervisor reicht sie als BUILD_FROM in den
+# Docker-Build (ohne diese Datei bleibt ARG BUILD_FROM leer → Build-Abbruch).
+build_from:
+  amd64: ghcr.io/home-assistant/amd64-base:3.21
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
