@@ -38,7 +38,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.12"
+ADDON_VERSION = "0.1.13"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -91,6 +91,7 @@ def _recovery_beweis() -> str | None:
 
 MAX_ZIP_BYTES = 200 * 1024 * 1024   # Schutzgrenze; das Kochbuch-Paket liegt ~ wenige MB
 REG_DROSSEL_S = 20                  # Registrierung höchstens alle 20 s (UI-Refresh-Schutz)
+FLOW_VERSUCHE_BIS_NEUSTART = 5   # danach gilt: ohne Neustart geht es nicht (Hinweis, kein Zwang)
 LOG_ZEILEN_MAX = 200
 
 # Ring-Puffer für die Ingress-Seite („letzte Log-Zeilen").
@@ -141,7 +142,7 @@ def lade_optionen() -> dict:
     return {
         "server_url": str(roh.get("server_url") or "https://lizenz.joamy.uk").rstrip("/"),
         "poll_sekunden": poll,
-        "auto_neustart": bool(roh.get("auto_neustart", True)),
+        "auto_neustart": bool(roh.get("auto_neustart", False)),
     }
 
 
@@ -216,6 +217,7 @@ class Installer:
         self.letzter_poll_iso: str | None = None
         self.letzter_fehler: str | None = None
         self._letzte_reg_s: float = 0.0
+        self._neustart_gemeldet: bool = False
         self._such_lock = asyncio.Lock()
 
     # ------------------------------------------------------------------
@@ -510,8 +512,14 @@ class Installer:
         for domain in upd_domains:
             if domain not in self.status.setdefault("reload_ausstehend", []):
                 self.status["reload_ausstehend"].append(domain)
+        # KEIN Neustart auf Verdacht. Gemessen an HA 2026.7 (Config-Flow gegen eine
+        # frisch hineinkopierte Integration): der Core findet und LÄDT eine neue
+        # Custom-Component im laufenden Betrieb — Eintrag „loaded", Karte wird
+        # ausgeliefert. Der Neustart hier war eine Vorsichtsannahme, kein Zwang.
+        # Wir stoßen also erst den Flow an; erst wenn der mehrfach scheitert, gilt
+        # ein Neustart als nötig — und selbst dann entscheidet der Nutzer (s. u.).
         if neu_domains:
-            self.status["neustart_noetig"] = True
+            self.status["flow_versuche"] = 0
         speichere_json(STATUS_DATEI, self.status)
         LOG.info("Baustein '%s' installiert → /config/custom_components/%s (Backup: joamy_backup/%s).",
                  baustein, domain_liste[0], ts)
@@ -577,15 +585,25 @@ class Installer:
         for domain in list(self.status.get("flow_ausstehend") or []):
             if await self._stosse_flow_an(domain):
                 self.status["flow_ausstehend"].remove(domain)
+                self.status["flow_versuche"] = 0
                 geaendert = True
+            else:
+                # Der Core lädt neue Integrationen normalerweise im Betrieb. Klappt
+                # es nach mehreren Anläufen nicht, ist ein Neustart die letzte
+                # Möglichkeit — ausgelöst wird er trotzdem NICHT von uns.
+                self.status["flow_versuche"] = int(self.status.get("flow_versuche") or 0) + 1
+                geaendert = True
+                if self.status["flow_versuche"] >= FLOW_VERSUCHE_BIS_NEUSTART:
+                    self.status["neustart_noetig"] = True
 
         if self.status.get("neustart_noetig"):
-            if not self.optionen["auto_neustart"]:
-                LOG.info("auto_neustart ist aus — bitte Home Assistant einmal selbst neu starten.")
-                self.status["neustart_noetig"] = False
-                geaendert = True
-            elif await self._core_neustart():
-                self.status["neustart_noetig"] = False
+            if self.optionen["auto_neustart"]:
+                if await self._core_neustart():
+                    self.status["neustart_noetig"] = False
+                    geaendert = True
+            else:
+                # Standardfall: der Nutzer bestimmt den Zeitpunkt. Wir sagen nur Bescheid.
+                await self._melde_neustart_noetig()
                 geaendert = True
 
         if geaendert:
@@ -645,6 +663,30 @@ class Installer:
                 return True
         LOG.warning("Config-Flow '%s' unerwartet beantwortet: %s", domain, antwort)
         return False
+
+    async def _melde_neustart_noetig(self) -> None:
+        """Hinweis in Home Assistant statt eigenmächtigem Neustart.
+
+        Ein Neustart mitten im Betrieb ist für den Nutzer das Unangenehmste, was
+        eine Installation tun kann (Automationen, Anwesenheit, laufende Timer).
+        Deshalb: Meldung setzen, Zeitpunkt bestimmt der Nutzer. Die Meldung trägt
+        eine feste ID — sie erscheint also nicht bei jedem Poll neu.
+        """
+        if self._neustart_gemeldet:
+            return
+        self._neustart_gemeldet = True
+        text = ("Ein neuer JoAmy-Baustein ist eingezogen, konnte aber nicht im laufenden "
+                "Betrieb geladen werden. Starte Home Assistant bei Gelegenheit einmal neu "
+                "(Entwicklerwerkzeuge → Neu starten) — danach ist die Karte da. "
+                "Du kannst in Ruhe zu Ende machen, was du gerade tust.")
+        ok = await self._core_api("POST", "/services/persistent_notification/create", {
+            "notification_id": "joamy_neustart",
+            "title": "JoAmy: Neustart bei Gelegenheit",
+            "message": text,
+        })
+        LOG.info("Neustart wäre nötig — Hinweis in Home Assistant gesetzt (%s). "
+                 "Es wird NICHTS eigenmächtig neu gestartet.",
+                 "zugestellt" if ok is not None else "Core nicht erreichbar")
 
     async def _core_neustart(self) -> bool:
         """Core-Neustart über den Supervisor-Management-Endpunkt (wie `ha core restart`).

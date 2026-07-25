@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.12"
+version: "0.1.13"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Käufe installieren sich von selbst
 url: https://joamy.uk
@@ -37,7 +37,13 @@ map:
 options:
   server_url: "https://lizenz.joamy.uk"
   poll_sekunden: 60
-  auto_neustart: true
+  # Standard AUS: Home Assistant wird von uns NIE eigenmächtig neu gestartet.
+  # Neue Bausteine lädt der Core im laufenden Betrieb (gemessen an HA 2026.7:
+  # frisch hineinkopierte Integration → Config-Flow → Eintrag „loaded", Karte
+  # wird ausgeliefert). Sollte es in einem Setup doch einmal klemmen, setzt das
+  # Add-on eine Meldung in Home Assistant — den Zeitpunkt bestimmt der Nutzer.
+  # Auf "true" nur stellen, wer den Neustart bewusst automatisieren will.
+  auto_neustart: false
 schema:
   server_url: str
   poll_sekunden: int

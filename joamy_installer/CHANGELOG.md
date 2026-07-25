@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## 0.1.13
+
+- **Kein automatischer Neustart mehr.** Home Assistant lädt neue Bausteine im
+  laufenden Betrieb — das Add-on stößt nur noch die Einrichtung an. Sollte das in
+  einem Setup wider Erwarten klemmen, erscheint eine Meldung in Home Assistant;
+  **wann** neu gestartet wird, entscheidest du.
+
 ## 0.1.12
 
 - **Neue Oberfläche** im JoAmy-Look der Website (dunkel, Bronze, Haus-Logo) — mit
