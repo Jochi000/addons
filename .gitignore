@@ -4,3 +4,6 @@ joamy_automatiken/
 **/__pycache__/
 *.pyc
 **/_test/
+# Interne Entwickler-Anleitung (nennt LAN-IPs) — gehört nicht in den öffentlichen Store-Repo.
+DEPLOY-LOKAL.md
+**/DEPLOY-LOKAL.md

@@ -1,0 +1,12 @@
+Die Datei inter-tight.woff2 ist ein Ausschnitt (Latin-Subset, variabel) der
+Schrift "Inter Tight" von Rasmus Andersson.
+
+Lizenz: SIL Open Font License 1.1 — erlaubt Weitergabe und Einbettung, auch in
+kommerziellen Produkten, solange dieser Hinweis mitgeliefert wird und die
+Schrift nicht einzeln verkauft wird.
+
+Volltext der Lizenz: https://openfontlicense.org/
+Quelle der Schrift:  https://fonts.google.com/specimen/Inter+Tight
+
+Sie liegt hier im Add-on, damit die Oberfläche ohne jeden Internet-Zugriff
+exakt so aussieht wie joamy.uk.

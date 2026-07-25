@@ -38,7 +38,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.11"
+ADDON_VERSION = "0.1.12"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -208,6 +208,11 @@ class Installer:
         self.kopplungscode: str | None = None
         self.code_ablauf_s: float = 0.0
         self.server_ok: bool | None = None      # None = noch nie versucht
+        # Feiner als server_ok: "unbekannt" | "ok" | "abgelehnt" | "weg".
+        # "abgelehnt" heißt: der Server ANTWORTET, weist die Anfrage aber ab
+        # (z. B. HTTP 403 bei veraltetem Add-on) — das ist NICHT "nicht erreichbar".
+        self.server_zustand: str = "unbekannt"
+        self.server_hinweis: str | None = None
         self.letzter_poll_iso: str | None = None
         self.letzter_fehler: str | None = None
         self._letzte_reg_s: float = 0.0
@@ -225,6 +230,56 @@ class Installer:
         if isinstance(daten, dict) and daten.get("version"):
             return str(daten["version"])
         return "unbekannt"
+
+    # ------------------------------------------------------------------
+    # Server-Zustand — „nicht erreichbar" NUR wenn wirklich nichts antwortet
+    # ------------------------------------------------------------------
+    def _server_gut(self) -> None:
+        if self.server_zustand not in ("ok", "unbekannt"):
+            LOG.info("Lizenz-Server wieder in Ordnung.")
+        self.server_zustand = "ok"
+        self.server_ok = True
+        self.server_hinweis = None
+        self.letzter_fehler = None
+
+    def _server_weg(self, wobei: str, fehler: str) -> None:
+        """Transportfehler (DNS/Timeout/TLS) — der Server hat GAR NICHT geantwortet."""
+        if self.server_zustand != "weg":
+            LOG.warning("Lizenz-Server nicht erreichbar (%s): %s — ich versuche es still weiter.",
+                        wobei, fehler)
+        self.server_zustand = "weg"
+        self.server_ok = False
+        self.server_hinweis = None
+        self.letzter_fehler = f"{wobei}: {fehler}"
+
+    def _server_abgelehnt(self, wobei: str, status: int, grund: str) -> None:
+        """Der Server ANTWORTET, lehnt die Anfrage aber ab (HTTP 4xx/5xx).
+
+        Wichtigster Fall: HTTP 403 „Besitznachweis erforderlich" — dann läuft hier
+        ein zu altes Add-on gegen einen neueren Lizenz-Server. Das früher angezeigte
+        „nicht erreichbar" war in dem Fall schlicht falsch.
+        """
+        hinweis = None
+        if status == 403 and "Besitznachweis" in (grund or ""):
+            hinweis = ("Dieses Add-on ist älter als der Lizenz-Server. Bitte im Add-on-Store "
+                       "auf die neueste Version aktualisieren — danach klappt es von selbst.")
+        elif status >= 500:
+            hinweis = "Der Lizenz-Server hat gerade eine Störung. Das Add-on versucht es weiter."
+        meldung = f"{wobei}: {grund}"
+        if self.server_zustand != "abgelehnt" or self.letzter_fehler != meldung:
+            LOG.warning("Lizenz-Server antwortet, weist aber ab (%s): HTTP %s — %s",
+                        wobei, status, grund)
+        self.server_zustand = "abgelehnt"
+        self.server_ok = False
+        self.server_hinweis = hinweis
+        self.letzter_fehler = meldung
+
+    @staticmethod
+    def _json_oder_none(roh: str):
+        try:
+            return json.loads(roh) if roh else None
+        except ValueError:
+            return None
 
     async def registrieren(self, erzwinge: bool = False) -> None:
         """POST /api/v1/instanz/registrieren — idempotent je instanz_id.
@@ -255,17 +310,18 @@ class Installer:
         kopf = {"X-Instanz-Token": self.instanz_token} if self.instanz_token else {}
         try:
             async with self.session.post(url, json=rumpf, headers=kopf) as r:
-                daten = await r.json(content_type=None)
-                if r.status != 200 or not isinstance(daten, dict):
-                    raise RuntimeError((daten or {}).get("fehler") or f"HTTP {r.status}")
+                status, roh = r.status, await r.text()
         except Exception as e:
-            self.server_ok = False
-            self.letzter_fehler = f"Registrierung: {e}"
-            LOG.error("Registrierung beim Lizenz-Server fehlgeschlagen: %s", e)
+            # Kein HTTP-Ergebnis → wirklich nicht erreichbar.
+            self._server_weg("Registrierung", str(e))
+            return
+        daten = self._json_oder_none(roh)
+        if status != 200 or not isinstance(daten, dict):
+            grund = (daten or {}).get("fehler") if isinstance(daten, dict) else None
+            self._server_abgelehnt("Registrierung", status, grund or f"HTTP {status}")
             return
 
-        self.server_ok = True
-        self.letzter_fehler = None
+        self._server_gut()
         token = daten.get("instanz_token")
         # Kanonische instanz_id vom Server übernehmen: nach /data-Verlust kann die lokal
         # neu abgeleitete ID von der serverseitig gebundenen (mit den Käufen) abweichen —
@@ -322,9 +378,7 @@ class Installer:
             if pakete is None:
                 return {"ok": False, "fehler": self.letzter_fehler or "Server nicht erreichbar."}
 
-            if self.server_ok is False:
-                LOG.info("Lizenz-Server wieder erreichbar.")
-            self.server_ok = True
+            self._server_gut()
             self.letzter_poll_iso = datetime.now().isoformat(timespec="seconds")
             neu: list[str] = []
             for paket in pakete:
@@ -347,29 +401,28 @@ class Installer:
 
     async def _hole_pakete(self) -> list | None:
         url = f"{self.optionen['server_url']}/api/v1/instanz/pakete"
+        # Nur beim ZUSTANDSWECHSEL warnen (sonst spammt ein längerer Server-Ausfall
+        # das Logbuch alle poll_sekunden voll) — das erledigen _server_weg/_abgelehnt.
         for versuch in (1, 2):
+            kopf = {"X-Instanz-Token": self.instanz_token or ""}
             try:
-                kopf = {"X-Instanz-Token": self.instanz_token or ""}
                 async with self.session.get(url, headers=kopf) as r:
-                    if r.status == 401 and versuch == 1:
-                        # Server kennt den Token nicht mehr → neu registrieren, 1× erneut.
-                        LOG.warning("Instanz-Token abgelehnt — registriere neu.")
-                        await self.registrieren(erzwinge=True)
-                        continue
-                    daten = await r.json(content_type=None)
-                    if r.status != 200 or not isinstance(daten, dict):
-                        raise RuntimeError((daten or {}).get("fehler") or f"HTTP {r.status}")
-                    pakete = daten.get("pakete")
-                    return pakete if isinstance(pakete, list) else []
+                    status, roh = r.status, await r.text()
             except Exception as e:
-                # Nur beim ZUSTANDSWECHSEL warnen (sonst spammt ein längerer
-                # Server-Ausfall das Logbuch alle poll_sekunden voll) — danach
-                # still weiterprobieren; die Erholung wird als INFO gemeldet.
-                if self.server_ok is not False:
-                    LOG.warning("Lizenz-Server nicht erreichbar: %s — ich versuche es still weiter.", e)
-                self.server_ok = False
-                self.letzter_fehler = f"Paket-Abfrage: {e}"
+                self._server_weg("Paket-Abfrage", str(e))
                 return None
+            if status == 401 and versuch == 1:
+                # Server kennt den Token nicht mehr → neu registrieren, 1× erneut.
+                LOG.warning("Instanz-Token abgelehnt — registriere neu.")
+                await self.registrieren(erzwinge=True)
+                continue
+            daten = self._json_oder_none(roh)
+            if status != 200 or not isinstance(daten, dict):
+                grund = (daten or {}).get("fehler") if isinstance(daten, dict) else None
+                self._server_abgelehnt("Paket-Abfrage", status, grund or f"HTTP {status}")
+                return None
+            pakete = daten.get("pakete")
+            return pakete if isinstance(pakete, list) else []
         return None
 
     # ------------------------------------------------------------------
@@ -692,6 +745,8 @@ class Installer:
             "code_rest_s": code_rest,
             "server_url": self.optionen["server_url"],
             "server_ok": self.server_ok,
+            "server_zustand": self.server_zustand,
+            "server_hinweis": self.server_hinweis,
             "registriert": bool(self.instanz_token),
             "instanz_id": self.instanz_id,
             "addon_version": ADDON_VERSION,
