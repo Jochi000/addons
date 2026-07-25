@@ -188,6 +188,26 @@ SEITE = """<!doctype html>
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
+  /* Musik-Karte: Platzierung am nachgebauten Dashboard */
+  .mk-hinweis { padding: 11px 13px; margin-bottom: 12px; border-radius: var(--r-12); font-size: 13.5px;
+    line-height: 1.5; background: rgba(194, 154, 108, .09); border: 1px solid rgba(194, 154, 108, .32);
+    color: var(--tinte-2); }
+  .mk-hinweis b { color: var(--tinte-1); font-weight: 600; }
+  #mk-players { display: grid; gap: 8px; }
+  .mk-buehne { display: grid; gap: 8px; justify-items: center; }
+  .mk-schirm { position: relative; width: 100%; max-width: 300px; aspect-ratio: 9 / 16;
+    border-radius: 18px; border: 1px solid var(--nacht-linie); background: var(--nacht-vertieft);
+    overflow: hidden; touch-action: none; user-select: none; }
+  .mk-kopf { height: 26px; margin: 8px 10px 6px; border-radius: 6px; background: rgba(255,255,255,.05); }
+  .mk-karten { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 10px; }
+  .mk-dummy { height: 44px; border-radius: 8px; background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.05); grid-column: span 2; }
+  .mk-dummy.klein { grid-column: span 1; height: 34px; }
+  .mk-griff { position: absolute; width: 22px; height: 62px; display: grid; place-items: center;
+    background: var(--akzent); color: var(--nacht); font-size: 13px; cursor: grab;
+    box-shadow: 0 2px 10px rgba(0,0,0,.45); touch-action: none; }
+  .mk-griff:active { cursor: grabbing; }
+  .mk-lage { font: 12.5px var(--mono); color: var(--tinte-3); }
   footer { text-align: center; color: var(--tinte-3); font-size: 13px; padding-top: 4px; }
   footer a { color: var(--akzent); text-decoration: none; }
 </style>
@@ -293,6 +313,55 @@ SEITE = """<!doctype html>
         </div>
         <button id="kf-kopieren" type="button" data-i18n>Code kopieren</button>
         <div id="kf-meldung"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="karte" id="media-karte">
+    <h2 data-i18n>Musik-Karte einrichten</h2>
+    <p class="kf-intro" data-i18n>Wähle deine Lautsprecher und schiebe den Musik-Griff dorthin,
+      wo er auf deinem Bildschirm sitzen soll. Am Ende bekommst du den fertigen Code zum Einfügen.</p>
+    <div class="mk-hinweis" data-i18n><b>Music Assistant wird gebraucht.</b> Zum Suchen und Abspielen
+      von Musik braucht die Karte das Add-on „Music Assistant“. Ohne es kannst du nur steuern,
+      was gerade läuft.</div>
+    <button id="mk-laden" type="button">Meine Lautsprecher laden</button>
+    <div id="mk-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Lautsprecher (anhaken + Namen vergeben)</span>
+        <div id="mk-players"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Wo soll der Musik-Griff sitzen?</span>
+        <p class="hinweis" data-i18n>Die Musik-Schublade liegt über deinem Dashboard — zu sehen ist
+          nur ein schmaler Griff am Bildschirmrand. Zieh ihn unten an die Stelle, an der er dich am
+          wenigsten stört; ein Tipp darauf zieht die Musik heraus. Das gilt auf jeder Seite deines
+          Dashboards, egal wie viele Karten du hast.</p>
+        <div id="mk-buehne" class="mk-buehne">
+          <div class="mk-schirm">
+            <div class="mk-kopf"></div>
+            <div class="mk-karten">
+              <div class="mk-dummy"></div><div class="mk-dummy"></div>
+              <div class="mk-dummy klein"></div><div class="mk-dummy klein"></div>
+              <div class="mk-dummy"></div>
+            </div>
+            <div id="mk-griff" class="mk-griff" title="Ziehen">♪</div>
+          </div>
+          <div class="mk-lage"><span id="mk-lage-text">rechts, mittig</span></div>
+        </div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="mk-stil" data-i18n>Style</label>
+        <span id="mk-stil-hinweis" class="hinweis" hidden></span>
+        <select id="mk-stil"></select>
+      </div>
+      <button id="mk-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <div id="mk-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
+          <pre id="mk-yaml"></pre>
+        </div>
+        <button id="mk-kopieren" type="button" data-i18n>Code kopieren</button>
+        <div id="mk-meldung"></div>
       </div>
     </div>
   </section>
@@ -526,7 +595,7 @@ function stileAnbieten(st) {
     sel.appendChild(o);
   });
   sel.value = vorher;
-  if (sel.value !== vorher) sel.value = liste[0];
+  if (!sel.value) sel.value = liste[0];        // '' = kein Treffer ⇒ erster Style
   var hw = el('kf-stil-hinweis');
   if (hw) {
     hw.textContent = gekauft.length ? '' : wt('Noch kein Kamera-Baustein gekauft — hier stehen später nur deine Styles.');
@@ -557,6 +626,17 @@ el('suchen').addEventListener('click', function () {
     .catch(function () { meldung.textContent = wt('Das hat nicht geklappt — Verbindung prüfen.'); })
     .finally(function () { knopf.disabled = false; lade(); });
 });
+
+// YAML-Werte sicher quoten — von beiden Konfiguratoren genutzt.
+function yamlEscape(s) {
+  s = String(s == null ? '' : s);
+  var c = s.charAt(0);
+  var braucht = s === '' || s !== s.trim() || s.indexOf(':') >= 0 || s.indexOf('#') >= 0 ||
+    c === '"' || c === "'" || c === '@' || c === '&' || c === '*' || c === '-' ||
+    c === '[' || c === '{' || c === '!' || c === '|' || c === '>' || c === '%' || c === '?';
+  if (!braucht) return s;
+  return "'" + s.split("'").join("''") + "'";
+}
 
 // ---- Kamera-Karten-Konfigurator ----
 (function () {
@@ -594,15 +674,6 @@ el('suchen').addEventListener('click', function () {
     });
     sel.value = vorher;                       // Auswahl behalten, falls noch vorhanden
     if (sel.value !== vorher) sel.value = '';
-  }
-  function yamlEscape(s) {
-    s = String(s == null ? '' : s);
-    var c = s.charAt(0);
-    var braucht = s === '' || s !== s.trim() || s.indexOf(':') >= 0 || s.indexOf('#') >= 0 ||
-      c === '"' || c === "'" || c === '@' || c === '&' || c === '*' || c === '-' ||
-      c === '[' || c === '{' || c === '!' || c === '|' || c === '>' || c === '%' || c === '?';
-    if (!braucht) return s;
-    return "'" + s.split("'").join("''") + "'";
   }
   var geladen = false;              // steuert die Beschriftung des Lade-Knopfes
   // Beim Sprachwechsel alles nachziehen, was das Skript selbst geschrieben hat.
@@ -683,6 +754,129 @@ el('suchen').addEventListener('click', function () {
       if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(fertig).catch(fallback); } else { fallback(); }
     });
   }
+})();
+
+/* ---- Musik-Karte: Lautsprecher wählen + Griff auf dem Dashboard platzieren ----
+   Der Griff ist das Einzige, was der Kunde später dauerhaft sieht. Deshalb wird
+   er hier an einem nachgebauten Dashboard gesetzt — ziehen, loslassen, fertig:
+   die Seite ergibt sich aus der Hälfte, in der er losgelassen wird, die Höhe
+   aus der Y-Position. Genau diese zwei Werte landen im Code. */
+(function () {
+  if (!el('mk-laden')) return;
+  var lautsprecher = [];
+  var lage = { seite: 'rechts', hoehe: 50 };
+
+  function lageText() {
+    var h = lage.hoehe;
+    var wo = h < 28 ? wt('oben') : (h > 72 ? wt('unten') : wt('mittig'));
+    return (lage.seite === 'links' ? wt('links') : wt('rechts')) + ', ' + wo + ' (' + Math.round(h) + '%)';
+  }
+  function griffZeichnen() {
+    var g = el('mk-griff'); if (!g) return;
+    g.style.top = lage.hoehe + '%';
+    g.style.transform = 'translateY(-50%)';
+    if (lage.seite === 'links') { g.style.left = '0'; g.style.right = 'auto'; g.style.borderRadius = '0 8px 8px 0'; }
+    else { g.style.right = '0'; g.style.left = 'auto'; g.style.borderRadius = '8px 0 0 8px'; }
+    el('mk-lage-text').textContent = lageText();
+  }
+  (function ziehbar() {
+    var g = el('mk-griff'), schirm = document.querySelector('.mk-schirm');
+    if (!g || !schirm) return;
+    var zieht = false;
+    var setzeAus = function (ev) {
+      var r = schirm.getBoundingClientRect();
+      lage.hoehe = Math.max(8, Math.min(92, ((ev.clientY - r.top) / r.height) * 100));
+      lage.seite = (ev.clientX - r.left) < r.width / 2 ? 'links' : 'rechts';
+      griffZeichnen();
+    };
+    // Ziehen darf ÜBERALL auf dem Bildschirm beginnen — auch neben dem Griff.
+    // Wer ihn direkt anfasst, zieht ihn; wer daneben tippt, holt ihn dorthin.
+    // Ziehen am FENSTER verfolgen (nicht am Element): so bleibt der Griff auch
+    // dann am Finger, wenn der Zeiger kurz aus dem Bildschirm-Rechteck läuft.
+    schirm.addEventListener('pointerdown', function (ev) {
+      zieht = true; setzeAus(ev); ev.preventDefault();
+      var bewegt = function (e2) { if (zieht) setzeAus(e2); };
+      var hoch = function () {
+        zieht = false;
+        window.removeEventListener('pointermove', bewegt);
+        window.removeEventListener('pointerup', hoch);
+        window.removeEventListener('pointercancel', hoch);
+      };
+      window.addEventListener('pointermove', bewegt);
+      window.addEventListener('pointerup', hoch);
+      window.addEventListener('pointercancel', hoch);
+    });
+    griffZeichnen();
+  })();
+
+  function stileMedia() {
+    var sel = el('mk-stil'); if (!sel) return;
+    var b = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'media'; })[0];
+    var gekauft = (b && b.themes && b.themes.length) ? b.themes.filter(function (t) { return STIL_NAMEN[t]; }) : [];
+    var liste = gekauft.length ? gekauft : Object.keys(STIL_NAMEN);
+    var vorher = sel.value;
+    sel.innerHTML = '';
+    liste.forEach(function (t) { var o = document.createElement('option'); o.value = t; o.textContent = STIL_NAMEN[t]; sel.appendChild(o); });
+    // Achtung: ein nicht vorhandener Wert setzt value auf '' (selectedIndex -1) —
+    // dann steht das Feld LEER da und der erzeugte Code hätte kein Style.
+    sel.value = vorher; if (!sel.value) sel.value = liste[0];
+    var hw = el('mk-stil-hinweis');
+    hw.textContent = gekauft.length ? '' : wt('Noch kein Musik-Baustein gekauft — hier stehen später nur deine Styles.');
+    hw.hidden = !!gekauft.length;
+  }
+
+  el('mk-laden').textContent = wt('Meine Lautsprecher laden');
+  el('mk-laden').addEventListener('click', function () {
+    var b = el('mk-laden'); b.disabled = true; b.textContent = wt('lädt …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      lautsprecher = (d && d.media_players) || [];
+      var ziel = el('mk-players'); ziel.innerHTML = '';
+      if (!lautsprecher.length) {
+        var p = document.createElement('p'); p.style.color = 'var(--rot)';
+        p.textContent = wt('Keine media_player-Entitäten gefunden — richte zuerst Lautsprecher in Home Assistant ein.');
+        ziel.appendChild(p);
+      }
+      lautsprecher.forEach(function (c) {
+        var row = document.createElement('div'); row.className = 'kf-cam';
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.setAttribute('data-entity', c.entity);
+        var eid = document.createElement('span'); eid.className = 'eid'; eid.textContent = c.entity;
+        var nm = document.createElement('input'); nm.type = 'text'; nm.value = c.name; nm.placeholder = wt('Name');
+        row.appendChild(cb); row.appendChild(eid); row.appendChild(nm); ziel.appendChild(row);
+      });
+      stileMedia();
+      el('mk-body').hidden = false;
+      griffZeichnen();
+    }).catch(function () {
+      el('mk-players').textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('mk-body').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = wt('Lautsprecher neu laden'); });
+  });
+
+  el('mk-erzeugen').addEventListener('click', function () {
+    var reihen = document.querySelectorAll('#mk-players .kf-cam');
+    var gewaehlt = [];
+    for (var i = 0; i < reihen.length; i++) {
+      var cb = reihen[i].querySelector('input[type=checkbox]'); if (!cb.checked) continue;
+      var nm = reihen[i].querySelector('input[type=text]');
+      var eid = cb.getAttribute('data-entity');
+      gewaehlt.push({ entity: eid, name: (nm.value.trim() || eid.replace('media_player.', '')) });
+    }
+    el('mk-ergebnis').hidden = false; el('mk-meldung').textContent = '';
+    if (!gewaehlt.length) { el('mk-yaml').textContent = wt('# Bitte mindestens einen Lautsprecher anhaken.'); return; }
+    var L = ['type: custom:joamy-media-card', 'stil: ' + el('mk-stil').value, 'players:'];
+    gewaehlt.forEach(function (p) { L.push('  - entity: ' + p.entity); L.push('    name: ' + yamlEscape(p.name)); });
+    L.push('drawer:');
+    L.push('  seite: ' + lage.seite);
+    L.push('  hoehe: ' + Math.round(lage.hoehe));
+    el('mk-yaml').textContent = L.join('\\n');
+  });
+
+  el('mk-kopieren').addEventListener('click', function () {
+    var t = el('mk-yaml').textContent;
+    var fertig = function () { el('mk-meldung').style.color = 'var(--gruen)'; el('mk-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(fertig).catch(fallback); else fallback();
+  });
 })();
 
 spracheAnwenden();

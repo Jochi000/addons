@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.1.15
+
+- **Musik-Karte einrichten:** neuer Abschnitt — Lautsprecher anhaken, benennen und den
+  Musik-Griff an einem nachgebauten Dashboard genau dorthin schieben, wo er später am
+  Bildschirmrand sitzen soll. Daraus entsteht der fertige Karten-Code zum Einfügen.
+
 ## 0.1.14
 
 - **JoAmy startet dein Home Assistant nie neu — und kann es nicht mehr.** Der

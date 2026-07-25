@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.14"
+ADDON_VERSION = "0.1.15"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -742,6 +742,7 @@ class Installer:
             "cameras": liste("camera."),
             "binary_sensors": liste("binary_sensor."),
             "buttons": liste("button."),
+            "media_players": liste("media_player."),
         }
 
     # ------------------------------------------------------------------
