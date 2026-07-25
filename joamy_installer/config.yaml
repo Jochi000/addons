@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.13"
+version: "0.1.14"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Käufe installieren sich von selbst
 url: https://joamy.uk
@@ -16,13 +16,14 @@ arch:
   - aarch64
 init: false
 # Core-API (http://supervisor/core/api, Bearer SUPERVISOR_TOKEN) wird gebraucht
-# für: HA-Version bei der Registrierung und den Config-Flow-Anstoß nach dem
-# Entpacken. Der NEUSTART läuft dagegen über den Supervisor-Management-Endpunkt
-# POST /core/restart (wie `ha core restart`) — der Service-Weg über den
-# /core/api-Proxy blockiert bis zum Gateway-Timeout (504, HA 2026.x).
+# für: HA-Version bei der Registrierung, den Config-Flow-Anstoß nach dem
+# Entpacken und die Hinweis-Meldung.
+#
+# `hassio_api`/`hassio_role: admin` sind seit 0.1.14 ABSICHTLICH weg: nur mit
+# ihnen käme man an den Supervisor-Endpunkt POST /core/restart. Ohne sie kann
+# dieses Add-on Home Assistant nicht neu starten — nicht durch einen Fehler,
+# nicht durch eine Option, gar nicht. Ein Neustart ist Sache des Nutzers.
 homeassistant_api: true
-hassio_api: true
-hassio_role: admin
 # Ingress: die Status-Seite (Kopplungscode, Bausteine, Logs) läuft NUR über den
 # authentifizierten Supervisor-Ingress-Proxy — der Port ist bewusst NICHT unter
 # `ports:` veröffentlicht (nicht im LAN erreichbar). Die App lauscht auf
@@ -34,19 +35,13 @@ ingress_port: 8321
 # Versionen nach /config/joamy_backup/ gesichert.
 map:
   - homeassistant_config:rw
+# Die Option `auto_neustart` gibt es nicht mehr (0.1.14) — es gibt nichts mehr
+# einzustellen: neu gestartet wird nie.
 options:
   server_url: "https://lizenz.joamy.uk"
   poll_sekunden: 60
-  # Standard AUS: Home Assistant wird von uns NIE eigenmächtig neu gestartet.
-  # Neue Bausteine lädt der Core im laufenden Betrieb (gemessen an HA 2026.7:
-  # frisch hineinkopierte Integration → Config-Flow → Eintrag „loaded", Karte
-  # wird ausgeliefert). Sollte es in einem Setup doch einmal klemmen, setzt das
-  # Add-on eine Meldung in Home Assistant — den Zeitpunkt bestimmt der Nutzer.
-  # Auf "true" nur stellen, wer den Neustart bewusst automatisieren will.
-  auto_neustart: false
 schema:
   server_url: str
   poll_sekunden: int
-  auto_neustart: bool
 startup: services
 boot: auto

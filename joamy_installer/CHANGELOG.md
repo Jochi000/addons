@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## 0.1.14
+
+- **JoAmy startet dein Home Assistant nie neu — und kann es nicht mehr.** Der
+  Neustart-Aufruf ist aus dem Code entfernt, und mit ihm die Berechtigung
+  (`hassio_api`/`hassio_role`), die ihn überhaupt möglich machte. Die Option
+  `auto_neustart` entfällt ersatzlos. Sollte ein Baustein wider Erwarten nicht im
+  laufenden Betrieb laden, erscheint nur eine Meldung — den Zeitpunkt bestimmst du.
+- **Style-Auswahl zeigt nur deine gekauften Styles** (vorher standen alle neun zur
+  Wahl, obwohl die Karte ungekaufte ohnehin nicht freischaltet).
+
 ## 0.1.13
 
 - **Kein automatischer Neustart mehr.** Home Assistant lädt neue Bausteine im

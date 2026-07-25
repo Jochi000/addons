@@ -229,7 +229,7 @@ SEITE = """<!doctype html>
     <div id="server-hinweis" hidden></div>
     <div class="zeile"><span data-i18n>Registriert</span><span class="wert" id="st-reg">—</span></div>
     <div class="zeile"><span data-i18n>Letzte Suche</span><span class="wert" id="st-poll">—</span></div>
-    <div class="zeile"><span data-i18n>Automatischer Neustart</span><span class="wert" id="st-neustart">—</span></div>
+    <div class="zeile"><span data-i18n>Neustart von Home Assistant</span><span class="wert" id="st-neustart">—</span></div>
     <div id="fehler"></div>
   </section>
 
@@ -257,6 +257,7 @@ SEITE = """<!doctype html>
       </div>
       <div class="kf-abschnitt">
         <label class="kf-titel" for="kf-stil" data-i18n>Style (kannst du später jederzeit über 🎨 wechseln)</label>
+        <span id="kf-stil-hinweis" class="hinweis" hidden></span>
         <select id="kf-stil">
           <option value="skizze">Skizze</option><option value="comic">Comic</option>
           <option value="pinnwand">Pinnwand</option><option value="frost">Frost</option>
@@ -325,7 +326,11 @@ var UEB = {
   'Lizenz-Server': 'License server',
   'Registriert': 'Registered',
   'Letzte Suche': 'Last check',
-  'Automatischer Neustart': 'Automatic restart',
+  'Neustart von Home Assistant': 'Restarting Home Assistant',
+  'wird von JoAmy nie ausgelöst': 'never triggered by JoAmy',
+  'einmal empfohlen — wann, entscheidest du': 'recommended once — you decide when',
+  'Noch kein Kamera-Baustein gekauft — hier stehen später nur deine Styles.':
+    'No camera building block bought yet — later only your own styles appear here.',
   'Installierte Bausteine': 'Installed building blocks',
   'Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Kauf hier von ganz allein.':
     'Nothing has moved in yet — after pairing, your first purchase shows up here all by itself.',
@@ -468,8 +473,10 @@ function male(st) {
   rg.appendChild(document.createTextNode(st.registriert ? wt('ja') : wt('noch nicht')));
 
   el('st-poll').textContent = st.letzter_poll || wt('noch keine');
-  el('st-neustart').textContent = (st.auto_neustart ? wt('an') : wt('aus'))
-    + (st.neustart_noetig ? wt(' · Neustart steht noch aus') : '');
+  // Wir starten Home Assistant NIE selbst — das steht hier auch so.
+  el('st-neustart').textContent = st.neustart_noetig
+    ? wt('einmal empfohlen — wann, entscheidest du')
+    : wt('wird von JoAmy nie ausgelöst');
   el('fehler').textContent = st.letzter_fehler ? wt('Zuletzt gemeldet: ') + st.letzter_fehler : '';
 
   var ul = el('bausteine'); ul.textContent = '';
@@ -492,6 +499,39 @@ function male(st) {
   el('leer').style.display = (st.bausteine || []).length ? 'none' : '';
 
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
+  stileAnbieten(st);
+}
+
+/* Style-Auswahl im Kamera-Konfigurator: NUR die tatsächlich gekauften Styles.
+   Alles andere wäre eine Attrappe — die Karte schaltet ungekaufte Styles ohnehin
+   nicht frei. Vor dem ersten Kauf steht die volle Liste (zum Anschauen). */
+var STIL_NAMEN = { skizze:'Skizze', comic:'Comic', pinnwand:'Pinnwand', frost:'Frost',
+                   terminal:'Terminal', riso:'Riso', almanach:'Almanach',
+                   keramik:'Keramik', pigment:'Pigment' };
+var stilStand = null;
+function stileAnbieten(st) {
+  var sel = el('kf-stil'); if (!sel) return;
+  var kam = (st.bausteine || []).filter(function (b) { return b.baustein === 'kamera'; })[0];
+  var gekauft = (kam && kam.themes && kam.themes.length) ? kam.themes.slice()
+    : (kam && kam.theme ? String(kam.theme).split(',') : []);
+  gekauft = gekauft.filter(function (t) { return STIL_NAMEN[t]; });
+  var signatur = gekauft.join(',') + '|' + sprache;
+  if (signatur === stilStand) return;            // nichts Neues → DOM in Ruhe lassen
+  stilStand = signatur;
+  var vorher = sel.value;
+  var liste = gekauft.length ? gekauft : Object.keys(STIL_NAMEN);
+  sel.innerHTML = '';
+  liste.forEach(function (t) {
+    var o = document.createElement('option'); o.value = t; o.textContent = STIL_NAMEN[t];
+    sel.appendChild(o);
+  });
+  sel.value = vorher;
+  if (sel.value !== vorher) sel.value = liste[0];
+  var hw = el('kf-stil-hinweis');
+  if (hw) {
+    hw.textContent = gekauft.length ? '' : wt('Noch kein Kamera-Baustein gekauft — hier stehen später nur deine Styles.');
+    hw.hidden = !!gekauft.length;
+  }
 }
 
 // Alle Pfade RELATIV — die Seite läuft hinter /api/hassio_ingress/<token>/.

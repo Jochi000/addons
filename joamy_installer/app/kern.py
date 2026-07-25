@@ -9,8 +9,9 @@ Ablauf (Kontrakt KONTRAKT-ADDON.md):
   3. Poll-Loop auf GET /api/v1/instanz/pakete. Jedes neue/geänderte Paket
      (Fingerabdruck kauf_id+theme+version+name in /data/status.json):
      ZIP laden → alte Version nach /config/joamy_backup/<ts>/ sichern →
-     nach /config/custom_components/ entpacken → Config-Flow anstoßen →
-     bei auto_neustart Core-Neustart.
+     nach /config/custom_components/ entpacken → Config-Flow anstoßen.
+     Home Assistant wird dabei NIEMALS neu gestartet (der Core lädt neue
+     Integrationen im Betrieb; klemmt es doch, gibt es nur eine Meldung).
   Fehler werden robust geloggt — die Schleife crasht nie.
 
 Pfade sind für den Mock-Test über ENV konfigurierbar:
@@ -38,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.13"
+ADDON_VERSION = "0.1.14"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -142,7 +143,6 @@ def lade_optionen() -> dict:
     return {
         "server_url": str(roh.get("server_url") or "https://lizenz.joamy.uk").rstrip("/"),
         "poll_sekunden": poll,
-        "auto_neustart": bool(roh.get("auto_neustart", False)),
     }
 
 
@@ -493,6 +493,10 @@ class Installer:
             "kauf_id": kauf_id,
             "baustein": baustein,
             "theme": paket.get("theme"),
+            # Alle gekauften Styles einzeln — der Konfigurator auf der Add-on-Seite
+            # bietet NUR diese zur Auswahl an (alles andere wäre Augenwischerei:
+            # die Karte schaltet ungekaufte Styles ohnehin nicht frei).
+            "themes": [t for t in (paket.get("themes") or []) if isinstance(t, str)],
             "name": paket.get("name"),
             "version": paket.get("version"),
             "fingerabdruck": fp,
@@ -597,14 +601,10 @@ class Installer:
                     self.status["neustart_noetig"] = True
 
         if self.status.get("neustart_noetig"):
-            if self.optionen["auto_neustart"]:
-                if await self._core_neustart():
-                    self.status["neustart_noetig"] = False
-                    geaendert = True
-            else:
-                # Standardfall: der Nutzer bestimmt den Zeitpunkt. Wir sagen nur Bescheid.
-                await self._melde_neustart_noetig()
-                geaendert = True
+            # Es gibt keinen zweiten Zweig mehr: Home Assistant wird von diesem
+            # Add-on NIEMALS neu gestartet. Wir sagen nur Bescheid.
+            await self._melde_neustart_noetig()
+            geaendert = True
 
         if geaendert:
             speichere_json(STATUS_DATEI, self.status)
@@ -688,36 +688,13 @@ class Installer:
                  "Es wird NICHTS eigenmächtig neu gestartet.",
                  "zugestellt" if ok is not None else "Core nicht erreichbar")
 
-    async def _core_neustart(self) -> bool:
-        """Core-Neustart über den Supervisor-Management-Endpunkt (wie `ha core restart`).
-
-        NICHT über /core/api/services/homeassistant/restart — der Proxy wartet
-        auf die Service-Antwort und läuft in ein 504-Gateway-Timeout (HA 2026.x).
-        /core/restart blockiert bis der Core wieder da ist; großzügiger Timeout.
-        Einmal-Schuss: Auch bei unklarem Ausgang wird NICHT endlos neu ausgelöst
-        (Schutz vor Neustart-Schleifen); danach Readiness-Poll mit Log.
-        """
-        LOG.info("Starte Home Assistant neu, damit der neue Baustein lädt (auto_neustart) …")
-        url = f"{SUPERVISOR_URL}/core/restart"
-        kopf = {"Authorization": f"Bearer {os.environ.get('SUPERVISOR_TOKEN', SUPERVISOR_TOKEN)}"}
-        try:
-            async with self.session.post(
-                url, headers=kopf, timeout=aiohttp.ClientTimeout(total=300)
-            ) as r:
-                if r.status >= 400:
-                    LOG.warning("Neustart abgelehnt (HTTP %s: %s) — Hinweis bleibt in der Oberfläche.",
-                                r.status, (await r.text())[:150])
-                    return True  # kein Retry-Loop; Nutzer sieht den Hinweis
-        except Exception as e:  # Timeout/Verbindungsabriss: Neustart läuft vermutlich trotzdem
-            LOG.info("Neustart angestoßen (Antwort offen: %s) — warte auf den Core …", str(e)[:80])
-        # Readiness: bis zu 2 Minuten auf die Core-API warten (rein informativ)
-        for _ in range(24):
-            await asyncio.sleep(5)
-            if await self._core_api("GET", "/config") is not None:
-                LOG.info("Home Assistant ist wieder da — Baustein aktiv.")
-                return True
-        LOG.warning("Core-API nach Neustart noch nicht erreichbar — bitte im Zweifel manuell prüfen.")
-        return True
+    # ENTFERNT (v0.1.14): _core_neustart(). Es gibt in diesem Add-on KEINEN Aufruf
+    # mehr, der Home Assistant neu starten kann — weder automatisch noch über eine
+    # Option. Ein Neustart ist Sache des Nutzers, und nur er löst ihn aus.
+    # Zusätzlich sind `hassio_api`/`hassio_role` aus der config.yaml verschwunden:
+    # ohne diese Rechte darf das Add-on den Supervisor-Endpunkt /core/restart gar
+    # nicht mehr aufrufen. Falls eine Installation wider Erwarten doch einen
+    # Neustart braucht, setzt _melde_neustart_noetig() eine Meldung in HA.
 
     async def _core_api(self, methode: str, pfad: str, json_daten=None):
         """Ein Aufruf der Core-API über den Supervisor-Proxy; None bei Fehler.
@@ -778,6 +755,7 @@ class Installer:
             bausteine.append({
                 "baustein": baustein,
                 "theme": info.get("theme"),
+                "themes": info.get("themes") or [],
                 "name": info.get("name"),
                 "version": info.get("version"),
                 "installiert_am": info.get("installiert_am"),
@@ -792,7 +770,6 @@ class Installer:
             "registriert": bool(self.instanz_token),
             "instanz_id": self.instanz_id,
             "addon_version": ADDON_VERSION,
-            "auto_neustart": self.optionen["auto_neustart"],
             "poll_sekunden": self.optionen["poll_sekunden"],
             "neustart_noetig": bool(self.status.get("neustart_noetig")),
             "flow_ausstehend": list(self.status.get("flow_ausstehend") or []),
