@@ -38,7 +38,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.10"
+ADDON_VERSION = "0.1.11"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -59,18 +59,35 @@ OPTIONS_DATEI = os.path.join(DATA_DIR, "options.json")
 CORE_UUID_DATEI = os.path.join(CONFIG_DIR, ".storage", "core.uuid")
 
 
-def _stabile_instanz_id() -> str | None:
-    """Deterministische instanz_id aus HA core.uuid; None wenn nicht lesbar."""
+def _core_uuid() -> str | None:
+    """Rohe HA core.uuid (bleibt im Haus — verlässt das Add-on NIE ungehasht)."""
     try:
         with open(CORE_UUID_DATEI, encoding="utf-8") as f:
             roh = json.load(f)
         core = (roh.get("data") or {}).get("uuid")
-        if not core or not isinstance(core, str):
-            return None
-        h = hashlib.sha256((core + "|joamy.instanz.v1").encode("utf-8")).hexdigest()
-        return "jha_" + h[:32]
+        return core if (core and isinstance(core, str)) else None
     except Exception:
         return None
+
+
+def _stabile_instanz_id() -> str | None:
+    """Deterministische instanz_id aus HA core.uuid; None wenn nicht lesbar."""
+    core = _core_uuid()
+    if not core:
+        return None
+    h = hashlib.sha256((core + "|joamy.instanz.v1").encode("utf-8")).hexdigest()
+    return "jha_" + h[:32]
+
+
+def _recovery_beweis() -> str | None:
+    """Besitznachweis für die Selbstheilung nach /data-Verlust: ein ANDERER Hash
+    derselben core.uuid (anderer Salt als die instanz_id). Reproduzierbar aus der
+    im /config überlebenden core.uuid, aber NICHT aus der öffentlichen instanz_id
+    herleitbar. Die rohe core.uuid erreicht den Server weiterhin nie."""
+    core = _core_uuid()
+    if not core:
+        return None
+    return hashlib.sha256((core + "|joamy.recovery.v1").encode("utf-8")).hexdigest()
 
 MAX_ZIP_BYTES = 200 * 1024 * 1024   # Schutzgrenze; das Kochbuch-Paket liegt ~ wenige MB
 REG_DROSSEL_S = 20                  # Registrierung höchstens alle 20 s (UI-Refresh-Schutz)
@@ -226,8 +243,18 @@ class Installer:
             "ha_version": ha_version,
             "addon_version": ADDON_VERSION,
         }
+        # Selbstheilender Besitznachweis: ein aus der core.uuid abgeleiteter Hash
+        # (überlebt /data-Verlust, Restore, Umzug). So bekommt das Add-on seinen
+        # instanz_token auch dann zurück, wenn /data (und damit der alte Token) weg ist.
+        beweis = _recovery_beweis()
+        if beweis:
+            rumpf["recovery_beweis"] = beweis
+        # Zusätzlicher Nachweis im Normalbetrieb: der persistierte instanz_token als
+        # Header. Der Server akzeptiert Token ODER recovery_beweis (Erst-Registrierung
+        # ohne beides = Trust-on-first-use).
+        kopf = {"X-Instanz-Token": self.instanz_token} if self.instanz_token else {}
         try:
-            async with self.session.post(url, json=rumpf) as r:
+            async with self.session.post(url, json=rumpf, headers=kopf) as r:
                 daten = await r.json(content_type=None)
                 if r.status != 200 or not isinstance(daten, dict):
                     raise RuntimeError((daten or {}).get("fehler") or f"HTTP {r.status}")
@@ -240,9 +267,16 @@ class Installer:
         self.server_ok = True
         self.letzter_fehler = None
         token = daten.get("instanz_token")
-        if token and token != self.instanz_token:
-            self.instanz_token = token
-            speichere_json(INSTANZ_DATEI, {"instanz_id": self.instanz_id, "instanz_token": token})
+        # Kanonische instanz_id vom Server übernehmen: nach /data-Verlust kann die lokal
+        # neu abgeleitete ID von der serverseitig gebundenen (mit den Käufen) abweichen —
+        # der Server löst das per recovery_beweis auf und liefert die maßgebliche ID zurück.
+        srv_id = daten.get("instanz_id")
+        neue_id = srv_id if (isinstance(srv_id, str) and srv_id) else self.instanz_id
+        if (token and token != self.instanz_token) or neue_id != self.instanz_id:
+            self.instanz_id = neue_id
+            if token:
+                self.instanz_token = token
+            speichere_json(INSTANZ_DATEI, {"instanz_id": self.instanz_id, "instanz_token": self.instanz_token})
 
         code = daten.get("kopplungscode")
         if code:
