@@ -759,6 +759,63 @@ class Installer:
             LOG.debug("Core-API nicht erreichbar (%s %s): %s", methode, pfad, e)
             return None
 
+    async def medienquellen(self) -> dict:
+        """Ordner aus den Medienquellen von Home Assistant — Vorlage fuer die
+        Kamera-Ereignisse.
+
+        Der Kunde soll seinen Aufnahme-Ordner nicht raten muessen: wir gehen die
+        Medienquellen (UniFi Protect, Frigate, /media, …) einmal durch und liefern
+        die gefundenen Ordner als Vorschlagsliste. Ueber die REST-Core-API geht das
+        nicht — media_source/browse_media gibt es nur ueber WebSocket; darum oeffnen
+        wir eine kurze Sitzung mit dem Supervisor-Token.
+        """
+        url = f"{SUPERVISOR_URL}/core/websocket"
+        token = os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN)
+        gefunden: list = []
+        try:
+            async with self.session.ws_connect(url, heartbeat=25) as ws:
+                lauf = {"n": 0}
+
+                async def frage(nutzlast: dict):
+                    lauf["n"] += 1
+                    nutzlast = dict(nutzlast, id=lauf["n"])
+                    await ws.send_json(nutzlast)
+                    while True:
+                        msg = await asyncio.wait_for(ws.receive_json(), timeout=20)
+                        if msg.get("id") == nutzlast["id"] and msg.get("type") == "result":
+                            return msg.get("result") if msg.get("success") else None
+
+                while True:
+                    erst = await asyncio.wait_for(ws.receive_json(), timeout=20)
+                    if erst.get("type") == "auth_required":
+                        await ws.send_json({"type": "auth", "access_token": token})
+                    elif erst.get("type") == "auth_ok":
+                        break
+                    elif erst.get("type") == "auth_invalid":
+                        return {"ok": False, "fehler": "Anmeldung am Core abgelehnt.", "quellen": []}
+
+                async def zweig(mid: str, tiefe: int, pfad: str) -> None:
+                    if tiefe > 2 or len(gefunden) > 120:
+                        return
+                    ergebnis = await frage({"type": "media_source/browse_media",
+                                            "media_content_id": mid})
+                    if not isinstance(ergebnis, dict):
+                        return
+                    for kind in (ergebnis.get("children") or []):
+                        kid = kind.get("media_content_id") or ""
+                        titel = str(kind.get("title") or "")
+                        if not kid.startswith("media-source://") or not kind.get("can_expand"):
+                            continue
+                        weg = (pfad + " > " + titel).strip(" >")
+                        gefunden.append({"id": kid, "titel": titel, "pfad": weg, "tiefe": tiefe})
+                        await zweig(kid, tiefe + 1, weg)
+
+                await zweig("", 0, "")
+        except Exception as e:
+            LOG.info("Medienquellen konnten nicht gelesen werden: %s", e)
+            return {"ok": False, "fehler": str(e), "quellen": []}
+        return {"ok": True, "quellen": gefunden[:120]}
+
     async def entitaeten_fuer_konfig(self) -> dict:
         """Kamera-/Türklingel-/Knopf-Entitäten für den Karten-Konfigurator.
 

@@ -184,6 +184,26 @@ SEITE = """<!doctype html>
   #kf-tk-body label, #kf-ev-body label { display: grid; gap: 5px; align-items: start;
                                          font-size: 14px; color: var(--tinte-2); min-width: 0; }
   #kf-ergebnis { display: grid; gap: 12px; }
+  .anleitung { margin-top: 14px; border: 1px solid var(--rand); border-radius: 12px;
+    background: rgba(255,255,255,.03); padding: 10px 12px; }
+  .anleitung summary { cursor: pointer; font-size: 14px; color: var(--tinte); list-style: none; }
+  .anleitung summary::-webkit-details-marker { display: none; }
+  .anleitung summary::before { content: "▶"; font-size: 11px; margin-right: 8px; color: var(--gruen); }
+  .anleitung[open] summary::before { content: "▼"; }
+  .anleitung-schritte { margin: 10px 0 12px; padding-left: 20px; display: grid; gap: 6px;
+    font-size: 13.5px; color: var(--tinte-2); }
+  .anleitung video { width: 100%; max-width: 320px; display: block; margin: 0 auto;
+    border: 1px solid var(--rand); border-radius: 12px; background: #000; }
+  .kf-beispiele { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 5px;
+    font-size: 13px; color: var(--tinte-2); }
+  .kf-beispiele code { font: 12.5px var(--mono); color: var(--tinte); background: rgba(255,255,255,.05);
+    border: 1px solid var(--rand); border-radius: 6px; padding: 1px 6px; display: inline-block;
+    word-break: break-all; }
+  .kf-quellen { display: grid; gap: 6px; margin-top: 8px; max-height: 240px; overflow-y: auto; }
+  .kf-quellen button { text-align: left; font-size: 13px; padding: 8px 10px; width: 100%; }
+  .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
+  .kf-quellen button b { display: block; font-size: 14px; }
+  .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
   pre#kf-yaml, pre#mk-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
@@ -303,6 +323,18 @@ SEITE = """<!doctype html>
           <label><span data-i18n>Wie viele der letzten Ereignisse laden?</span>
             <input id="kf-ev-anzahl" type="number" min="1" max="100" step="1" value="20"></label>
           <span class="hinweis" data-i18n>Mehr Ereignisse heißt längeres Laden — 20 ist ein guter Wert.</span>
+          <label><span data-i18n>Aus welchem Medien-Ordner kommen die Aufnahmen?</span>
+            <input id="kf-ev-quelle" type="text" list="kf-ev-liste" placeholder="media-source://…" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+          <datalist id="kf-ev-liste"></datalist>
+          <button id="kf-ev-suchen" type="button" class="leise" data-i18n>Meine Medien-Ordner anzeigen</button>
+          <div id="kf-ev-treffer" class="kf-quellen" hidden></div>
+          <span class="hinweis" data-i18n>Leer lassen heißt: JoAmy nimmt den ersten Ordner, der Aufnahmen enthält. Wenn du mehrere Kamerasysteme hast, trag deins ein — Beispiele:</span>
+          <ul class="kf-beispiele">
+            <li><b>UniFi Protect</b> <code>media-source://unifiprotect</code></li>
+            <li><b>Frigate</b> <code>media-source://frigate/event_search/clips</code></li>
+            <li><b data-i18n>Kamera-Aufnahmen von HA</b> <code>media-source://camera</code></li>
+            <li><b data-i18n>Eigener Ordner</b> <span data-i18n>(z. B. Reolink/FTP nach</span> <code>/media/kameras</code>) <code>media-source://media_source/local/kameras</code></li>
+          </ul>
         </div>
       </div>
       <button id="kf-erzeugen" type="button" data-i18n>Code erzeugen</button>
@@ -312,6 +344,15 @@ SEITE = """<!doctype html>
           <pre id="kf-yaml"></pre>
         </div>
         <button id="kf-kopieren" type="button" data-i18n>Code kopieren</button>
+        <details class="anleitung">
+          <summary data-i18n>Wie füge ich den Code ins Dashboard ein? (kurzes Video)</summary>
+          <ol class="anleitung-schritte">
+            <li data-i18n>Dashboard öffnen → Menü oben rechts → <b>Dashboard bearbeiten</b></li>
+            <li data-i18n>Auf <b>+</b> tippen → Reiter <b>Nach Karte</b> → nach <b>Manuell</b> suchen</li>
+            <li data-i18n>Alles im Feld markieren, deinen Code <b>einfügen</b> → <b>Speichern</b> → <b>Fertig</b></li>
+          </ol>
+          <video id="kf-video" controls playsinline preload="none" src="anleitung.mp4"></video>
+        </details>
         <div id="kf-meldung"></div>
       </div>
     </div>
@@ -361,6 +402,15 @@ SEITE = """<!doctype html>
           <pre id="mk-yaml"></pre>
         </div>
         <button id="mk-kopieren" type="button" data-i18n>Code kopieren</button>
+        <details class="anleitung">
+          <summary data-i18n>Wie füge ich den Code ins Dashboard ein? (kurzes Video)</summary>
+          <ol class="anleitung-schritte">
+            <li data-i18n>Dashboard öffnen → Menü oben rechts → <b>Dashboard bearbeiten</b></li>
+            <li data-i18n>Auf <b>+</b> tippen → Reiter <b>Nach Karte</b> → nach <b>Manuell</b> suchen</li>
+            <li data-i18n>Alles im Feld markieren, deinen Code <b>einfügen</b> → <b>Speichern</b> → <b>Fertig</b></li>
+          </ol>
+          <video id="mk-video" controls playsinline preload="none" src="anleitung.mp4"></video>
+        </details>
         <div id="mk-meldung"></div>
       </div>
     </div>
@@ -385,6 +435,22 @@ function el(id) { return document.getElementById(id); }
    (darf HTML enthalten). Kein Treffer ⇒ Deutsch bleibt stehen. Gemerkt wird die
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
+  'Wie füge ich den Code ins Dashboard ein? (kurzes Video)': 'How do I paste the code into my dashboard? (short video)',
+  'Dashboard öffnen → Menü oben rechts → Dashboard bearbeiten': 'Open your dashboard → menu top right → Edit dashboard',
+  'Auf + tippen → Reiter Nach Karte → nach Manuell suchen': 'Tap + → tab By card → search for Manual',
+  'Alles im Feld markieren, deinen Code einfügen → Speichern → Fertig': 'Select everything in the field, paste your code → Save → Done',
+  'Aus welchem Medien-Ordner kommen die Aufnahmen?': 'Which media folder holds the recordings?',
+  'Meine Medien-Ordner anzeigen': 'Show my media folders',
+  'Suche deine Medien-Ordner …': 'Looking for your media folders …',
+  'Keine Medien-Ordner gefunden — trag deinen Ordner von Hand ein (Beispiele unten).':
+    'No media folders found — enter your folder by hand (examples below).',
+  'Konnte die Medien-Ordner nicht lesen — trag deinen Ordner von Hand ein.':
+    'Could not read the media folders — enter your folder by hand.',
+  'Leer lassen heißt: JoAmy nimmt den ersten Ordner, der Aufnahmen enthält. Wenn du mehrere Kamerasysteme hast, trag deins ein — Beispiele:':
+    'Leave it empty and JoAmy takes the first folder that holds recordings. If you run several camera systems, enter yours — examples:',
+  'Kamera-Aufnahmen von HA': 'Camera recordings from HA',
+  'Eigener Ordner': 'Your own folder',
+  '(z. B. Reolink/FTP nach': '(e.g. Reolink/FTP into',
   'Für Home Assistant': 'For Home Assistant',
   'Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.':
     'Pair once — from then on your purchases move in all by themselves.',
@@ -751,6 +817,29 @@ function yamlEscape(s) {
     });
     el('kf-tk-an').addEventListener('change', function () { el('kf-tk-body').hidden = !this.checked; });
     el('kf-ev-an').addEventListener('change', function () { el('kf-ev-body').hidden = !this.checked; });
+    el('kf-ev-suchen').addEventListener('click', function () {
+      var b = this, kasten = el('kf-ev-treffer');
+      b.disabled = true; b.textContent = wt('Suche deine Medien-Ordner …');
+      fetch('medienquellen', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+        var q = (d && d.quellen) || [];
+        el('kf-ev-liste').innerHTML = q.map(function (x) { return '<option value="' + x.id + '">' + (x.pfad || x.titel) + '</option>'; }).join('');
+        kasten.innerHTML = ''; kasten.hidden = false;
+        if (!q.length) { var p0 = document.createElement('p'); p0.className = 'hinweis';
+          p0.textContent = wt('Keine Medien-Ordner gefunden — trag deinen Ordner von Hand ein (Beispiele unten).'); kasten.appendChild(p0); return; }
+        q.forEach(function (x) {
+          var kn = document.createElement('button'); kn.type = 'button'; kn.className = 'leise';
+          var t1 = document.createElement('b'); t1.textContent = x.pfad || x.titel;
+          var t2 = document.createElement('span'); t2.textContent = x.id;
+          kn.appendChild(t1); kn.appendChild(t2);
+          kn.addEventListener('click', function () { el('kf-ev-quelle').value = x.id;
+            Array.prototype.forEach.call(kasten.children, function (c) { c.classList.remove('gewaehlt'); });
+            kn.classList.add('gewaehlt'); });
+          kasten.appendChild(kn);
+        });
+      }).catch(function () {
+        kasten.hidden = false; kasten.textContent = wt('Konnte die Medien-Ordner nicht lesen — trag deinen Ordner von Hand ein.');
+      }).finally(function () { b.disabled = false; b.textContent = wt('Meine Medien-Ordner anzeigen'); });
+    });
     el('kf-erzeugen').addEventListener('click', function () {
       var cams = angehakteCams();
       el('kf-ergebnis').hidden = false; el('kf-meldung').textContent = '';
@@ -771,6 +860,8 @@ function yamlEscape(s) {
         var anz = parseInt(el('kf-ev-anzahl').value, 10);
         if (!(anz >= 1)) anz = 20;
         L.push('  count: ' + Math.min(100, anz));
+        var q = (el('kf-ev-quelle').value || '').trim();
+        if (q) L.push('  quelle: ' + yamlEscape(q));
       }
       el('kf-yaml').textContent = L.join('\\n');
     });
@@ -968,6 +1059,20 @@ def baue_web_app(installer: Installer) -> web.Application:
             return web.json_response(
                 {"cameras": [], "binary_sensors": [], "buttons": [], "fehler": str(e)}, status=500)
 
+    async def medienquellen(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.medienquellen())
+        except Exception as e:
+            LOG.error("Medienquellen-Endpunkt fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e), "quellen": []}, status=500)
+
+    async def anleitung(request: web.Request) -> web.StreamResponse:
+        weg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "anleitung.mp4")
+        if not os.path.exists(weg):
+            raise web.HTTPNotFound()
+        return web.FileResponse(weg, headers={"Cache-Control": "public, max-age=604800",
+                                              "Content-Type": "video/mp4"})
+
     async def schrift(request: web.Request) -> web.StreamResponse:
         if not os.path.exists(SCHRIFT_DATEI):
             raise web.HTTPNotFound()
@@ -983,4 +1088,6 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_post("/suchen", suchen)
     app.router.add_get("/logs", logs)
     app.router.add_get("/entities", entities)
+    app.router.add_get("/medienquellen", medienquellen)
+    app.router.add_get("/anleitung.mp4", anleitung)
     return app
