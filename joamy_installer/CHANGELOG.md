@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.1.18
+
+- Karten-Einstellungen (Kamera-/Musik-Konfigurator) erscheinen nur noch, wenn der
+  jeweilige Baustein auch gekauft ist — Einstellungen für nie gekaufte Karten
+  verwirren nur.
+
 ## 0.1.17
 
 - Startfehler von 0.1.16 behoben (Rest-Verweis auf die entfernte Option auto_neustart).

@@ -265,7 +265,7 @@ SEITE = """<!doctype html>
     <div id="such-meldung"></div>
   </section>
 
-  <section class="karte" id="konfig-karte">
+  <section class="karte" id="konfig-karte" hidden>
     <h2 data-i18n>Kamera-Karte einrichten</h2>
     <p class="kf-intro" data-i18n>Wähle deine Kameras — wir bauen dir den fertigen Code. Den fügst du beim
       Hinzufügen der Karte („Karte hinzufügen“ → ganz unten „Manuell“) einfach ein.</p>
@@ -317,7 +317,7 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
-  <section class="karte" id="media-karte">
+  <section class="karte" id="media-karte" hidden>
     <h2 data-i18n>Musik-Karte einrichten</h2>
     <p class="kf-intro" data-i18n>Wähle deine Lautsprecher und schiebe den Musik-Griff dorthin,
       wo er auf deinem Bildschirm sitzen soll. Am Ende bekommst du den fertigen Code zum Einfügen.</p>
@@ -587,6 +587,13 @@ function male(st) {
   });
   el('leer').style.display = (st.bausteine || []).length ? 'none' : '';
 
+  // Konfiguratoren NUR zeigen, wenn der zugehörige Baustein gekauft ist —
+  // Einstellungen für nie gekaufte Karten verwirren Kunden und wirken
+  // unseriös (Franks Regel, gilt für ALLE künftigen Karten-Konfiguratoren).
+  var gekauftB = {};
+  (st.bausteine || []).forEach(function (b) { gekauftB[b.baustein] = true; });
+  if (el('konfig-karte')) el('konfig-karte').hidden = !gekauftB.kamera;
+  if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
 }
