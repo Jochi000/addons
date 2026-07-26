@@ -184,7 +184,7 @@ SEITE = """<!doctype html>
   #kf-tk-body label, #kf-ev-body label { display: grid; gap: 5px; align-items: start;
                                          font-size: 14px; color: var(--tinte-2); min-width: 0; }
   #kf-ergebnis { display: grid; gap: 12px; }
-  pre#kf-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -463,6 +463,25 @@ var UEB = {
   /* --- Hinweise, die der Server (kern.py) auf Deutsch liefert --- */
   'Dieses Add-on ist älter als der Lizenz-Server. Bitte im Add-on-Store auf die neueste Version aktualisieren — danach klappt es von selbst.':
     'This add-on is older than the license server. Please update it to the newest version in the add-on store — after that it works by itself.',
+  /* --- Musik-Karte (Konfigurator) --- */
+  'Musik-Karte einrichten': 'Set up the music card',
+  'Wähle deine Lautsprecher und schiebe den Musik-Griff dorthin, wo er auf deinem Bildschirm sitzen soll. Am Ende bekommst du den fertigen Code zum Einfügen.':
+    'Pick your speakers and slide the music handle to where it should sit on your screen. At the end you get the finished code to paste in.',
+  'Music Assistant wird gebraucht. Zum Suchen und Abspielen von Musik braucht die Karte das Add-on „Music Assistant“. Ohne es kannst du nur steuern, was gerade läuft.':
+    '<b>Music Assistant is required.</b> To search for and play music, the card needs the “Music Assistant” add-on. Without it you can only control what is already playing.',
+  'Meine Lautsprecher laden': 'Load my speakers',
+  'Lautsprecher neu laden': 'Reload speakers',
+  'Lautsprecher (anhaken + Namen vergeben)': 'Speakers (tick them + give them names)',
+  'Wo soll der Musik-Griff sitzen?': 'Where should the music handle sit?',
+  'Die Musik-Schublade liegt über deinem Dashboard — zu sehen ist nur ein schmaler Griff am Bildschirmrand. Zieh ihn unten an die Stelle, an der er dich am wenigsten stört; ein Tipp darauf zieht die Musik heraus. Das gilt auf jeder Seite deines Dashboards, egal wie viele Karten du hast.':
+    'The music drawer sits above your dashboard — all you see is a slim handle at the edge of the screen. Drag it below to the spot where it bothers you least; a tap on it pulls the music out. This works on every page of your dashboard, no matter how many cards you have.',
+  'Style': 'Style',
+  'Keine media_player-Entitäten gefunden — richte zuerst Lautsprecher in Home Assistant ein.':
+    'No media_player entities found — set up speakers in Home Assistant first.',
+  'Noch kein Musik-Baustein gekauft — hier stehen später nur deine Styles.':
+    'No music building block bought yet — later only your own styles appear here.',
+  '# Bitte mindestens einen Lautsprecher anhaken.': '# Please tick at least one speaker.',
+  'links': 'left', 'rechts': 'right', 'oben': 'top', 'unten': 'bottom', 'mittig': 'middle',
   'Der Lizenz-Server hat gerade eine Störung. Das Add-on versucht es weiter.':
     'The license server is having trouble right now. The add-on keeps trying.'
 };
@@ -500,6 +519,7 @@ function setzeSprache(l) {
   spracheAnwenden();
   male(letzterStand);                                  // Status-Zeilen neu beschriften
   if (window.__kfSprache) window.__kfSprache();         // Kamera-Konfigurator ebenso
+  if (window.__mkSprache) window.__mkSprache();         // Musik-Konfigurator ebenso
 }
 (function () {
   var o = document.querySelectorAll('.lang-opt');
@@ -825,13 +845,27 @@ function yamlEscape(s) {
     hw.hidden = !!gekauft.length;
   }
 
+  var mkGeladen = false;
+  // Sprachwechsel: alles nachziehen, was dieses Skript selbst geschrieben hat.
+  window.__mkSprache = function () {
+    el('mk-laden').textContent = wt(mkGeladen ? 'Lautsprecher neu laden' : 'Meine Lautsprecher laden');
+    el('mk-lage-text').textContent = lageText();
+    var rows = document.querySelectorAll('#mk-players .kf-cam input[type=text]');
+    for (var i = 0; i < rows.length; i++) rows[i].placeholder = wt('Name');
+  };
   el('mk-laden').textContent = wt('Meine Lautsprecher laden');
   el('mk-laden').addEventListener('click', function () {
     var b = el('mk-laden'); b.disabled = true; b.textContent = wt('lädt …');
     fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
       lautsprecher = (d && d.media_players) || [];
       var ziel = el('mk-players'); ziel.innerHTML = '';
-      if (!lautsprecher.length) {
+      if (d && d.fehler) {
+        // Der Endpunkt hat geantwortet, aber mit einem echten Fehler — den sagen
+        // wir wörtlich, statt fälschlich „richte Lautsprecher ein" zu behaupten.
+        var pf = document.createElement('p'); pf.style.color = 'var(--rot)';
+        pf.textContent = wt('Konnte Home Assistant nicht erreichen.') + ' (' + d.fehler + ')';
+        ziel.appendChild(pf);
+      } else if (!lautsprecher.length) {
         var p = document.createElement('p'); p.style.color = 'var(--rot)';
         p.textContent = wt('Keine media_player-Entitäten gefunden — richte zuerst Lautsprecher in Home Assistant ein.');
         ziel.appendChild(p);
@@ -844,12 +878,13 @@ function yamlEscape(s) {
         row.appendChild(cb); row.appendChild(eid); row.appendChild(nm); ziel.appendChild(row);
       });
       stileMedia();
+      mkGeladen = true;
       el('mk-body').hidden = false;
       griffZeichnen();
     }).catch(function () {
       el('mk-players').textContent = wt('Konnte Home Assistant nicht erreichen.');
       el('mk-body').hidden = false;
-    }).finally(function () { b.disabled = false; b.textContent = wt('Lautsprecher neu laden'); });
+    }).finally(function () { b.disabled = false; b.textContent = wt(mkGeladen ? 'Lautsprecher neu laden' : 'Meine Lautsprecher laden'); });
   });
 
   el('mk-erzeugen').addEventListener('click', function () {

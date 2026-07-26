@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## 0.1.16
+
+- **Käufe brauchen nie wieder einen Home-Assistant-Neustart.** Das Add-on legt beim
+  Einrichten einmalig den JoAmy-Grundbaustein an (EINE Integration für alle Karten;
+  dafür ist genau ein Neustart nötig — beim Einrichten, nicht nach Käufen). Jeder
+  Kauf danach ist nur noch Dateien + Neuladen im laufenden Betrieb; die neue Karte
+  erscheint nach einem Aktualisieren der Seite.
+- **Musik-Konfigurator verfeinert:** vollständig übersetzt (DE/EN), ehrliche
+  Fehlermeldung, wenn Home Assistant nicht antwortet, und der erzeugte Code läuft
+  auf dem Handy nicht mehr seitlich aus dem Bild.
+
 ## 0.1.15
 
 - **Musik-Karte einrichten:** neuer Abschnitt — Lautsprecher anhaken, benennen und den

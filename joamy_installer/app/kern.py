@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.15"
+ADDON_VERSION = "0.1.16"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -225,7 +225,37 @@ class Installer:
     # ------------------------------------------------------------------
     async def start(self) -> None:
         self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60))
+        await self._hub_grundinstallation()
         await self.registrieren(erzwinge=True)
+
+    async def _hub_grundinstallation(self) -> None:
+        """Den JoAmy-Grundbaustein (Hub-Integration) beim Einrichten hinlegen.
+
+        Der Hub ist die EINE Integration für alle Karten. Er wird JETZT
+        installiert — beim Einrichten des Add-ons, bevor irgendetwas gekauft
+        ist. Der eine dafür nötige HA-Neustart passiert also im Onboarding
+        (wie bei HACS); jeder spätere Kauf ist nur noch Dateien + Reload und
+        braucht NIE einen Neustart. Kommt der Hub zusätzlich in Kauf-Paketen
+        an, überschreibt er sich selbst — harmlos, gleiche Quelle.
+        """
+        quelle = os.environ.get("HUB_DIR", "/hub/custom_components/joamy")
+        ziel = os.path.join(CONFIG_DIR, "custom_components", "joamy")
+        try:
+            if not os.path.isdir(quelle):
+                return                                   # Entwicklungs-/Testumgebung ohne Bundle
+            if not os.path.isfile(os.path.join(ziel, "__init__.py")):
+                os.makedirs(ziel, exist_ok=True)
+                for name in os.listdir(quelle):
+                    q = os.path.join(quelle, name)
+                    if os.path.isfile(q):
+                        shutil.copy2(q, os.path.join(ziel, name))
+                LOG.info("JoAmy-Grundbaustein nach custom_components/joamy gelegt "
+                         "(einmalig; lädt nach EINEM Neustart beim Einrichten).")
+            if "joamy" not in self.status.setdefault("flow_ausstehend", []):
+                self.status["flow_ausstehend"].append("joamy")
+                speichere_json(STATUS_DATEI, self.status)
+        except Exception as e:
+            LOG.warning("Grundbaustein-Installation verschoben (%s) — nächster Anlauf beim Poll.", e)
 
     async def _hole_ha_version(self) -> str:
         daten = await self._core_api("GET", "/config")
@@ -545,7 +575,13 @@ class Installer:
         return rumpf
 
     def _sichere_alt(self, domain: str, ts: str) -> bool:
-        """True = es gab eine Alt-Version (Update); False = Erstinstallation."""
+        """True = es gab eine Alt-Version (Update); False = Erstinstallation.
+
+        Beim HUB (domain 'joamy') wird KOPIERT statt verschoben: sein static/
+        enthält die Karten ALLER bisherigen Käufe — ein Verschieben würde sie
+        beim Kauf des nächsten Bausteins mitreißen (Audit-Befund). Das ZIP
+        überschreibt anschließend nur seine eigenen Dateien.
+        """
         if not re.fullmatch(r"[A-Za-z0-9_]+", domain or ""):
             return False
         quelle = os.path.join(CONFIG_DIR, "custom_components", domain)
@@ -553,8 +589,12 @@ class Installer:
             return False
         ziel = os.path.join(CONFIG_DIR, "joamy_backup", ts, domain)
         os.makedirs(os.path.dirname(ziel), exist_ok=True)
-        shutil.move(quelle, ziel)
-        LOG.info("Alte Version gesichert: /config/joamy_backup/%s/%s", ts, domain)
+        if domain == "joamy":
+            shutil.copytree(quelle, ziel, dirs_exist_ok=True)
+            LOG.info("Hub gesichert (Kopie): /config/joamy_backup/%s/%s", ts, domain)
+        else:
+            shutil.move(quelle, ziel)
+            LOG.info("Alte Version gesichert: /config/joamy_backup/%s/%s", ts, domain)
         return True
 
     # ------------------------------------------------------------------
@@ -677,8 +717,10 @@ class Installer:
         self._neustart_gemeldet = True
         text = ("Ein neuer JoAmy-Baustein ist eingezogen, konnte aber nicht im laufenden "
                 "Betrieb geladen werden. Starte Home Assistant bei Gelegenheit einmal neu "
-                "(Entwicklerwerkzeuge → Neu starten) — danach ist die Karte da. "
-                "Du kannst in Ruhe zu Ende machen, was du gerade tust.")
+                "(Entwicklerwerkzeuge → Neu starten) und **lade danach die App bzw. die Seite "
+                "einmal neu** — sonst kennt dein Browser die neue Karte noch nicht und zeigt "
+                "an ihrer Stelle „Konfigurationsfehler“. Du kannst in Ruhe zu Ende machen, "
+                "was du gerade tust.")
         ok = await self._core_api("POST", "/services/persistent_notification/create", {
             "notification_id": "joamy_neustart",
             "title": "JoAmy: Neustart bei Gelegenheit",

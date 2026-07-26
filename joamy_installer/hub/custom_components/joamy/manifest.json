@@ -1,0 +1,13 @@
+{
+  "domain": "joamy",
+  "name": "JoAmy",
+  "codeowners": ["@Jochi000"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "websocket_api"],
+  "documentation": "https://joamy.uk",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Jochi000/addons/issues",
+  "single_config_entry": true,
+  "version": "0.2.0"
+}

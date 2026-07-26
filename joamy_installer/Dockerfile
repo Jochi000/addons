@@ -10,6 +10,10 @@ RUN apk add --no-cache python3 py3-pip tzdata \
 
 COPY run.sh /
 COPY app /app
+# JoAmy-Grundbaustein (Hub-Integration): wird beim ersten Start nach
+# /config/custom_components/joamy kopiert. EIN Neustart beim Einrichten —
+# danach braucht kein Kauf je wieder einen (Hub lädt Karten per Reload).
+COPY hub /hub
 RUN chmod a+x /run.sh
 
 CMD [ "/run.sh" ]
