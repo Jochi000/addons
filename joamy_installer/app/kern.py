@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.16"
+ADDON_VERSION = "0.1.17"
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")

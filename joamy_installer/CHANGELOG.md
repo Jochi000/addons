@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## 0.1.17
+
+- Startfehler von 0.1.16 behoben (Rest-Verweis auf die entfernte Option auto_neustart).
+
 ## 0.1.16
 
 - **Käufe brauchen nie wieder einen Home-Assistant-Neustart.** Das Add-on legt beim

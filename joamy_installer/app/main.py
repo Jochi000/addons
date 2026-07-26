@@ -33,9 +33,9 @@ PORT = int(os.environ.get("INGRESS_PORT", "8321"))
 
 async def haupt() -> None:
     optionen = lade_optionen()
-    LOG.info("JoAmy Installer startet (Server %s, Poll alle %d s, auto_neustart %s).",
-             optionen["server_url"], optionen["poll_sekunden"],
-             "an" if optionen["auto_neustart"] else "aus")
+    LOG.info("JoAmy Installer startet (Server %s, Poll alle %d s). "
+             "Home Assistant wird von diesem Add-on NIE neu gestartet.",
+             optionen["server_url"], optionen["poll_sekunden"])
 
     installer = Installer(optionen)
     await installer.start()
