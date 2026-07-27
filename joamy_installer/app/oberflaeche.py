@@ -255,54 +255,6 @@ SEITE = """<!doctype html>
     <p data-i18n>Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.</p>
   </header>
 
-  <section class="karte" id="basics-karte" hidden>
-    <h2 data-i18n>Basics einrichten — Beleuchtung &amp; Jalousie</h2>
-    <p class="kf-intro" data-i18n>Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen
-      selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die
-      Karten soll, und füge den fertigen Code in dein Dashboard ein.</p>
-    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre Lampe oder Rollladen in
-      deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer
-      Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten.
-      Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
-    <button id="bx-laden" type="button">Meine Lichter &amp; Rollläden laden</button>
-    <div id="bx-body" hidden>
-      <div class="kf-abschnitt">
-        <span class="kf-titel" data-i18n>Lichter für die Beleuchtungs-Karte</span>
-        <div id="bx-lights"></div>
-      </div>
-      <div class="kf-abschnitt">
-        <span class="kf-titel" data-i18n>Rollläden für die Jalousie-Karte</span>
-        <div id="bx-covers"></div>
-      </div>
-      <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
-        <select id="bx-groesse">
-          <option value="normal">Normal — wie im JoAmy-Vorbild</option>
-          <option value="kompakt">Kompakt — eine Stufe kleiner</option>
-        </select>
-      </div>
-      <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-stil" data-i18n>Style</label>
-        <span id="bx-stil-hinweis" class="hinweis" hidden></span>
-        <select id="bx-stil"></select>
-      </div>
-      <button id="bx-erzeugen" type="button" data-i18n>Code erzeugen</button>
-      <div id="bx-ergebnis" hidden>
-        <div class="kf-abschnitt">
-          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell" einfügen</span>
-          <pre id="bx-yaml-licht"></pre>
-        </div>
-        <div class="kf-abschnitt">
-          <span class="kf-titel" data-i18n>Jalousie-Karte — als zweite Karte genauso einfügen</span>
-          <pre id="bx-yaml-jal"></pre>
-        </div>
-        <button id="bx-kopieren-licht" type="button" data-i18n>Licht-Code kopieren</button>
-        <button id="bx-kopieren-jal" type="button" data-i18n>Jalousie-Code kopieren</button>
-        <div id="bx-meldung"></div>
-      </div>
-    </div>
-  </section>
-
   <section class="karte">
     <h2 data-i18n>Kopplungscode</h2>
     <div id="code">—</div>
@@ -460,6 +412,54 @@ SEITE = """<!doctype html>
           <video id="mk-video" controls playsinline preload="none" src="anleitung.mp4"></video>
         </details>
         <div id="mk-meldung"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="karte" id="basics-karte" hidden>
+    <h2 data-i18n>Basics einrichten — Beleuchtung &amp; Jalousie</h2>
+    <p class="kf-intro" data-i18n>Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen
+      selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die
+      Karten soll, und füge den fertigen Code in dein Dashboard ein.</p>
+    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre Lampe oder Rollladen in
+      deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer
+      Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten.
+      Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
+    <button id="bx-laden" type="button">Meine Lichter &amp; Rollläden laden</button>
+    <div id="bx-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Lichter für die Beleuchtungs-Karte</span>
+        <div id="bx-lights"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Rollläden für die Jalousie-Karte</span>
+        <div id="bx-covers"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
+        <select id="bx-groesse">
+          <option value="normal">Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt">Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-stil" data-i18n>Style</label>
+        <span id="bx-stil-hinweis" class="hinweis" hidden></span>
+        <select id="bx-stil"></select>
+      </div>
+      <button id="bx-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <div id="bx-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell" einfügen</span>
+          <pre id="bx-yaml-licht"></pre>
+        </div>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Jalousie-Karte — als zweite Karte genauso einfügen</span>
+          <pre id="bx-yaml-jal"></pre>
+        </div>
+        <button id="bx-kopieren-licht" type="button" data-i18n>Licht-Code kopieren</button>
+        <button id="bx-kopieren-jal" type="button" data-i18n>Jalousie-Code kopieren</button>
+        <div id="bx-meldung"></div>
       </div>
     </div>
   </section>
