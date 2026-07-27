@@ -152,7 +152,13 @@ SEITE = """<!doctype html>
     background: rgba(194, 154, 108, .09); border: 1px solid rgba(194, 154, 108, .32); color: var(--tinte-2); }
   /* Kamera-Konfigurator */
   .kf-intro { color: var(--tinte-3); font-size: 14.5px; margin-bottom: 14px; }
-  #kf-body { display: grid; gap: 18px; margin-top: 16px; }
+  #kf-body, #mk-body, #bx-body, #bk-body { display: grid; gap: 18px; margin-top: 16px; }
+  /* Zeitschaltuhr hat keinen Body-Wrapper — gleicher Rhythmus per Margin. */
+  #zs-karte > .kf-abschnitt { margin: 16px 0; }
+  #zs-karte > button { margin-top: 18px; }
+  #kf-laden, #mk-laden, #bx-laden, #bk-laden, #zs-laden { margin: 14px 0 2px; }
+  /* Hinweise überall leise und klein — nicht nur im Ereignis-Block. */
+  .hinweis { color: var(--tinte-3); font-size: 13px; line-height: 1.55; }
   .kf-abschnitt { display: grid; gap: 8px; min-width: 0; }
   .kf-titel { font-size: 12px; font-weight: 600; letter-spacing: .1em;
               text-transform: uppercase; color: var(--tinte-3); }
@@ -169,7 +175,7 @@ SEITE = """<!doctype html>
   .kf-abschnitt label b { font-weight: 600; }
   /* NICHT `font: inherit` — die Felder sitzen in 14px-Labels und lägen damit
      unter 16px ⇒ iOS zoomt beim Antippen hinein. Größe hier fest setzen. */
-  select, input[type=text], input[type=number] {
+  select, input[type=text], input[type=number], input[type=search] {
     font-family: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--nacht-linie);
     border-radius: var(--r-12); background: var(--nacht-vertieft); color: var(--tinte-1);
     width: 100%; min-width: 0; max-width: 100%; appearance: none; -webkit-appearance: none; }
@@ -229,23 +235,25 @@ SEITE = """<!doctype html>
   .mk-griff:active { cursor: grabbing; }
   .mk-lage { font: 12.5px var(--mono); color: var(--tinte-3); }
   /* ---- Button-Baukasten (Basics) ---- */
-  .bk-trenn { border-top: 1px solid var(--nacht-linie); margin: 22px 0 14px; }
-  .bk-zeilen { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: start; }
+  .bk-trenn { border-top: 1px solid var(--nacht-linie); margin: 28px 0 18px; }
+  .bk-zeilen { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: start; }
   @media (max-width: 640px) { .bk-zeilen { grid-template-columns: 1fr; } }
   .bk-buehne { display: grid; gap: 10px; justify-items: center; }
-  .bk-knopf { position: relative; width: 214px; min-height: 152px; border-radius: 18px; cursor: pointer;
-    background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie);
-    display: grid; place-items: center; align-content: center; gap: 7px; padding: 30px 12px 18px;
+  /* Groß zum BEARBEITEN (Drag-and-drop braucht Fläche) — die echte Karte
+     im Dashboard bleibt in ihrer normalen Größe. */
+  .bk-knopf { position: relative; width: 310px; max-width: 100%; min-height: 220px; border-radius: 20px;
+    cursor: pointer; background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie);
+    display: grid; place-items: center; align-content: center; gap: 8px; padding: 40px 14px 24px;
     user-select: none; touch-action: manipulation; }
-  .bk-ico { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
+  .bk-ico { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center;
     border: 1.5px solid var(--nacht-linie); color: var(--tinte-2); background: rgba(255,255,255,.04);
     transition: color .25s, border-color .25s, filter .25s; }
-  .bk-ico svg { width: 30px; height: 30px; }
+  .bk-ico svg { width: 40px; height: 40px; }
   .bk-knopf.an .bk-ico { color: var(--knopf-an, var(--akzent)); border-color: currentColor; }
   .bk-knopf:not(.an):not(.sicher):not(.offen) .bk-ico { color: var(--knopf-aus, var(--tinte-2)); }
   .bk-knopf.sicher .bk-ico { color: var(--gruen); border-color: currentColor; filter: drop-shadow(0 0 9px var(--gruen)); }
   .bk-knopf.offen .bk-ico { color: var(--rot); border-color: currentColor; filter: drop-shadow(0 0 9px var(--rot)); }
-  .bk-name { font-size: 14.5px; font-weight: 600; color: var(--tinte-1); max-width: 100%;
+  .bk-name { font-size: 16px; font-weight: 600; color: var(--tinte-1); max-width: 100%;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bk-status { font-size: 12px; color: var(--tinte-3); min-height: 1.2em; }
   @keyframes bkPuls { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
@@ -272,7 +280,7 @@ SEITE = """<!doctype html>
   .bk-punkt[data-a="ur"] { left: 85%; top: 86%; }
   .bk-punkt.an { border-style: solid; border-color: var(--akzent); background: rgba(255,255,255,.12);
     transform: translate(-50%,-50%) scale(1.7); }
-  .bk-mittezone { position: absolute; left: 50%; top: 50%; width: 98px; height: 98px; border-radius: 50%;
+  .bk-mittezone { position: absolute; left: 50%; top: 50%; width: 132px; height: 132px; border-radius: 50%;
     transform: translate(-50%,-50%); border: 1.5px dashed transparent; transition: border-color .15s, background .15s; }
   .bk-mittezone.an { border-color: var(--gruen); background: rgba(89,201,138,.10); }
   .bk-knopf.magnet { border-color: var(--akzent); }
@@ -296,7 +304,7 @@ SEITE = """<!doctype html>
   .bk-chip u { text-decoration: none; color: var(--tinte-3); cursor: pointer; padding: 0 2px; font-weight: 700; }
   .bk-chip.zieht { opacity: .92; box-shadow: 0 6px 18px rgba(0,0,0,.5); cursor: grabbing; }
   .bk-chip.auf-karte { position: absolute; transform: translate(-50%,-50%); max-width: 46%;
-    padding: 2px 8px; font-size: 11px; z-index: 3; }
+    padding: 3px 9px; font-size: 12px; z-index: 3; }
   .bk-chip.auf-karte i, .bk-chip.auf-karte u { display: none; }
   .bk-chip.auf-karte.geraet i { display: block; }
   .bk-chip.auf-karte.plopp { animation: bkPlopp .35s cubic-bezier(.2,1.4,.4,1); }
@@ -575,8 +583,8 @@ SEITE = """<!doctype html>
     </div>
     <div class="bk-trenn"></div>
     <h2 data-i18n>Button-Karte — dein Baukasten</h2>
-    <p class="kf-intro" data-i18n>Bau deinen Button hier visuell zusammen: Gerät wählen, Symbol antippen,
-      Sensorwerte mit dem Finger auf eine Ecke der Vorschau ziehen. Ein Klick — der fertige Code ist kopiert.</p>
+    <p class="kf-intro" data-i18n>Bau deinen Button hier visuell zusammen: Zieh ein Gerät in die Mitte der Vorschau,
+      Werte dorthin, wo du sie haben willst, tippe ein Symbol an. Ein Klick — der fertige Code ist kopiert.</p>
     <button id="bk-laden" type="button" data-i18n>Baukasten öffnen</button>
     <div id="bk-body" hidden>
       <div class="bk-zeilen">
@@ -771,8 +779,8 @@ var UEB = {
   'Licht-Code kopieren': 'Copy lighting code',
   'Jalousie-Code kopieren': 'Copy blinds code',
   'Button-Karte — dein Baukasten': 'Button card — your builder kit',
-  'Bau deinen Button hier visuell zusammen: Gerät wählen, Symbol antippen, Sensorwerte mit dem Finger auf eine Ecke der Vorschau ziehen. Ein Klick — der fertige Code ist kopiert.':
-    'Build your button visually right here: pick a device, tap a symbol, drag sensor values onto a corner of the preview. One click — the finished code is copied.',
+  'Bau deinen Button hier visuell zusammen: Zieh ein Gerät in die Mitte der Vorschau, Werte dorthin, wo du sie haben willst, tippe ein Symbol an. Ein Klick — der fertige Code ist kopiert.':
+    'Build your button visually right here: drag a device into the middle of the preview, drop values wherever you want them, tap a symbol. One click — the finished code is copied.',
   'Baukasten öffnen': 'Open the builder kit',
   'Tipp: Tippe auf die Vorschau — sie wechselt zwischen An und Aus, so siehst du Farben und Bewegung in beiden Zuständen.':
     'Tip: tap the preview — it toggles between on and off so you can see colours and motion in both states.',

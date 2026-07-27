@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## 0.1.33
+
+- Feinschliff der Oberfläche: einheitlicher Abstand in allen Konfiguratoren
+  (nichts klebt mehr aneinander), Hinweise überall dezent, Suchfeld im
+  dunklen Stil. Die Baukasten-Vorschau ist zum Bearbeiten deutlich größer —
+  die Karte im Dashboard bleibt unverändert.
+
 ## 0.1.32
 
 - Button-Baukasten ist jetzt eine Magnet-Leinwand: ALLE Entitäten (Sensoren
