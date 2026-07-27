@@ -204,7 +204,7 @@ SEITE = """<!doctype html>
   .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
   .kf-quellen button b { display: block; font-size: 14px; }
   .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
-  pre#kf-yaml, pre#mk-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -254,6 +254,54 @@ SEITE = """<!doctype html>
     <h1 data-i18n>Installer</h1>
     <p data-i18n>Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.</p>
   </header>
+
+  <section class="karte" id="basics-karte" hidden>
+    <h2 data-i18n>Basics einrichten — Beleuchtung &amp; Jalousie</h2>
+    <p class="kf-intro" data-i18n>Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen
+      selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die
+      Karten soll, und füge den fertigen Code in dein Dashboard ein.</p>
+    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre Lampe oder Rollladen in
+      deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer
+      Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten.
+      Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
+    <button id="bx-laden" type="button">Meine Lichter &amp; Rollläden laden</button>
+    <div id="bx-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Lichter für die Beleuchtungs-Karte</span>
+        <div id="bx-lights"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Rollläden für die Jalousie-Karte</span>
+        <div id="bx-covers"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
+        <select id="bx-groesse">
+          <option value="normal">Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt">Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-stil" data-i18n>Style</label>
+        <span id="bx-stil-hinweis" class="hinweis" hidden></span>
+        <select id="bx-stil"></select>
+      </div>
+      <button id="bx-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <div id="bx-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell" einfügen</span>
+          <pre id="bx-yaml-licht"></pre>
+        </div>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Jalousie-Karte — als zweite Karte genauso einfügen</span>
+          <pre id="bx-yaml-jal"></pre>
+        </div>
+        <button id="bx-kopieren-licht" type="button" data-i18n>Licht-Code kopieren</button>
+        <button id="bx-kopieren-jal" type="button" data-i18n>Jalousie-Code kopieren</button>
+        <div id="bx-meldung"></div>
+      </div>
+    </div>
+  </section>
 
   <section class="karte">
     <h2 data-i18n>Kopplungscode</h2>
@@ -659,6 +707,7 @@ function male(st) {
   var gekauftB = {};
   (st.bausteine || []).forEach(function (b) { gekauftB[b.baustein] = true; });
   if (el('konfig-karte')) el('konfig-karte').hidden = !gekauftB.kamera;
+  if (el('basics-karte')) el('basics-karte').hidden = !gekauftB.basics;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
@@ -872,6 +921,66 @@ function yamlEscape(s) {
       if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(fertig).catch(fallback); } else { fallback(); }
     });
   }
+})();
+
+/* ---- Basics: Lichter + Rollläden wählen → zwei fertige Codes ---- */
+(function () {
+  if (!document.getElementById('bx-laden')) return;
+  var geladen = false;
+  function kaesten(ziel, liste, prefix) {
+    var wrap = el(ziel); wrap.innerHTML = '';
+    liste.forEach(function (e, i) {
+      var z = document.createElement('label'); z.className = 'kf-cam';
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 8; cb.dataset.entity = e.entity;
+      var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
+      z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
+    });
+    if (!liste.length) { var p = document.createElement('p'); p.className = 'hinweis';
+      p.textContent = wt('Keine gefunden.'); wrap.appendChild(p); }
+  }
+  el('bx-laden').addEventListener('click', function () {
+    var b = this; b.disabled = true; b.textContent = wt('Lade …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      kaesten('bx-lights', d.lights || [], 'l');
+      kaesten('bx-covers', d.covers || [], 'c');
+      var stil = el('bx-stil'); stil.innerHTML = '';
+      var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'basics'; })[0];
+      var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
+      var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
+      liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
+      var hw = el('bx-stil-hinweis');
+      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      el('bx-body').hidden = false; geladen = true;
+    }).catch(function () {
+      var p = document.createElement('p'); p.style.color = 'var(--rot)';
+      p.textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('bx-lights').innerHTML = ''; el('bx-lights').appendChild(p); el('bx-body').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Meine Lichter & Rollläden laden'); });
+  });
+  function angehakte(ziel) {
+    return Array.prototype.slice.call(el(ziel).querySelectorAll('input:checked')).map(function (c) { return c.dataset.entity; });
+  }
+  function baueYaml(typ, entities) {
+    var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
+    if (el('bx-groesse').value === 'kompakt') L.push('groesse: kompakt');
+    L.push('entities:');
+    entities.forEach(function (e2) { L.push('  - ' + e2); });
+    return L.join('\n');
+  }
+  el('bx-erzeugen').addEventListener('click', function () {
+    var li = angehakte('bx-lights'), co = angehakte('bx-covers');
+    el('bx-ergebnis').hidden = false; el('bx-meldung').textContent = '';
+    el('bx-yaml-licht').textContent = li.length ? baueYaml('joamy-licht-card', li) : wt('# Kein Licht angehakt.');
+    el('bx-yaml-jal').textContent = co.length ? baueYaml('joamy-jalousie-card', co) : wt('# Kein Rollladen angehakt.');
+  });
+  function kopiere(quelle) {
+    var t2 = el(quelle).textContent;
+    var fertig = function () { el('bx-meldung').style.color = 'var(--gruen)'; el('bx-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
+  }
+  el('bx-kopieren-licht').addEventListener('click', function () { kopiere('bx-yaml-licht'); });
+  el('bx-kopieren-jal').addEventListener('click', function () { kopiere('bx-yaml-jal'); });
 })();
 
 /* ---- Musik-Karte: Lautsprecher wählen + Griff auf dem Dashboard platzieren ----

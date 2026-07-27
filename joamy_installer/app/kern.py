@@ -842,6 +842,8 @@ class Installer:
             "binary_sensors": liste("binary_sensor."),
             "buttons": liste("button."),
             "media_players": liste("media_player."),
+            "lights": liste("light."),
+            "covers": liste("cover."),
         }
 
     # ------------------------------------------------------------------
