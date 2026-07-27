@@ -418,7 +418,15 @@ class ZeitschaltuhrEngine:
             try:
                 naechste = await self._tick(erst_lauf)
                 erst_lauf = False
-            except Exception:
+            except Exception as e:
+                # Baustein (Karte) noch nicht installiert → der Hub kennt die
+                # WS-Kommandos nicht. Leise schlafen statt Fehlerflut — sobald
+                # die Karte einzieht, greift der nächste Anlauf.
+                if "unknown_command" in str(e):
+                    LOG.info("Zeitschaltuhr: Baustein noch nicht installiert — schlafe 5 min.")
+                    await asyncio.sleep(300)
+                    erst_lauf = True
+                    continue
                 LOG.exception("Zeitschaltuhr-Tick fehlgeschlagen — weiter")
                 naechste = TICK_MAX_S
             try:

@@ -47,13 +47,14 @@ async def haupt() -> None:
         from zeitschaltuhr import ZeitschaltuhrEngine
         from kern import SUPERVISOR_URL, SUPERVISOR_TOKEN
         while True:
-            if "zeitschaltuhr" in (installer.status.get("installiert") or {}):
-                engine = ZeitschaltuhrEngine(installer.session, SUPERVISOR_URL,
-                                             os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN))
-                try:
-                    await engine.laufe()
-                except Exception:
-                    LOG.exception("Zeitschaltuhr-Engine gestorben — Neustart in 30 s")
+            # Die Engine gattert sich selbst: kennt der Hub den Baustein (Karte
+            # installiert), läuft sie — sonst schläft sie leise in 5-min-Schritten.
+            engine = ZeitschaltuhrEngine(installer.session, SUPERVISOR_URL,
+                                         os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN))
+            try:
+                await engine.laufe()
+            except Exception:
+                LOG.exception("Zeitschaltuhr-Engine gestorben — Neustart in 30 s")
             await asyncio.sleep(30)
 
     asyncio.get_running_loop().create_task(zeitschaltuhr_wache())
