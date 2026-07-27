@@ -296,6 +296,13 @@ SEITE = """<!doctype html>
         <div id="kf-cams"></div>
       </div>
       <div class="kf-abschnitt">
+        <label class="kf-titel" for="kf-groesse" data-i18n>Größe</label>
+        <select id="kf-groesse">
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
         <label class="kf-titel" for="kf-stil" data-i18n>Style (kannst du später jederzeit über 🎨 wechseln)</label>
         <span id="kf-stil-hinweis" class="hinweis" hidden></span>
         <select id="kf-stil">
@@ -389,6 +396,13 @@ SEITE = """<!doctype html>
           </div>
           <div class="mk-lage"><span id="mk-lage-text">rechts, mittig</span></div>
         </div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="mk-groesse" data-i18n>Größe</label>
+        <select id="mk-groesse">
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+        </select>
       </div>
       <div class="kf-abschnitt">
         <label class="kf-titel" for="mk-stil" data-i18n>Style</label>
@@ -490,6 +504,21 @@ SEITE = """<!doctype html>
       laufenden Timer überleben jeden Neustart von Home Assistant — sie liegen sicher in deinem
       Home Assistant, nicht in der Karte.</span></div>
     <div class="kf-abschnitt">
+      <label class="kf-titel" for="zs-groesse" data-i18n>Größe</label>
+      <select id="zs-groesse">
+        <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+        <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+      </select>
+    </div>
+    <div class="kf-abschnitt">
+      <label class="kf-titel" for="zs-ansicht" data-i18n>Darstellung der Karte</label>
+      <select id="zs-ansicht">
+        <option value="voll" data-i18n>Alles auf den ersten Blick — alle Zeitpläne direkt in der Karte</option>
+        <option value="kompakt" data-i18n>Kleiner Überblick — Anzahl und nächste Schaltung; Antippen öffnet alles</option>
+      </select>
+      <span class="hinweis" data-i18n>Der kleine Überblick hält dein Dashboard schlank, auch wenn du viele Zeitpläne hast.</span>
+    </div>
+    <div class="kf-abschnitt">
       <label class="kf-titel" for="zs-stil" data-i18n>Style</label>
       <span id="zs-stil-hinweis" class="hinweis" hidden></span>
       <select id="zs-stil"></select>
@@ -525,6 +554,10 @@ function el(id) { return document.getElementById(id); }
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
   'Zeitschaltuhr einrichten': 'Set up the timer switch',
+  'Darstellung der Karte': 'Card layout',
+  'Alles auf den ersten Blick — alle Zeitpläne direkt in der Karte': 'Everything at a glance — all schedules right in the card',
+  'Kleiner Überblick — Anzahl und nächste Schaltung; Antippen öffnet alles': 'Small overview — count and next switch time; tap to open everything',
+  'Der kleine Überblick hält dein Dashboard schlank, auch wenn du viele Zeitpläne hast.': 'The small overview keeps your dashboard lean, even with many schedules.',
   'Wie an einer klassischen Zeitschaltuhr: Gerät wählen, Ein- und Aus-Zeit stecken, fertig. Geräte, Zeiten und Timer stellst du direkt in der Karte ein — hier brauchst du nur den Code fürs Dashboard.':
     'Just like a classic plug-in timer: pick a device, set the on and off time, done. Devices, times and quick timers are set right in the card — here you only need the code for your dashboard.',
   'Bleibt alles erhalten:': 'Everything is kept:',
@@ -978,6 +1011,7 @@ function yamlEscape(s) {
       var L = [];
       L.push('type: custom:joamy-kamera-card');
       L.push('stil: ' + el('kf-stil').value);
+      if (el('kf-groesse') && el('kf-groesse').value === 'kompakt') L.push('groesse: kompakt');
       L.push('cameras:');
       cams.forEach(function (c) { L.push('  - entity: ' + c.entity); L.push('    name: ' + yamlEscape(c.name)); });
       if (el('kf-tk-an').checked) {
@@ -1025,7 +1059,10 @@ function yamlEscape(s) {
   el('zs-erzeugen').addEventListener('click', function () {
     stileZs();
     el('zs-ergebnis').hidden = false; el('zs-meldung').textContent = '';
-    el('zs-yaml').textContent = ['type: custom:joamy-zeitschaltuhr-card', 'stil: ' + el('zs-stil').value].join('\\n');
+    var zeilen = ['type: custom:joamy-zeitschaltuhr-card', 'stil: ' + el('zs-stil').value];
+    if (el('zs-ansicht') && el('zs-ansicht').value === 'kompakt') zeilen.push('ansicht: kompakt');
+    if (el('zs-groesse') && el('zs-groesse').value === 'kompakt') zeilen.push('groesse: kompakt');
+    el('zs-yaml').textContent = zeilen.join('\\n');
   });
   el('zs-kopieren').addEventListener('click', function () {
     var t2 = el('zs-yaml').textContent;
@@ -1232,6 +1269,7 @@ function yamlEscape(s) {
     el('mk-ergebnis').hidden = false; el('mk-meldung').textContent = '';
     if (!gewaehlt.length) { el('mk-yaml').textContent = wt('# Bitte mindestens einen Lautsprecher anhaken.'); return; }
     var L = ['type: custom:joamy-media-card', 'stil: ' + el('mk-stil').value, 'players:'];
+    if (el('mk-groesse') && el('mk-groesse').value === 'kompakt') L.splice(2, 0, 'groesse: kompakt');
     gewaehlt.forEach(function (p) { L.push('  - entity: ' + p.entity); L.push('    name: ' + yamlEscape(p.name)); });
     L.push('drawer:');
     L.push('  seite: ' + lage.seite);
