@@ -204,7 +204,7 @@ SEITE = """<!doctype html>
   .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
   .kf-quellen button b { display: block; font-size: 14px; }
   .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
-  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml, pre#bk-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -228,6 +228,64 @@ SEITE = """<!doctype html>
     box-shadow: 0 2px 10px rgba(0,0,0,.45); touch-action: none; }
   .mk-griff:active { cursor: grabbing; }
   .mk-lage { font: 12.5px var(--mono); color: var(--tinte-3); }
+  /* ---- Button-Baukasten (Basics) ---- */
+  .bk-trenn { border-top: 1px solid var(--nacht-linie); margin: 22px 0 14px; }
+  .bk-zeilen { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 640px) { .bk-zeilen { grid-template-columns: 1fr; } }
+  .bk-buehne { display: grid; gap: 10px; justify-items: center; }
+  .bk-knopf { position: relative; width: 214px; min-height: 152px; border-radius: 18px; cursor: pointer;
+    background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie);
+    display: grid; place-items: center; align-content: center; gap: 7px; padding: 30px 12px 18px;
+    user-select: none; touch-action: manipulation; }
+  .bk-ico { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
+    border: 1.5px solid var(--nacht-linie); color: var(--tinte-2); background: rgba(255,255,255,.04);
+    transition: color .25s, border-color .25s, filter .25s; }
+  .bk-ico svg { width: 30px; height: 30px; }
+  .bk-knopf.an .bk-ico { color: var(--knopf-an, var(--akzent)); border-color: currentColor; }
+  .bk-knopf:not(.an):not(.sicher):not(.offen) .bk-ico { color: var(--knopf-aus, var(--tinte-2)); }
+  .bk-knopf.sicher .bk-ico { color: var(--gruen); border-color: currentColor; filter: drop-shadow(0 0 9px var(--gruen)); }
+  .bk-knopf.offen .bk-ico { color: var(--rot); border-color: currentColor; filter: drop-shadow(0 0 9px var(--rot)); }
+  .bk-name { font-size: 14.5px; font-weight: 600; color: var(--tinte-1); max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bk-status { font-size: 12px; color: var(--tinte-3); min-height: 1.2em; }
+  @keyframes bkPuls { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  @keyframes bkDreh { to { transform: rotate(360deg); } }
+  @keyframes bkWippe { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+  @keyframes bkFunkeln { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.88); } }
+  .bk-knopf.an.m-glow .bk-ico { filter: drop-shadow(0 0 10px var(--knopf-an, var(--akzent))); }
+  .bk-knopf.an.m-glow .bk-ico svg { animation: bkPuls 3.2s ease-in-out infinite; }
+  .bk-knopf.an.m-puls .bk-ico svg { animation: bkPuls 1.6s ease-in-out infinite; }
+  .bk-knopf.an.m-dreh .bk-ico svg { animation: bkDreh 2.6s linear infinite; }
+  .bk-knopf.an.m-wippe .bk-ico svg { animation: bkWippe 1.8s ease-in-out infinite; transform-origin: 50% 20%; }
+  .bk-knopf.an.m-funkeln .bk-ico svg { animation: bkFunkeln 2.2s ease-in-out infinite; }
+  .bk-slot { position: absolute; width: 68px; height: 28px; border: 1.5px dashed transparent;
+    border-radius: 9px; display: grid; place-items: center; transition: border-color .2s, background .2s; }
+  .bk-slot[data-pos="ol"] { top: 7px; left: 7px; }
+  .bk-slot[data-pos="or"] { top: 7px; right: 7px; }
+  .bk-slot[data-pos="ul"] { bottom: 7px; left: 7px; }
+  .bk-slot[data-pos="ur"] { bottom: 7px; right: 7px; }
+  body.bk-ziehen .bk-slot { border-color: rgba(255,255,255,.32); }
+  .bk-slot.ziel { border-color: var(--akzent); background: rgba(255,255,255,.08); }
+  .bk-sensorwahl { display: flex; gap: 8px; width: 100%; }
+  .bk-sensorwahl select { flex: 1; min-width: 0; max-width: 100%; }
+  #bk-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 34px; width: 100%; align-content: flex-start; }
+  .bk-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px;
+    background: rgba(255,255,255,.06); border: 1px solid var(--nacht-linie); font-size: 12px;
+    color: var(--tinte-2); cursor: grab; touch-action: none; user-select: none; max-width: 220px; }
+  .bk-chip b { color: var(--tinte-1); font-weight: 600; white-space: nowrap; }
+  .bk-chip i { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bk-chip u { text-decoration: none; color: var(--tinte-3); cursor: pointer; padding: 0 2px; font-weight: 700; }
+  .bk-chip.zieht { opacity: .92; box-shadow: 0 6px 18px rgba(0,0,0,.5); cursor: grabbing; }
+  .bk-slot .bk-chip { max-width: 100%; padding: 2px 7px; font-size: 11px; }
+  .bk-slot .bk-chip i, .bk-slot .bk-chip u { display: none; }
+  .bk-symgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; width: 100%; }
+  .bk-symgrid button { padding: 9px 0; display: grid; place-items: center; color: var(--tinte-2); font-size: 11px; }
+  .bk-symgrid button.gewaehlt { border-color: var(--akzent); color: var(--tinte); }
+  .bk-symgrid svg { width: 22px; height: 22px; }
+  .bk-felder { display: grid; gap: 14px; min-width: 0; }
+  .bk-farben { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; color: var(--tinte-2); }
+  .bk-farben input[type="color"] { width: 46px; height: 30px; padding: 2px; border: 1px solid var(--nacht-linie);
+    border-radius: 8px; background: var(--nacht-vertieft); }
   footer { text-align: center; color: var(--tinte-3); font-size: 13px; padding-top: 4px; }
   footer a { color: var(--akzent); text-decoration: none; }
 </style>
@@ -493,6 +551,100 @@ SEITE = """<!doctype html>
         <div id="bx-meldung"></div>
       </div>
     </div>
+    <div class="bk-trenn"></div>
+    <h2 data-i18n>Button-Karte — dein Baukasten</h2>
+    <p class="kf-intro" data-i18n>Bau deinen Button hier visuell zusammen: Gerät wählen, Symbol antippen,
+      Sensorwerte mit dem Finger auf eine Ecke der Vorschau ziehen. Ein Klick — der fertige Code ist kopiert.</p>
+    <button id="bk-laden" type="button" data-i18n>Baukasten öffnen</button>
+    <div id="bk-body" hidden>
+      <div class="bk-zeilen">
+        <div class="bk-buehne">
+          <div id="bk-vorschau" class="bk-knopf">
+            <div class="bk-slot" data-pos="ol"></div>
+            <div class="bk-slot" data-pos="or"></div>
+            <div class="bk-slot" data-pos="ul"></div>
+            <div class="bk-slot" data-pos="ur"></div>
+            <div class="bk-ico" id="bk-ico"></div>
+            <div class="bk-name" id="bk-name">Button</div>
+            <div class="bk-status" id="bk-status"></div>
+          </div>
+          <span class="hinweis" data-i18n>Tipp: Tippe auf die Vorschau — sie wechselt zwischen An und Aus, so siehst du Farben und Bewegung in beiden Zuständen.</span>
+          <div class="kf-abschnitt">
+            <span class="kf-titel" data-i18n>Zusatzwerte — Sensor wählen und auf eine Ecke der Vorschau ziehen</span>
+            <div class="bk-sensorwahl">
+              <select id="bk-sensor"></select>
+              <button id="bk-sensor-add" type="button" data-i18n>+ Hinzufügen</button>
+            </div>
+            <div id="bk-chips"></div>
+          </div>
+        </div>
+        <div class="bk-felder">
+          <div class="kf-abschnitt">
+            <label class="kf-titel" for="bk-funktion" data-i18n>Funktion</label>
+            <select id="bk-funktion">
+              <option value="geraet" data-i18n>Ein Gerät schalten</option>
+              <option value="sprung" data-i18n>Sprung zu einem anderen Dashboard</option>
+            </select>
+          </div>
+          <div class="kf-abschnitt" id="bk-feld-entity">
+            <label class="kf-titel" for="bk-entity" data-i18n>Gerät</label>
+            <select id="bk-entity"></select>
+            <span class="hinweis" data-i18n>Symbol, Farbe und Bewegung passen sich automatisch dem Gerät an — unten kannst du alles ändern.</span>
+          </div>
+          <div class="kf-abschnitt" id="bk-feld-ziel" hidden>
+            <label class="kf-titel" for="bk-ziel" data-i18n>Ziel (Pfad des Dashboards)</label>
+            <input id="bk-ziel" type="text" placeholder="/lovelace/kameras">
+            <span class="hinweis" data-i18n>Den Pfad siehst du oben in der Adresszeile, wenn du das Ziel-Dashboard offen hast.</span>
+          </div>
+          <div class="kf-abschnitt">
+            <label class="kf-titel" for="bk-label" data-i18n>Beschriftung</label>
+            <input id="bk-label" type="text">
+          </div>
+          <div class="kf-abschnitt">
+            <span class="kf-titel" data-i18n>Symbol</span>
+            <div id="bk-symgrid" class="bk-symgrid"></div>
+          </div>
+          <div class="kf-abschnitt" id="bk-feld-farben">
+            <label class="kf-cam"><input type="checkbox" id="bk-farben-eigene">
+              <span data-i18n>Eigene Farben statt der Style-Farben</span></label>
+            <div class="bk-farben" id="bk-farben" hidden>
+              <label for="bk-farbe-an" data-i18n>Farbe An</label><input type="color" id="bk-farbe-an" value="#59c98a">
+              <label for="bk-farbe-aus" data-i18n>Farbe Aus</label><input type="color" id="bk-farbe-aus" value="#8a8f98">
+            </div>
+          </div>
+          <div class="kf-abschnitt" id="bk-feld-motion">
+            <label class="kf-titel" for="bk-motion" data-i18n>Bewegung</label>
+            <select id="bk-motion">
+              <option value="std" data-i18n>Automatisch — passend zum Gerät</option>
+              <option value="glow" data-i18n>Glühen</option>
+              <option value="puls" data-i18n>Pulsieren</option>
+              <option value="dreh" data-i18n>Drehen</option>
+              <option value="wippe" data-i18n>Wippen</option>
+              <option value="funkeln" data-i18n>Funkeln</option>
+              <option value="aus" data-i18n>Aus — keine Bewegung</option>
+            </select>
+            <span class="hinweis" id="bk-motion-hinweis"></span>
+          </div>
+          <div class="kf-abschnitt">
+            <label class="kf-titel" for="bk-groesse" data-i18n>Größe</label>
+            <select id="bk-groesse">
+              <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+              <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+            </select>
+          </div>
+          <div class="kf-abschnitt">
+            <label class="kf-titel" for="bk-stil" data-i18n>Style</label>
+            <span id="bk-stil-hinweis" class="hinweis" hidden></span>
+            <select id="bk-stil"></select>
+          </div>
+        </div>
+      </div>
+      <button id="bk-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
+      <div class="kf-abschnitt" id="bk-ergebnis" hidden>
+        <pre id="bk-yaml"></pre>
+      </div>
+      <div id="bk-meldung"></div>
+    </div>
   </section>
 
   <section class="karte" id="zs-karte" hidden>
@@ -593,6 +745,57 @@ var UEB = {
   'Jalousie-Karte — als zweite Karte genauso einfügen': 'Blinds card — paste the same way as a second card',
   'Licht-Code kopieren': 'Copy lighting code',
   'Jalousie-Code kopieren': 'Copy blinds code',
+  'Button-Karte — dein Baukasten': 'Button card — your builder kit',
+  'Bau deinen Button hier visuell zusammen: Gerät wählen, Symbol antippen, Sensorwerte mit dem Finger auf eine Ecke der Vorschau ziehen. Ein Klick — der fertige Code ist kopiert.':
+    'Build your button visually right here: pick a device, tap a symbol, drag sensor values onto a corner of the preview. One click — the finished code is copied.',
+  'Baukasten öffnen': 'Open the builder kit',
+  'Tipp: Tippe auf die Vorschau — sie wechselt zwischen An und Aus, so siehst du Farben und Bewegung in beiden Zuständen.':
+    'Tip: tap the preview — it toggles between on and off so you can see colours and motion in both states.',
+  'Zusatzwerte — Sensor wählen und auf eine Ecke der Vorschau ziehen': 'Extra values — pick a sensor and drag it onto a corner of the preview',
+  '+ Hinzufügen': '+ Add',
+  'Funktion': 'Function',
+  'Ein Gerät schalten': 'Switch a device',
+  'Sprung zu einem anderen Dashboard': 'Jump to another dashboard',
+  'Gerät': 'Device',
+  'Symbol, Farbe und Bewegung passen sich automatisch dem Gerät an — unten kannst du alles ändern.':
+    'Symbol, colour and motion adapt to the device automatically — you can change everything below.',
+  'Ziel (Pfad des Dashboards)': 'Target (dashboard path)',
+  'Den Pfad siehst du oben in der Adresszeile, wenn du das Ziel-Dashboard offen hast.':
+    'You can see the path in the address bar while the target dashboard is open.',
+  'Beschriftung': 'Label',
+  'Symbol': 'Symbol',
+  'Eigene Farben statt der Style-Farben': 'Custom colours instead of the style colours',
+  'Farbe An': 'Colour on',
+  'Farbe Aus': 'Colour off',
+  'Bewegung': 'Motion',
+  'Automatisch — passend zum Gerät': 'Automatic — matched to the device',
+  'Glühen': 'Glow',
+  'Pulsieren': 'Pulse',
+  'Drehen': 'Spin',
+  'Wippen': 'Rock',
+  'Funkeln': 'Sparkle',
+  'Aus — keine Bewegung': 'Off — no motion',
+  'Automatisch heißt hier:': 'Automatic here means:',
+  'Automatisch': 'Automatic',
+  'Schlösser': 'Locks',
+  'Lichter': 'Lights',
+  'Schalter': 'Switches',
+  'Ventilatoren': 'Fans',
+  'Rollläden': 'Blinds',
+  'Szenen': 'Scenes',
+  'Skripte': 'Scripts',
+  'Knöpfe': 'Buttons',
+  'Helfer (an/aus)': 'Helpers (on/off)',
+  'Medien': 'Media players',
+  'automatisch — Name des Geräts': 'automatic — device name',
+  'Erst ein Gerät wählen — oder oben auf „Sprung“ stellen.': 'Pick a device first — or set “Jump” above.',
+  'Meine Geräte & Sensoren laden': 'Load my devices & sensors',
+  'Keine Sensoren gefunden.': 'No sensors found.',
+  'Weiter': 'Go',
+  'verriegelt': 'locked',
+  'offen': 'open',
+  'an': 'on',
+  'aus': 'off',
   'Keine gefunden.': 'None found.',
   'Lade …': 'Loading …',
   'Neu laden': 'Reload',
@@ -1148,6 +1351,257 @@ function yamlEscape(s) {
   }
   el('bx-kopieren-licht').addEventListener('click', function () { kopiere('bx-yaml-licht'); });
   el('bx-kopieren-jal').addEventListener('click', function () { kopiere('bx-yaml-jal'); });
+})();
+
+/* ---- Button-Baukasten: visuell zusammenbauen, Code mit einem Klick ----
+   Vorschau = schematischer Button (Add-on-Optik, nicht der Karten-Style);
+   Motion/Farben/Zustände live. Sensor-Chips per Pointer auf die Eck-Slots
+   ziehen. Kontextabhängig: Sprung ohne Gerät/Farben/Bewegung, zustandslose
+   Domänen (Szene/Skript/Knopf) ohne Farben/Bewegung, Schloss fest grün/rot. */
+(function () {
+  if (!document.getElementById('bk-laden')) return;
+  var NL = String.fromCharCode(10);
+  var geladen = false, symbolWahl = '', anZ = true;
+  function P(d) { return '<path d="' + d + '"/>'; }
+  function C(cx, cy, r, f) { return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '"' + (f ? ' fill="currentColor" stroke="none"' : '') + '/>'; }
+  function R(x, y, w, h, rx) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/>'; }
+  /* Dieselben 43 Formen wie in der Karte (bx-Symbolbibliothek). */
+  var SYM = {
+    haustuer: P('M4 21V5.5L12 2l8 3.5V21') + P('M9 21v-8h6v8') + C(13.6, 16.5, .9, 1),
+    tuer: R(6, 3, 12, 18, 1.5) + C(15, 12, .9, 1),
+    schloss_zu: R(5, 10.5, 14, 9.5, 2) + P('M8 10.5V7a4 4 0 0 1 8 0v3.5') + P('M12 14.5v2.5'),
+    schloss_auf: R(5, 10.5, 14, 9.5, 2) + P('M8 10.5V7a4 4 0 0 1 7.7-1.5') + P('M12 14.5v2.5'),
+    schluessel: C(8, 8, 4.2) + P('M11 11l9 9') + P('M16.5 16.5l2.4-2.4M19 19l2-2'),
+    garage: P('M3 21V8l9-5 9 5v13') + P('M6.5 21v-9h11v9') + P('M6.5 15h11') + P('M6.5 18h11'),
+    tor: P('M3 20V8M21 20V8') + P('M3 10h18M3 14h18M3 18h18') + P('M7 20V10M12 20V10M17 20V10'),
+    licht: P('M9 18h6M10 21h4') + P('M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.6-1 2.5H9c0-.9-.2-1.8-1-2.5A6 6 0 0 1 12 3z'),
+    deckenlampe: P('M12 2v5') + P('M5 13a7 7 0 0 1 14 0z') + P('M12 16.5v1') + C(12, 20, 1.4),
+    stehlampe: P('M9 3h7l-2.5 7h-4z') + P('M12 10v9') + P('M8 21h8'),
+    steckdose: C(12, 12, 9) + P('M9.5 9.5v3M14.5 9.5v3') + P('M12 15.5v2'),
+    ventilator: C(12, 12, 2.2) + P('M12 9.8C12 6 10 4 7.5 4 6 4 5 5 5 6.4 5 9 8.5 9.8 12 9.8z') + P('M14.2 12c3.8 0 5.8-2 5.8-4.5C20 6 19 5 17.6 5 15 5 14.2 8.5 14.2 12z') + P('M12 14.2c0 3.8 2 5.8 4.5 5.8 1.5 0 2.5-1 2.5-2.4 0-2.6-3.5-3.4-7-3.4z') + P('M9.8 12c-3.8 0-5.8 2-5.8 4.5C4 18 5 19 6.4 19 9 19 9.8 15.5 9.8 12z'),
+    klima: R(3, 5, 18, 7, 2) + P('M7 8.5h10') + P('M7 15c0 2-1.5 2.5-1.5 4M12 15c0 2-1.5 2.5-1.5 4M17 15c0 2-1.5 2.5-1.5 4'),
+    heizung: P('M5 10c2-2.5.5-4.5 2-6.5M10 10c2-2.5.5-4.5 2-6.5M15 10c2-2.5.5-4.5 2-6.5') + R(4, 13, 16, 7, 2) + P('M7 13v7M11 13v7M15 13v7'),
+    thermometer: P('M10 4a2 2 0 0 1 4 0v9.3a4.5 4.5 0 1 1-4 0z') + C(12, 17.5, 1.6, 1),
+    rollo: R(3, 3, 18, 18, 1.5) + P('M3 7h18M3 10.5h18M3 14h18') + P('M12 14v4.5') + C(12, 19.6, .9),
+    vorhang: P('M4 4h16') + P('M6 4c1 6-.5 12-2 16 4-1.5 5-3 6-6V4M18 4c-1 6 .5 12 2 16-4-1.5-5-3-6-6V4'),
+    fenster: R(4, 3, 16, 18, 1.5) + P('M12 3v18M4 12h16'),
+    kamera: R(2.5, 7, 15, 10, 2.5) + P('M17.5 10.5 21.5 8v8l-4-2.5') + C(9.5, 12, 2.6),
+    sirene: P('M7 18v-6a5 5 0 0 1 10 0v6') + R(4.5, 18, 15, 3, 1.2) + P('M12 3v2M5 5.5 6.5 7M19 5.5 17.5 7'),
+    glocke: P('M6 16v-5.5a6 6 0 0 1 12 0V16l1.6 2.5H4.4z') + P('M10.3 21a2 2 0 0 0 3.4 0'),
+    musik: P('M9 18V6l10-2.5V15') + C(6.6, 18, 2.5) + C(16.6, 15, 2.5),
+    tv: R(3, 5, 18, 12, 2) + P('M8.5 21h7M12 17v4'),
+    staubsauger: C(12, 11, 7.5) + C(12, 11, 3.2) + C(12, 11, .9, 1) + P('M5.5 19.5h13'),
+    waschmaschine: R(4, 2.8, 16, 18.4, 2) + C(12, 13.4, 4.6) + P('M8.6 12.2c1.4 1.2 3.6 1.2 5-.1') + C(7.4, 6, .9) + C(10.4, 6, .9),
+    wasser: P('M12 3.5c3.4 4.2 6 7.6 6 10.7a6 6 0 0 1-12 0c0-3.1 2.6-6.5 6-10.7z'),
+    pflanze: P('M12 21v-7') + P('M12 14C12 9 9 7 4.5 7c0 5 3 7 7.5 7z') + P('M12 12c0-4 2.5-5.7 6.5-5.7 0 4.2-2.5 5.9-6.5 5.9') + P('M8 21h8'),
+    kaffee: P('M5 9h11v6a5 5 0 0 1-10 0z') + P('M16 10h2.2a2.3 2.3 0 0 1 0 4.6H16') + P('M8 5.5c0-1 .8-1 .8-2M11.5 5.5c0-1 .8-1 .8-2'),
+    herd: R(3.5, 3.5, 17, 17, 2) + C(8.4, 8.4, 2.2) + C(15.6, 8.4, 2.2) + C(8.4, 15.6, 2.2) + C(15.6, 15.6, 2.2),
+    kuehlschrank: R(6, 2.5, 12, 19, 1.8) + P('M6 9.5h12') + P('M9 6v1.5M9 13v3'),
+    auto: P('M4 16v-4l2-5h12l2 5v4') + P('M4 12h16') + C(7.5, 16.8, 1.7) + C(16.5, 16.8, 1.7) + P('M3 16.8h2.6M9.4 16.8h5.2M18.6 16.8H21'),
+    ladeport: R(6, 6, 12, 15, 2) + P('M12 2.8v3.2M9 4v2M15 4v2') + P('M12.8 10 10 14h4l-2.8 4'),
+    szene: P('M12 3l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4L7.5 16.7l.9-5L4.8 8.2l5-.7z'),
+    stern: P('M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z'),
+    blitz: P('M13 2 4.5 13.5H11L9.5 22 19 10h-6.5z'),
+    power: P('M12 3v8') + P('M6.2 6.5a8 8 0 1 0 11.6 0'),
+    play: P('M7 4.5v15l13-7.5z'),
+    haus: P('M3.5 11 12 3.5 20.5 11') + P('M5.5 9.5V20h13V9.5'),
+    sprung: P('M5 12h13') + P('M13 6l6 6-6 6') + P('M5 5v14'),
+    zahnrad: C(12, 12, 3.2) + P('M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1'),
+    sonne: C(12, 12, 4.2) + P('M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8'),
+    mond: P('M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z'),
+    feuer: P('M12 2.5c1 3-3.5 5-3.5 9a3.5 3.5 0 0 0 7 0c0-1.4-.7-2.6-1.5-3.7') + P('M12 21.5a6.5 6.5 0 0 1-6.5-6.5c0-2 1-3.8 2-5.3') + P('M12 21.5a6.5 6.5 0 0 0 6.5-6.5c0-1.5-.5-2.9-1.3-4.2')
+  };
+  var VORSCHLAG = { lock: 'haustuer', light: 'licht', switch: 'steckdose', fan: 'ventilator',
+    cover: 'rollo', scene: 'szene', script: 'blitz', button: 'power', input_boolean: 'power',
+    input_button: 'power', climate: 'klima', media_player: 'musik', vacuum: 'staubsauger', camera: 'kamera' };
+  var MOTION_STD = { fan: 'dreh', light: 'glow', switch: 'glow', input_boolean: 'glow',
+    media_player: 'puls', vacuum: 'puls', cover: 'puls', climate: 'puls', scene: 'funkeln', lock: 'glow' };
+  var STATUSLOS = ['scene', 'script', 'button', 'input_button'];
+  function svgVon(n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (SYM[n] || SYM.power) + '</svg>'; }
+  function domainJetzt() { return el('bk-funktion').value === 'sprung' ? '' : (el('bk-entity').value || '').split('.')[0]; }
+  function istStatuslos() { return el('bk-funktion').value === 'sprung' || STATUSLOS.indexOf(domainJetzt()) >= 0; }
+  function alleSlots(f) { Array.prototype.forEach.call(el('bk-vorschau').querySelectorAll('.bk-slot'), f); }
+
+  /* ---- Symbol-Galerie ---- */
+  function markiereGitter() {
+    Array.prototype.forEach.call(el('bk-symgrid').querySelectorAll('button'), function (b) {
+      b.classList.toggle('gewaehlt', (b.dataset.sym || '') === symbolWahl);
+    });
+  }
+  function baueGitter() {
+    var g = el('bk-symgrid'); g.innerHTML = '';
+    var auto = document.createElement('button'); auto.type = 'button'; auto.dataset.sym = '';
+    auto.textContent = wt('Automatisch').slice(0, 4); auto.title = wt('Automatisch');
+    auto.addEventListener('click', function () { symbolWahl = ''; markiereGitter(); vorschau(); });
+    g.appendChild(auto);
+    Object.keys(SYM).forEach(function (n) {
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.sym = n;
+      b.title = n.replace(/_/g, ' '); b.innerHTML = svgVon(n);
+      b.addEventListener('click', function () { symbolWahl = n; markiereGitter(); vorschau(); });
+      g.appendChild(b);
+    });
+    markiereGitter();
+  }
+
+  /* ---- Kontextabhängige Felder: Sinnloses bleibt unsichtbar ---- */
+  function felder() {
+    var fn = el('bk-funktion').value, d = domainJetzt(), los = istStatuslos();
+    el('bk-feld-entity').hidden = fn !== 'geraet';
+    el('bk-feld-ziel').hidden = fn !== 'sprung';
+    el('bk-feld-farben').hidden = los || d === 'lock';
+    el('bk-feld-motion').hidden = los;
+    var namen = { glow: wt('Glühen'), puls: wt('Pulsieren'), dreh: wt('Drehen'), wippe: wt('Wippen'), funkeln: wt('Funkeln') };
+    var std = MOTION_STD[d] || 'glow';
+    el('bk-motion-hinweis').textContent = (fn === 'geraet' && el('bk-entity').value) ? wt('Automatisch heißt hier:') + ' ' + (namen[std] || std) : '';
+  }
+
+  /* ---- Live-Vorschau ---- */
+  function vorschau() {
+    var v = el('bk-vorschau'), fn = el('bk-funktion').value, d = domainJetzt(), los = istStatuslos();
+    var sym = symbolWahl || (fn === 'sprung' ? 'sprung' : (VORSCHLAG[d] || 'power'));
+    el('bk-ico').innerHTML = svgVon(sym);
+    var o = el('bk-entity').selectedOptions && el('bk-entity').selectedOptions[0];
+    el('bk-name').textContent = el('bk-label').value || (fn === 'sprung' ? wt('Weiter') : ((o && o.dataset.name) || 'Button'));
+    v.className = 'bk-knopf';
+    var mArt = el('bk-motion').value === 'std' ? (MOTION_STD[d] || 'glow') : el('bk-motion').value;
+    if (!los) {
+      if (d === 'lock') { v.classList.add(anZ ? 'sicher' : 'offen'); }
+      else if (anZ) { v.classList.add('an'); if (mArt !== 'aus') v.classList.add('m-' + mArt); }
+    }
+    el('bk-status').textContent = los ? '' : (d === 'lock' ? wt(anZ ? 'verriegelt' : 'offen') : wt(anZ ? 'an' : 'aus'));
+    var eigene = !los && d !== 'lock' && el('bk-farben-eigene').checked;
+    v.style.setProperty('--knopf-an', eigene ? el('bk-farbe-an').value : '');
+    v.style.setProperty('--knopf-aus', eigene ? el('bk-farbe-aus').value : '');
+  }
+  el('bk-vorschau').addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('.bk-chip')) return;
+    anZ = !anZ; vorschau();
+  });
+
+  /* ---- Sensor-Chips: hinzufügen + auf Ecken ziehen ---- */
+  function slotUnter(x, y) {
+    var hit = null;
+    alleSlots(function (s) { var r = s.getBoundingClientRect();
+      if (x >= r.left - 16 && x <= r.right + 16 && y >= r.top - 16 && y <= r.bottom + 16) hit = s; });
+    return hit;
+  }
+  function ziehbar(chip) {
+    chip.addEventListener('pointerdown', function (ev) {
+      if (ev.target.classList.contains('bk-chip-x')) return;
+      ev.preventDefault();
+      chip.setPointerCapture(ev.pointerId);
+      chip.classList.add('zieht'); document.body.classList.add('bk-ziehen');
+      var move = function (e2) {
+        chip.style.position = 'fixed'; chip.style.left = (e2.clientX - 34) + 'px';
+        chip.style.top = (e2.clientY - 14) + 'px'; chip.style.zIndex = '99';
+        var s2 = slotUnter(e2.clientX, e2.clientY);
+        alleSlots(function (s) { s.classList.toggle('ziel', s === s2); });
+      };
+      var up = function (e2) {
+        chip.removeEventListener('pointermove', move); chip.removeEventListener('pointerup', up);
+        chip.removeEventListener('pointercancel', up);
+        chip.style.position = ''; chip.style.left = ''; chip.style.top = ''; chip.style.zIndex = '';
+        chip.classList.remove('zieht'); document.body.classList.remove('bk-ziehen');
+        var s2 = slotUnter(e2.clientX, e2.clientY);
+        alleSlots(function (s) { s.classList.remove('ziel'); });
+        if (s2) { var alt = s2.querySelector('.bk-chip'); if (alt) el('bk-chips').appendChild(alt); s2.appendChild(chip); }
+        else { el('bk-chips').appendChild(chip); }
+      };
+      chip.addEventListener('pointermove', move);
+      chip.addEventListener('pointerup', up);
+      chip.addEventListener('pointercancel', up);
+    });
+  }
+  el('bk-sensor-add').addEventListener('click', function () {
+    var o = el('bk-sensor').selectedOptions && el('bk-sensor').selectedOptions[0];
+    if (!o || !o.value) return;
+    if (el('bk-body').querySelectorAll('.bk-chip').length >= 8) return;
+    var chip = document.createElement('span'); chip.className = 'bk-chip'; chip.dataset.entity = o.value;
+    var b = document.createElement('b'); b.textContent = o.dataset.wert || '–';
+    var i2 = document.createElement('i'); i2.textContent = o.dataset.name || o.value;
+    var x = document.createElement('u'); x.className = 'bk-chip-x'; x.textContent = '×';
+    x.addEventListener('click', function () { chip.remove(); });
+    chip.appendChild(b); chip.appendChild(i2); chip.appendChild(x);
+    ziehbar(chip); el('bk-chips').appendChild(chip);
+  });
+
+  /* ---- Laden ---- */
+  el('bk-laden').addEventListener('click', function () {
+    var kb = this; kb.disabled = true; kb.textContent = wt('Lade …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      var grp = [['locks', 'Schlösser'], ['lights', 'Lichter'], ['switches', 'Schalter'],
+        ['fans', 'Ventilatoren'], ['covers', 'Rollläden'], ['scenes', 'Szenen'], ['scripts', 'Skripte'],
+        ['buttons', 'Knöpfe'], ['input_booleans', 'Helfer (an/aus)'], ['media_players', 'Medien']];
+      var sel = el('bk-entity'); sel.innerHTML = '';
+      grp.forEach(function (g) {
+        var L = d[g[0]] || []; if (!L.length) return;
+        var og = document.createElement('optgroup'); og.label = wt(g[1]);
+        L.forEach(function (e) { var o = document.createElement('option'); o.value = e.entity;
+          o.textContent = e.name + ' (' + e.entity + ')'; o.dataset.name = e.name; og.appendChild(o); });
+        sel.appendChild(og);
+      });
+      var sn = el('bk-sensor'); sn.innerHTML = '';
+      (d.sensors || []).forEach(function (e) { var o = document.createElement('option'); o.value = e.entity;
+        o.textContent = e.name + (e.wert ? ' — ' + e.wert : ''); o.dataset.name = e.name;
+        o.dataset.wert = e.wert || ''; sn.appendChild(o); });
+      if (!(d.sensors || []).length) { var o0 = document.createElement('option'); o0.value = '';
+        o0.textContent = wt('Keine Sensoren gefunden.'); sn.appendChild(o0); }
+      var stil = el('bk-stil'); stil.innerHTML = '';
+      var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'basics'; })[0];
+      var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
+      var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
+      liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
+      var hw = el('bk-stil-hinweis');
+      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      el('bk-label').placeholder = wt('automatisch — Name des Geräts');
+      baueGitter(); felder(); vorschau();
+      el('bk-body').hidden = false; geladen = true;
+    }).catch(function () {
+      el('bk-meldung').style.color = 'var(--rot)';
+      el('bk-meldung').textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('bk-body').hidden = false;
+    }).finally(function () { kb.disabled = false; kb.textContent = wt(geladen ? 'Neu laden' : 'Meine Geräte & Sensoren laden'); });
+  });
+  el('bk-funktion').addEventListener('change', function () { symbolWahl = ''; markiereGitter(); felder(); vorschau(); });
+  el('bk-entity').addEventListener('change', function () { symbolWahl = ''; markiereGitter(); felder(); vorschau(); });
+  el('bk-label').addEventListener('input', vorschau);
+  el('bk-motion').addEventListener('change', vorschau);
+  el('bk-farben-eigene').addEventListener('change', function () { el('bk-farben').hidden = !this.checked; vorschau(); });
+  el('bk-farbe-an').addEventListener('input', vorschau);
+  el('bk-farbe-aus').addEventListener('input', vorschau);
+
+  /* ---- Ein Klick: Code anzeigen und kopieren ---- */
+  function kopiereBk() {
+    var t2 = el('bk-yaml').textContent;
+    var fertig = function () { el('bk-meldung').style.color = 'var(--gruen)'; el('bk-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
+  }
+  el('bk-erzeugen').addEventListener('click', function () {
+    var fn = el('bk-funktion').value, d = domainJetzt(), los = istStatuslos();
+    el('bk-meldung').textContent = '';
+    var L = ['type: custom:joamy-button-card', 'stil: ' + el('bk-stil').value];
+    if (fn === 'sprung') { L.push('aktion: sprung'); L.push('ziel: ' + (el('bk-ziel').value || '/')); }
+    else {
+      if (!el('bk-entity').value) { el('bk-meldung').style.color = 'var(--rot)';
+        el('bk-meldung').textContent = wt('Erst ein Gerät wählen — oder oben auf „Sprung“ stellen.'); return; }
+      L.push('entity: ' + el('bk-entity').value);
+    }
+    if (el('bk-label').value) L.push('label: ' + (/[:#"]/.test(el('bk-label').value) ? "'" + el('bk-label').value.replace(/'/g, '') + "'" : el('bk-label').value));
+    if (symbolWahl) L.push('symbol: ' + symbolWahl);
+    if (!los && d !== 'lock' && el('bk-farben-eigene').checked) {
+      L.push('farbe_an: "' + el('bk-farbe-an').value + '"');
+      L.push('farbe_aus: "' + el('bk-farbe-aus').value + '"');
+    }
+    if (!los && el('bk-motion').value !== 'std') L.push('motion: ' + el('bk-motion').value);
+    if (el('bk-groesse').value === 'kompakt') L.push('groesse: kompakt');
+    var ex = [];
+    alleSlots(function (s) { var c = s.querySelector('.bk-chip'); if (c) ex.push({ entity: c.dataset.entity, pos: s.dataset.pos }); });
+    if (ex.length) { L.push('extras:'); ex.forEach(function (e) { L.push('  - entity: ' + e.entity); L.push('    pos: ' + e.pos); }); }
+    el('bk-ergebnis').hidden = false;
+    el('bk-yaml').textContent = L.join(NL);
+    kopiereBk();
+  });
 })();
 
 /* ---- Musik-Karte: Lautsprecher wählen + Griff auf dem Dashboard platzieren ----

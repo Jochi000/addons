@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## 0.1.31
+
+- Button-Baukasten in der Basics-Sektion: Button visuell zusammenbauen —
+  Gerät wählen, Symbol aus 43 eigenen Formen antippen, Sensorwerte per
+  Drag-and-drop auf die Ecken ziehen, Farben/Bewegung live in der Vorschau.
+  Sinnlose Menüs bleiben unsichtbar (Sprung ohne Farben, Szene ohne Bewegung,
+  Schloss fest grün/rot). Ein Klick: Code anzeigen und kopieren.
+
 ## 0.1.18
 
 - Karten-Einstellungen (Kamera-/Musik-Konfigurator) erscheinen nur noch, wenn der

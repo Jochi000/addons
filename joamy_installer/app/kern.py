@@ -844,7 +844,33 @@ class Installer:
             "media_players": liste("media_player."),
             "lights": liste("light."),
             "covers": liste("cover."),
+            # Für den Button-Baukasten: alles, was ein Knopf schalten kann,
+            # plus Sensoren für die Eck-Zusatzwerte (gedeckelt, sonst uferlos).
+            "locks": liste("lock."),
+            "switches": liste("switch."),
+            "fans": liste("fan."),
+            "scenes": liste("scene."),
+            "scripts": liste("script."),
+            "input_booleans": liste("input_boolean."),
+            "sensors": self._sensoren_mit_wert(states),
         }
+
+    @staticmethod
+    def _sensoren_mit_wert(states: list) -> list:
+        """Sensoren inkl. aktuellem Wert — der Baukasten zeigt echte Werte
+        auf den Eck-Chips (WOW statt Platzhalter). Gedeckelt auf 300."""
+        out = []
+        for s in states:
+            eid = s.get("entity_id", "")
+            if not (isinstance(eid, str) and eid.startswith("sensor.")):
+                continue
+            att = s.get("attributes") or {}
+            zustand = str(s.get("state", ""))
+            einheit = str(att.get("unit_of_measurement") or "")
+            wert = "" if zustand in ("unknown", "unavailable", "") else (zustand + (" " + einheit if einheit else ""))
+            out.append({"entity": eid, "name": str(att.get("friendly_name") or eid), "wert": wert})
+        out.sort(key=lambda x: x["name"].lower())
+        return out[:300]
 
     # ------------------------------------------------------------------
     # Status für die Ingress-Seite
