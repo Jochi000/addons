@@ -344,13 +344,13 @@ SEITE = """<!doctype html>
           </ul>
         </div>
       </div>
-      <button id="kf-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <button id="kf-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
       <div id="kf-ergebnis" hidden>
         <div class="kf-abschnitt">
           <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
           <pre id="kf-yaml"></pre>
         </div>
-        <button id="kf-kopieren" type="button" data-i18n>Code kopieren</button>
+        <button id="kf-kopieren" type="button" data-i18n hidden>Code kopieren</button>
         <details class="anleitung">
           <summary data-i18n>Wie füge ich den Code ins Dashboard ein? (kurzes Video)</summary>
           <ol class="anleitung-schritte">
@@ -409,13 +409,13 @@ SEITE = """<!doctype html>
         <span id="mk-stil-hinweis" class="hinweis" hidden></span>
         <select id="mk-stil"></select>
       </div>
-      <button id="mk-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <button id="mk-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
       <div id="mk-ergebnis" hidden>
         <div class="kf-abschnitt">
           <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
           <pre id="mk-yaml"></pre>
         </div>
-        <button id="mk-kopieren" type="button" data-i18n>Code kopieren</button>
+        <button id="mk-kopieren" type="button" data-i18n hidden>Code kopieren</button>
         <details class="anleitung">
           <summary data-i18n>Wie füge ich den Code ins Dashboard ein? (kurzes Video)</summary>
           <ol class="anleitung-schritte">
@@ -478,7 +478,7 @@ SEITE = """<!doctype html>
         <span id="bx-stil-hinweis" class="hinweis" hidden></span>
         <select id="bx-stil"></select>
       </div>
-      <button id="bx-erzeugen" type="button" data-i18n>Code erzeugen</button>
+      <button id="bx-erzeugen" type="button" data-i18n>Codes anzeigen</button>
       <div id="bx-ergebnis" hidden>
         <div class="kf-abschnitt">
           <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell" einfügen</span>
@@ -523,13 +523,13 @@ SEITE = """<!doctype html>
       <span id="zs-stil-hinweis" class="hinweis" hidden></span>
       <select id="zs-stil"></select>
     </div>
-    <button id="zs-erzeugen" type="button" data-i18n>Code erzeugen</button>
+    <button id="zs-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
     <div id="zs-ergebnis" hidden>
       <div class="kf-abschnitt">
         <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
         <pre id="zs-yaml"></pre>
       </div>
-      <button id="zs-kopieren" type="button" data-i18n>Code kopieren</button>
+      <button id="zs-kopieren" type="button" data-i18n hidden>Code kopieren</button>
       <div id="zs-meldung"></div>
     </div>
   </section>
@@ -584,6 +584,8 @@ var UEB = {
   '3 nebeneinander': '3 side by side',
   'Wähle dafür mindestens so viele Geräte aus — die Karten skalieren sich automatisch kleiner, damit sie in eine Reihe passen (höchstens 3).':
     'Select at least that many devices — the cards automatically scale down so they fit in one row (3 at most).',
+  'Code anzeigen und kopieren': 'Show and copy code',
+  'Codes anzeigen': 'Show codes',
   'Größe': 'Size',
   'Normal — wie im JoAmy-Vorbild': 'Normal — like the JoAmy original',
   'Kompakt — eine Stufe kleiner': 'Compact — one step smaller',
@@ -1029,6 +1031,7 @@ function yamlEscape(s) {
         if (q) L.push('  quelle: ' + yamlEscape(q));
       }
       el('kf-yaml').textContent = L.join('\\n');
+      el('kf-kopieren').click();
     });
     el('kf-kopieren').addEventListener('click', function () {
       var t = el('kf-yaml').textContent;
@@ -1063,6 +1066,7 @@ function yamlEscape(s) {
     if (el('zs-ansicht') && el('zs-ansicht').value === 'kompakt') zeilen.push('ansicht: kompakt');
     if (el('zs-groesse') && el('zs-groesse').value === 'kompakt') zeilen.push('groesse: kompakt');
     el('zs-yaml').textContent = zeilen.join('\\n');
+    el('zs-kopieren').click();
   });
   el('zs-kopieren').addEventListener('click', function () {
     var t2 = el('zs-yaml').textContent;
@@ -1275,6 +1279,7 @@ function yamlEscape(s) {
     L.push('  seite: ' + lage.seite);
     L.push('  hoehe: ' + Math.round(lage.hoehe));
     el('mk-yaml').textContent = L.join('\\n');
+    el('mk-kopieren').click();
   });
 
   el('mk-kopieren').addEventListener('click', function () {
