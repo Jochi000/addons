@@ -40,6 +40,24 @@ async def haupt() -> None:
     installer = Installer(optionen)
     await installer.start()
 
+    # Zeitschaltuhr-Engine: läuft ALS TASK IM INSTALLER (kein zweites Add-on).
+    # Sie wartet selbst darauf, dass der Baustein installiert ist — startet der
+    # Kunde ohne Kauf, schläft sie leise und kostet nichts.
+    async def zeitschaltuhr_wache() -> None:
+        from zeitschaltuhr import ZeitschaltuhrEngine
+        from kern import SUPERVISOR_URL, SUPERVISOR_TOKEN
+        while True:
+            if "zeitschaltuhr" in (installer.status.get("installiert") or {}):
+                engine = ZeitschaltuhrEngine(installer.session, SUPERVISOR_URL,
+                                             os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN))
+                try:
+                    await engine.laufe()
+                except Exception:
+                    LOG.exception("Zeitschaltuhr-Engine gestorben — Neustart in 30 s")
+            await asyncio.sleep(30)
+
+    asyncio.get_running_loop().create_task(zeitschaltuhr_wache())
+
     runner = web.AppRunner(baue_web_app(installer))
     await runner.setup()
     # 0.0.0.0 ist Pflicht: der Ingress-Proxy verbindet sich aus dem
