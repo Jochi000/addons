@@ -204,7 +204,7 @@ SEITE = """<!doctype html>
   .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
   .kf-quellen button b { display: block; font-size: 14px; }
   .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
-  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -481,6 +481,30 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
+  <section class="karte" id="zs-karte" hidden>
+    <h2 data-i18n>Zeitschaltuhr einrichten</h2>
+    <p class="kf-intro" data-i18n>Wie an einer klassischen Zeitschaltuhr: Gerät wählen, Ein- und
+      Aus-Zeit stecken, fertig. Geräte, Zeiten und Timer stellst du direkt in der Karte ein —
+      hier brauchst du nur den Code fürs Dashboard.</p>
+    <div class="mk-hinweis"><b data-i18n>Bleibt alles erhalten:</b> <span data-i18n>Deine Zeitpläne und
+      laufenden Timer überleben jeden Neustart von Home Assistant — sie liegen sicher in deinem
+      Home Assistant, nicht in der Karte.</span></div>
+    <div class="kf-abschnitt">
+      <label class="kf-titel" for="zs-stil" data-i18n>Style</label>
+      <span id="zs-stil-hinweis" class="hinweis" hidden></span>
+      <select id="zs-stil"></select>
+    </div>
+    <button id="zs-erzeugen" type="button" data-i18n>Code erzeugen</button>
+    <div id="zs-ergebnis" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
+        <pre id="zs-yaml"></pre>
+      </div>
+      <button id="zs-kopieren" type="button" data-i18n>Code kopieren</button>
+      <div id="zs-meldung"></div>
+    </div>
+  </section>
+
   <section class="karte">
     <h2 data-i18n>Logbuch</h2>
     <pre id="logs">—</pre>
@@ -500,6 +524,12 @@ function el(id) { return document.getElementById(id); }
    (darf HTML enthalten). Kein Treffer ⇒ Deutsch bleibt stehen. Gemerkt wird die
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
+  'Zeitschaltuhr einrichten': 'Set up the timer switch',
+  'Wie an einer klassischen Zeitschaltuhr: Gerät wählen, Ein- und Aus-Zeit stecken, fertig. Geräte, Zeiten und Timer stellst du direkt in der Karte ein — hier brauchst du nur den Code fürs Dashboard.':
+    'Just like a classic plug-in timer: pick a device, set the on and off time, done. Devices, times and quick timers are set right in the card — here you only need the code for your dashboard.',
+  'Bleibt alles erhalten:': 'Everything is kept:',
+  'Deine Zeitpläne und laufenden Timer überleben jeden Neustart von Home Assistant — sie liegen sicher in deinem Home Assistant, nicht in der Karte.':
+    'Your schedules and running timers survive every Home Assistant restart — they are stored safely inside your Home Assistant, not in the card.',
   'Basics einrichten — Beleuchtung & Jalousie': 'Set up the Basics — lighting & blinds',
   'Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die Karten soll, und füge den fertigen Code in dein Dashboard ein.':
     'Two cards in one module: lights and blinds. Both detect on their own what your device can do — dimming, white tones, colour, slats. Pick below what goes on the cards and paste the finished code into your dashboard.',
@@ -759,6 +789,7 @@ function male(st) {
   (st.bausteine || []).forEach(function (b) { gekauftB[b.baustein] = true; });
   if (el('konfig-karte')) el('konfig-karte').hidden = !gekauftB.kamera;
   if (el('basics-karte')) el('basics-karte').hidden = !gekauftB.basics;
+  if (el('zs-karte')) el('zs-karte').hidden = !gekauftB.zeitschaltuhr;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
@@ -972,6 +1003,36 @@ function yamlEscape(s) {
       if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(fertig).catch(fallback); } else { fallback(); }
     });
   }
+})();
+
+/* ---- Zeitschaltuhr: nur Style wählen → fertiger Code ---- */
+(function () {
+  if (!document.getElementById('zs-erzeugen')) return;
+  function stileZs() {
+    var sel = el('zs-stil'); if (!sel) return;
+    var b = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'zeitschaltuhr'; })[0];
+    var gek = (b && b.themes && b.themes.length) ? b.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
+    var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
+    var vorher = sel.value;
+    sel.innerHTML = '';
+    liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; sel.appendChild(o); });
+    sel.value = vorher; if (!sel.value) sel.value = liste[0];
+    var hw = el('zs-stil-hinweis');
+    if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+  }
+  window.__zsStile = stileZs;
+  stileZs();
+  el('zs-erzeugen').addEventListener('click', function () {
+    stileZs();
+    el('zs-ergebnis').hidden = false; el('zs-meldung').textContent = '';
+    el('zs-yaml').textContent = ['type: custom:joamy-zeitschaltuhr-card', 'stil: ' + el('zs-stil').value].join('\\n');
+  });
+  el('zs-kopieren').addEventListener('click', function () {
+    var t2 = el('zs-yaml').textContent;
+    var fertig = function () { el('zs-meldung').style.color = 'var(--gruen)'; el('zs-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
+  });
 })();
 
 /* ---- Basics: Lichter + Rollläden wählen → zwei fertige Codes ---- */
