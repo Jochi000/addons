@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import (
+    entdecke_bausteine,
     BAUSTEINE,
     DATA_CARD_URLS,
     DATA_RUNTIMES,
@@ -71,7 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: JoamyConfigEntry) -> boo
     """Hub aufsetzen: Stores laden, Static-Pfade + Karten registrieren."""
     runtime = JoamyRuntime()
 
-    for baustein in BAUSTEINE:
+    static_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+    bausteine = await hass.async_add_executor_job(entdecke_bausteine, static_root)
+    domain_data_frueh = hass.data.setdefault(DOMAIN, {})
+    domain_data_frueh["bausteine"] = bausteine
+
+    for baustein in bausteine:
         store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, storage_key(baustein))
         data = await store.async_load()
         if not isinstance(data, dict):
@@ -98,16 +104,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: JoamyConfigEntry) -> boo
     domain_data[DATA_RUNTIMES] = runtime
     entry.runtime_data = runtime.bausteine
 
-    if not domain_data.get(DATA_WS_REGISTERED):
-        async_register_websocket_commands(hass)
-        domain_data[DATA_WS_REGISTERED] = True
+    # Altbestand aus 0.2.0 war ein bool — dann frisch anfangen (doppeltes
+    # Registrieren ist harmlos, HA ueberschreibt den Handler nur).
+    if not isinstance(domain_data.get(DATA_WS_REGISTERED), set):
+        domain_data[DATA_WS_REGISTERED] = set()
+    ws_registriert: set[str] = domain_data[DATA_WS_REGISTERED]
+    ws_neu = [b for b in bausteine if b not in ws_registriert]
+    if ws_neu:
+        async_register_websocket_commands(hass, ws_neu)
+        ws_registriert.update(ws_neu)
 
     # Static-Pfade: nur für Bausteine, deren Ordner wirklich daliegt. Ein
     # Pfad lässt sich nicht doppelt registrieren → einmal pro HA-Laufzeit
     # merken; NEUE Bausteine kommen per Reload dazu (Ordner entsteht → Pfad).
     registriert: set[str] = domain_data.setdefault(DATA_STATIC_REGISTERED, set())
     vorhanden = await hass.async_add_executor_job(
-        lambda: [b for b in BAUSTEINE if os.path.isdir(_static_dir(b))]
+        lambda: [b for b in bausteine if os.path.isdir(_static_dir(b))]
     )
     neu = [b for b in vorhanden if b not in registriert]
     if neu:

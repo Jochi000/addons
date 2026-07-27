@@ -23,7 +23,32 @@ VERSION = "0.2.0"
 # Alle Bausteine, die der Hub kennt. WS-Kommandos + Stores werden für ALLE
 # registriert (ein Store ohne Karte ist leer und harmlos); Static-Pfad und
 # Karten-URL gibt es nur für Bausteine, deren Ordner wirklich daliegt.
-BAUSTEINE = ("kochbuch", "familie", "kamera", "media")
+import os
+import re
+
+BAUSTEINE = ("kochbuch", "familie", "kamera", "media", "basics")
+
+
+def entdecke_bausteine(static_root: str) -> tuple[str, ...]:
+    """Bekannte Bausteine + alles, was als Ordner unter static/ liegt.
+
+    Ein Karten-Update darf einen NEUEN Baustein mitbringen, ohne dass der Hub
+    selbst aktualisiert (und HA neu gestartet) werden muss: der Installer legt
+    nur den Ordner an, der Entry-Reload nimmt ihn hier auf. Nur schlichte
+    Ordnernamen zaehlen — nichts anderes darf zum WS-Kommando werden.
+    """
+    gefunden = list(BAUSTEINE)
+    try:
+        for name in sorted(os.listdir(static_root)):
+            if name in gefunden:
+                continue
+            if not re.fullmatch(r"[a-z][a-z0-9_]{1,31}", name):
+                continue
+            if os.path.isdir(os.path.join(static_root, name)):
+                gefunden.append(name)
+    except OSError:
+        pass
+    return tuple(gefunden)
 
 # Baustein-eigene Zusatzfelder in der config-Antwort (Vertrag der jeweiligen Karte).
 CONFIG_EXTRAS = {

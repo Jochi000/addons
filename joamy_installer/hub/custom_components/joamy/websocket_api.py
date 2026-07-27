@@ -40,9 +40,9 @@ ERR_NOT_LOADED = "not_loaded"
 
 
 @callback
-def async_register_websocket_commands(hass: HomeAssistant) -> None:
-    """Vier Kommandos je Baustein registrieren (einmal pro HA-Laufzeit)."""
-    for baustein in BAUSTEINE:
+def async_register_websocket_commands(hass: HomeAssistant, bausteine=None) -> None:
+    """Vier Kommandos je Baustein registrieren (je Baustein einmal pro Laufzeit)."""
+    for baustein in (bausteine if bausteine is not None else BAUSTEINE):
         for cmd in _baue_kommandos(baustein):
             websocket_api.async_register_command(hass, cmd)
 
