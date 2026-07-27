@@ -1018,7 +1018,9 @@ function yamlEscape(s) {
     function eine(liste) {
       var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
       if (frei) L.push('rahmen: frei');
-      if (spalten > 1) L.push('spalten: ' + Math.min(3, spalten));
+      // Immer mitschreiben: spalten: 1 erzwingt „wirklich untereinander" —
+      // ohne die Angabe verteilt die Karte automatisch (2 je Reihe am Handy).
+      L.push('spalten: ' + Math.min(3, Math.max(1, spalten)));
       if (kompakt) L.push('groesse: kompakt');
       L.push('entities:');
       liste.forEach(function (e2) { L.push('  - ' + e2); });
