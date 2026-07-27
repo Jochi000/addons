@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.1.34
+
+- Neuer Baustein: KALENDER. Der Konfigurator findet deine Kalender automatisch
+  (abwählbar); alle angehakt heißt, die Karte erkennt auch künftige Kalender
+  von selbst. Größe, Style und Ein-Klick-Code wie gewohnt.
+
 ## 0.1.33
 
 - Feinschliff der Oberfläche: einheitlicher Abstand in allen Konfiguratoren

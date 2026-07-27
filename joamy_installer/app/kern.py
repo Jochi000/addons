@@ -852,6 +852,7 @@ class Installer:
             "scenes": liste("scene."),
             "scripts": liste("script."),
             "input_booleans": liste("input_boolean."),
+            "calendars": liste("calendar."),
             "sensors": self._sensoren_mit_wert(states),
         }
 

@@ -154,9 +154,9 @@ SEITE = """<!doctype html>
   .kf-intro { color: var(--tinte-3); font-size: 14.5px; margin-bottom: 14px; }
   #kf-body, #mk-body, #bx-body, #bk-body { display: grid; gap: 18px; margin-top: 16px; }
   /* Zeitschaltuhr hat keinen Body-Wrapper — gleicher Rhythmus per Margin. */
-  #zs-karte > .kf-abschnitt { margin: 16px 0; }
-  #zs-karte > button { margin-top: 18px; }
-  #kf-laden, #mk-laden, #bx-laden, #bk-laden, #zs-laden { margin: 14px 0 2px; }
+  #zs-karte > .kf-abschnitt, #kal-karte > .kf-abschnitt { margin: 16px 0; }
+  #zs-karte > button, #kal-karte > button { margin-top: 18px; }
+  #kf-laden, #mk-laden, #bx-laden, #bk-laden, #zs-laden, #kl-laden { margin: 14px 0 2px; }
   /* Hinweise überall leise und klein — nicht nur im Ereignis-Block. */
   .hinweis { color: var(--tinte-3); font-size: 13px; line-height: 1.55; }
   .kf-abschnitt { display: grid; gap: 8px; min-width: 0; }
@@ -210,7 +210,7 @@ SEITE = """<!doctype html>
   .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
   .kf-quellen button b { display: block; font-size: 14px; }
   .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
-  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml, pre#bk-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml, pre#bk-yaml, pre#kl-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -719,6 +719,38 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
+  <section class="karte" id="kal-karte" hidden>
+    <h2 data-i18n>Kalender einrichten</h2>
+    <p class="kf-intro" data-i18n>Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen
+      willst. Liegt ein Termin in der aktuellen Uhrzeit, legt er sich groß über die Karte; der Kalender
+      bleibt dahinter verschwommen sichtbar, ein Fingertipp blendet ihn aus.</p>
+    <button id="kl-laden" type="button" data-i18n>Meine Kalender laden</button>
+    <div id="kl-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Diese Kalender zeigt die Karte</span>
+        <div id="kl-liste"></div>
+        <span class="hinweis" data-i18n>Alle angehakt heißt: die Karte erkennt auch später neu angelegte Kalender von selbst. Wählst du ab, zeigt sie genau deine Auswahl.</span>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="kl-groesse" data-i18n>Größe</label>
+        <select id="kl-groesse">
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="kl-stil" data-i18n>Style</label>
+        <span id="kl-stil-hinweis" class="hinweis" hidden></span>
+        <select id="kl-stil"></select>
+      </div>
+      <button id="kl-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
+      <div class="kf-abschnitt" id="kl-ergebnis" hidden>
+        <pre id="kl-yaml"></pre>
+      </div>
+      <div id="kl-meldung"></div>
+    </div>
+  </section>
+
   <section class="karte">
     <h2 data-i18n>Logbuch</h2>
     <pre id="logs">—</pre>
@@ -826,6 +858,16 @@ var UEB = {
   'Beim Ziehen erscheinen Magnet-Linien: Ecken und Mittelachsen rasten sanft ein. Zum Entfernen einen Wert einfach von der Karte herunterziehen.':
     'While dragging, magnet lines appear: corners and centre axes snap gently. To remove a value, just drag it off the card.',
   'Sensoren': 'Sensors',
+  'Kalender einrichten': 'Set up the calendar',
+  'Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen willst. Liegt ein Termin in der aktuellen Uhrzeit, legt er sich groß über die Karte; der Kalender bleibt dahinter verschwommen sichtbar, ein Fingertipp blendet ihn aus.':
+    'Your calendars are found automatically — untick what you don’t want to see. When an appointment falls on the current time it lays itself large over the card; the calendar stays blurred behind it, one tap hides it.',
+  'Meine Kalender laden': 'Load my calendars',
+  'Diese Kalender zeigt die Karte': 'These calendars appear on the card',
+  'Alle angehakt heißt: die Karte erkennt auch später neu angelegte Kalender von selbst. Wählst du ab, zeigt sie genau deine Auswahl.':
+    'All ticked means: the card also picks up calendars you create later. If you untick some, it shows exactly your selection.',
+  'Keine Kalender gefunden — in Home Assistant unter Einstellungen → Integrationen einen „Lokalen Kalender" anlegen.':
+    'No calendars found — create a “Local calendar” in Home Assistant under Settings → Integrations.',
+  'Mindestens einen Kalender anhaken.': 'Tick at least one calendar.',
   'Suchen …': 'Search …',
   'Erst ein Gerät wählen — oder oben auf „Sprung“ stellen.': 'Pick a device first — or set “Jump” above.',
   'Meine Geräte & Sensoren laden': 'Load my devices & sensors',
@@ -1067,6 +1109,7 @@ function male(st) {
   if (el('konfig-karte')) el('konfig-karte').hidden = !gekauftB.kamera;
   if (el('basics-karte')) el('basics-karte').hidden = !gekauftB.basics;
   if (el('zs-karte')) el('zs-karte').hidden = !gekauftB.zeitschaltuhr;
+  if (el('kal-karte')) el('kal-karte').hidden = !gekauftB.kalender;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
@@ -1716,6 +1759,61 @@ function yamlEscape(s) {
     el('bk-ergebnis').hidden = false;
     el('bk-yaml').textContent = L.join(NL);
     kopiereBk();
+  });
+})();
+
+/* ---- Kalender: Auto-Vorschlag (abwählbar) → Ein-Klick-Code ---- */
+(function () {
+  if (!document.getElementById('kl-laden')) return;
+  var NL = String.fromCharCode(10);
+  var geladen = false;
+  el('kl-laden').addEventListener('click', function () {
+    var b = this; b.disabled = true; b.textContent = wt('Lade …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      var wrap = el('kl-liste'); wrap.innerHTML = '';
+      var L = d.calendars || [];
+      L.forEach(function (e) {
+        var z = document.createElement('label'); z.className = 'kf-cam';
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.dataset.entity = e.entity;
+        var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
+        z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
+      });
+      if (!L.length) { var p2 = document.createElement('p'); p2.className = 'hinweis';
+        p2.textContent = wt('Keine Kalender gefunden — in Home Assistant unter Einstellungen → Integrationen einen „Lokalen Kalender" anlegen.'); wrap.appendChild(p2); }
+      var stil = el('kl-stil'); stil.innerHTML = '';
+      var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'kalender'; })[0];
+      var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
+      var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
+      liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
+      var hw = el('kl-stil-hinweis');
+      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      el('kl-body').hidden = false; geladen = true;
+    }).catch(function () {
+      el('kl-meldung').style.color = 'var(--rot)';
+      el('kl-meldung').textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('kl-body').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Meine Kalender laden'); });
+  });
+  el('kl-erzeugen').addEventListener('click', function () {
+    var alle = Array.prototype.slice.call(el('kl-liste').querySelectorAll('input[type=checkbox]'));
+    var an = alle.filter(function (c) { return c.checked; });
+    el('kl-meldung').textContent = '';
+    var L = ['type: custom:joamy-kalender-card', 'stil: ' + el('kl-stil').value];
+    // Alle angehakt = Auto-Modus (KEINE entities-Zeile): die Karte findet
+    // auch künftige Kalender von selbst. Teilmenge = explizite Liste.
+    if (alle.length && an.length && an.length < alle.length) {
+      L.push('entities:');
+      an.forEach(function (c) { L.push('  - ' + c.dataset.entity); });
+    }
+    if (alle.length && !an.length) { el('kl-meldung').style.color = 'var(--rot)';
+      el('kl-meldung').textContent = wt('Mindestens einen Kalender anhaken.'); return; }
+    if (el('kl-groesse').value === 'kompakt') L.push('groesse: kompakt');
+    el('kl-ergebnis').hidden = false;
+    el('kl-yaml').textContent = L.join(NL);
+    var t2 = el('kl-yaml').textContent;
+    var fertig = function () { el('kl-meldung').style.color = 'var(--gruen)'; el('kl-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   });
 })();
 
