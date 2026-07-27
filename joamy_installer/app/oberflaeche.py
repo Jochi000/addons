@@ -444,6 +444,15 @@ SEITE = """<!doctype html>
         <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
       </div>
       <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-spalten" data-i18n>Nebeneinander</label>
+        <select id="bx-spalten">
+          <option value="1" data-i18n>Untereinander (Standard)</option>
+          <option value="2" data-i18n>2 nebeneinander</option>
+          <option value="3" data-i18n>3 nebeneinander</option>
+        </select>
+        <span class="hinweis" data-i18n>Wähle dafür mindestens so viele Geräte aus — die Karten skalieren sich automatisch kleiner, damit sie in eine Reihe passen (höchstens 3).</span>
+      </div>
+      <div class="kf-abschnitt">
         <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
         <select id="bx-groesse">
           <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
@@ -506,6 +515,12 @@ var UEB = {
   '„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.':
     '“Free” creates its own code per device — each card can be placed individually in your dashboard.',
   '# ─── nächste Karte — einzeln unter „Manuell“ einfügen ───': '# ─── next card — paste separately via “Manual” ───',
+  'Nebeneinander': 'Side by side',
+  'Untereinander (Standard)': 'Stacked (default)',
+  '2 nebeneinander': '2 side by side',
+  '3 nebeneinander': '3 side by side',
+  'Wähle dafür mindestens so viele Geräte aus — die Karten skalieren sich automatisch kleiner, damit sie in eine Reihe passen (höchstens 3).':
+    'Select at least that many devices — the cards automatically scale down so they fit in one row (3 at most).',
   'Größe': 'Size',
   'Normal — wie im JoAmy-Vorbild': 'Normal — like the JoAmy original',
   'Kompakt — eine Stufe kleiner': 'Compact — one step smaller',
@@ -999,16 +1014,19 @@ function yamlEscape(s) {
   function baueYaml(typ, entities) {
     var frei = el('bx-rahmen') && el('bx-rahmen').value === 'frei';
     var kompakt = el('bx-groesse').value === 'kompakt';
+    var spalten = el('bx-spalten') ? parseInt(el('bx-spalten').value, 10) || 1 : 1;
     function eine(liste) {
       var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
       if (frei) L.push('rahmen: frei');
+      if (spalten > 1) L.push('spalten: ' + Math.min(3, spalten));
       if (kompakt) L.push('groesse: kompakt');
       L.push('entities:');
       liste.forEach(function (e2) { L.push('  - ' + e2); });
       return L.join('\\n');
     }
-    if (!frei) return eine(entities);
-    // frei: jedes Gerät bekommt seinen eigenen Code — einzeln einfügen.
+    // Nebeneinander braucht die Geräte in EINEM Code — sonst stünden sie
+    // nie in einer Reihe. Nur frei OHNE Spalten trennt je Gerät.
+    if (!frei || spalten > 1) return eine(entities);
     return entities.map(function (e2) { return eine([e2]); })
       .join('\\n\\n' + wt('# ─── nächste Karte — einzeln unter „Manuell“ einfügen ───') + '\\n');
   }
