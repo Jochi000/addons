@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## 0.1.32
+
+- Button-Baukasten ist jetzt eine Magnet-Leinwand: ALLE Entitäten (Sensoren
+  mit Live-Wert, Suche) einfach auf die Karte ziehen — frei platzierbar,
+  Ecken und Mittelachsen rasten magnetisch ein, Plopp beim Ablegen. Ein
+  schaltbares Gerät in der Mitte abgelegt WIRD der Button (Symbol ploppt um).
+  Herunterziehen entfernt einen Wert. Die Button-Karte kann Zusatzwerte an
+  jeder freien Position anzeigen (x/y in Prozent), auch Zustände von Schloss,
+  Licht & Co.
+
 ## 0.1.31
 
 - Button-Baukasten in der Basics-Sektion: Button visuell zusammenbauen —

@@ -258,17 +258,36 @@ SEITE = """<!doctype html>
   .bk-knopf.an.m-dreh .bk-ico svg { animation: bkDreh 2.6s linear infinite; }
   .bk-knopf.an.m-wippe .bk-ico svg { animation: bkWippe 1.8s ease-in-out infinite; transform-origin: 50% 20%; }
   .bk-knopf.an.m-funkeln .bk-ico svg { animation: bkFunkeln 2.2s ease-in-out infinite; }
-  .bk-slot { position: absolute; width: 68px; height: 28px; border: 1.5px dashed transparent;
-    border-radius: 9px; display: grid; place-items: center; transition: border-color .2s, background .2s; }
-  .bk-slot[data-pos="ol"] { top: 7px; left: 7px; }
-  .bk-slot[data-pos="or"] { top: 7px; right: 7px; }
-  .bk-slot[data-pos="ul"] { bottom: 7px; left: 7px; }
-  .bk-slot[data-pos="ur"] { bottom: 7px; right: 7px; }
-  body.bk-ziehen .bk-slot { border-color: rgba(255,255,255,.32); }
-  .bk-slot.ziel { border-color: var(--akzent); background: rgba(255,255,255,.08); }
-  .bk-sensorwahl { display: flex; gap: 8px; width: 100%; }
-  .bk-sensorwahl select { flex: 1; min-width: 0; max-width: 100%; }
-  #bk-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 34px; width: 100%; align-content: flex-start; }
+  .bk-hilfen { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .15s; }
+  body.bk-ziehen .bk-hilfen { opacity: 1; }
+  .bk-linie.v { position: absolute; left: 50%; top: 6px; bottom: 6px; border-left: 1.5px dashed rgba(255,255,255,.16); }
+  .bk-linie.h { position: absolute; top: 50%; left: 6px; right: 6px; border-top: 1.5px dashed rgba(255,255,255,.16); }
+  .bk-linie.an { border-color: var(--akzent); }
+  .bk-punkt { position: absolute; width: 10px; height: 10px; border-radius: 50%;
+    border: 1.5px dashed rgba(255,255,255,.3); transform: translate(-50%,-50%);
+    transition: transform .15s, border-color .15s, background .15s; }
+  .bk-punkt[data-a="ol"] { left: 15%; top: 14%; }
+  .bk-punkt[data-a="or"] { left: 85%; top: 14%; }
+  .bk-punkt[data-a="ul"] { left: 15%; top: 86%; }
+  .bk-punkt[data-a="ur"] { left: 85%; top: 86%; }
+  .bk-punkt.an { border-style: solid; border-color: var(--akzent); background: rgba(255,255,255,.12);
+    transform: translate(-50%,-50%) scale(1.7); }
+  .bk-mittezone { position: absolute; left: 50%; top: 50%; width: 98px; height: 98px; border-radius: 50%;
+    transform: translate(-50%,-50%); border: 1.5px dashed transparent; transition: border-color .15s, background .15s; }
+  .bk-mittezone.an { border-color: var(--gruen); background: rgba(89,201,138,.10); }
+  .bk-knopf.magnet { border-color: var(--akzent); }
+  #bk-suche { width: 100%; }
+  #bk-palette { max-height: 250px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px;
+    align-content: flex-start; padding: 9px; border: 1px solid var(--nacht-linie);
+    border-radius: var(--r-12); background: var(--nacht-vertieft); }
+  .bk-pal-kopf { width: 100%; font-size: 11.5px; letter-spacing: .4px; text-transform: uppercase;
+    color: var(--tinte-3); margin: 4px 0 0; }
+  .bk-chip.geraet b { display: none; }
+  @keyframes bkPlopp { 0% { transform: translate(-50%,-50%) scale(.3); opacity: 0; }
+    60% { transform: translate(-50%,-50%) scale(1.18); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1); } }
+  @keyframes bkIcoPop { 0% { transform: scale(.55); } 55% { transform: scale(1.28); } 100% { transform: scale(1); } }
+  .bk-ico.pop svg { animation: bkIcoPop .5s cubic-bezier(.2,1.4,.4,1); }
   .bk-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px;
     background: rgba(255,255,255,.06); border: 1px solid var(--nacht-linie); font-size: 12px;
     color: var(--tinte-2); cursor: grab; touch-action: none; user-select: none; max-width: 220px; }
@@ -276,8 +295,11 @@ SEITE = """<!doctype html>
   .bk-chip i { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bk-chip u { text-decoration: none; color: var(--tinte-3); cursor: pointer; padding: 0 2px; font-weight: 700; }
   .bk-chip.zieht { opacity: .92; box-shadow: 0 6px 18px rgba(0,0,0,.5); cursor: grabbing; }
-  .bk-slot .bk-chip { max-width: 100%; padding: 2px 7px; font-size: 11px; }
-  .bk-slot .bk-chip i, .bk-slot .bk-chip u { display: none; }
+  .bk-chip.auf-karte { position: absolute; transform: translate(-50%,-50%); max-width: 46%;
+    padding: 2px 8px; font-size: 11px; z-index: 3; }
+  .bk-chip.auf-karte i, .bk-chip.auf-karte u { display: none; }
+  .bk-chip.auf-karte.geraet i { display: block; }
+  .bk-chip.auf-karte.plopp { animation: bkPlopp .35s cubic-bezier(.2,1.4,.4,1); }
   .bk-symgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; width: 100%; }
   .bk-symgrid button { padding: 9px 0; display: grid; place-items: center; color: var(--tinte-2); font-size: 11px; }
   .bk-symgrid button.gewaehlt { border-color: var(--akzent); color: var(--tinte); }
@@ -560,22 +582,25 @@ SEITE = """<!doctype html>
       <div class="bk-zeilen">
         <div class="bk-buehne">
           <div id="bk-vorschau" class="bk-knopf">
-            <div class="bk-slot" data-pos="ol"></div>
-            <div class="bk-slot" data-pos="or"></div>
-            <div class="bk-slot" data-pos="ul"></div>
-            <div class="bk-slot" data-pos="ur"></div>
+            <div class="bk-hilfen" id="bk-hilfen">
+              <div class="bk-linie v"></div>
+              <div class="bk-linie h"></div>
+              <div class="bk-punkt" data-a="ol"></div>
+              <div class="bk-punkt" data-a="or"></div>
+              <div class="bk-punkt" data-a="ul"></div>
+              <div class="bk-punkt" data-a="ur"></div>
+              <div class="bk-mittezone"></div>
+            </div>
             <div class="bk-ico" id="bk-ico"></div>
             <div class="bk-name" id="bk-name">Button</div>
             <div class="bk-status" id="bk-status"></div>
           </div>
           <span class="hinweis" data-i18n>Tipp: Tippe auf die Vorschau — sie wechselt zwischen An und Aus, so siehst du Farben und Bewegung in beiden Zuständen.</span>
           <div class="kf-abschnitt">
-            <span class="kf-titel" data-i18n>Zusatzwerte — Sensor wählen und auf eine Ecke der Vorschau ziehen</span>
-            <div class="bk-sensorwahl">
-              <select id="bk-sensor"></select>
-              <button id="bk-sensor-add" type="button" data-i18n>+ Hinzufügen</button>
-            </div>
-            <div id="bk-chips"></div>
+            <span class="kf-titel" data-i18n>Alles hier kannst du auf die Karte ziehen: Werte dorthin, wo du sie willst — ein schaltbares Gerät in die Mitte, dann wird es der Button.</span>
+            <input id="bk-suche" type="search">
+            <div id="bk-palette"></div>
+            <span class="hinweis" data-i18n>Beim Ziehen erscheinen Magnet-Linien: Ecken und Mittelachsen rasten sanft ein. Zum Entfernen einen Wert einfach von der Karte herunterziehen.</span>
           </div>
         </div>
         <div class="bk-felder">
@@ -788,6 +813,12 @@ var UEB = {
   'Helfer (an/aus)': 'Helpers (on/off)',
   'Medien': 'Media players',
   'automatisch — Name des Geräts': 'automatic — device name',
+  'Alles hier kannst du auf die Karte ziehen: Werte dorthin, wo du sie willst — ein schaltbares Gerät in die Mitte, dann wird es der Button.':
+    'Drag anything here onto the card: values wherever you want them — drop a switchable device in the middle and it becomes the button.',
+  'Beim Ziehen erscheinen Magnet-Linien: Ecken und Mittelachsen rasten sanft ein. Zum Entfernen einen Wert einfach von der Karte herunterziehen.':
+    'While dragging, magnet lines appear: corners and centre axes snap gently. To remove a value, just drag it off the card.',
+  'Sensoren': 'Sensors',
+  'Suchen …': 'Search …',
   'Erst ein Gerät wählen — oder oben auf „Sprung“ stellen.': 'Pick a device first — or set “Jump” above.',
   'Meine Geräte & Sensoren laden': 'Load my devices & sensors',
   'Keine Sensoren gefunden.': 'No sensors found.',
@@ -1420,7 +1451,6 @@ function yamlEscape(s) {
   function svgVon(n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (SYM[n] || SYM.power) + '</svg>'; }
   function domainJetzt() { return el('bk-funktion').value === 'sprung' ? '' : (el('bk-entity').value || '').split('.')[0]; }
   function istStatuslos() { return el('bk-funktion').value === 'sprung' || STATUSLOS.indexOf(domainJetzt()) >= 0; }
-  function alleSlots(f) { Array.prototype.forEach.call(el('bk-vorschau').querySelectorAll('.bk-slot'), f); }
 
   /* ---- Symbol-Galerie ---- */
   function markiereGitter() {
@@ -1475,54 +1505,131 @@ function yamlEscape(s) {
   }
   el('bk-vorschau').addEventListener('click', function (ev) {
     if (ev.target.closest && ev.target.closest('.bk-chip')) return;
+    if (Date.now() - ebenGezogen < 300) return;
     anZ = !anZ; vorschau();
   });
 
-  /* ---- Sensor-Chips: hinzufügen + auf Ecken ziehen ---- */
-  function slotUnter(x, y) {
-    var hit = null;
-    alleSlots(function (s) { var r = s.getBoundingClientRect();
-      if (x >= r.left - 16 && x <= r.right + 16 && y >= r.top - 16 && y <= r.bottom + 16) hit = s; });
-    return hit;
+  /* ---- Magnet-Leinwand: ALLES auf die Karte ziehen ----
+     Palette → Karte: frei platzieren (x/y in %), Ecken/Mittelachsen rasten
+     magnetisch ein; ein schaltbares Gerät in der MITTE abgelegt WIRD der
+     Button. Von der Karte herunterziehen = entfernen. */
+  var SCHALTBAR = ['lock', 'light', 'switch', 'fan', 'cover', 'scene', 'script', 'button', 'input_boolean', 'media_player'];
+  var ECKEN = { ol: [15, 14], or: [85, 14], ul: [15, 86], ur: [85, 86] };
+  var ebenGezogen = 0;
+  function chipBau(entity, name, wert) {
+    var chip = document.createElement('span'); chip.className = 'bk-chip';
+    chip.dataset.entity = entity; chip.dataset.name = name || entity; chip.dataset.wert = wert || '';
+    var b = document.createElement('b'); b.textContent = wert || '';
+    var i2 = document.createElement('i'); i2.textContent = name || entity;
+    chip.appendChild(b); chip.appendChild(i2);
+    if (!wert) chip.classList.add('geraet');
+    return chip;
   }
-  function ziehbar(chip) {
-    chip.addEventListener('pointerdown', function (ev) {
-      if (ev.target.classList.contains('bk-chip-x')) return;
-      ev.preventDefault();
-      chip.setPointerCapture(ev.pointerId);
-      chip.classList.add('zieht'); document.body.classList.add('bk-ziehen');
-      var move = function (e2) {
-        chip.style.position = 'fixed'; chip.style.left = (e2.clientX - 34) + 'px';
-        chip.style.top = (e2.clientY - 14) + 'px'; chip.style.zIndex = '99';
-        var s2 = slotUnter(e2.clientX, e2.clientY);
-        alleSlots(function (s) { s.classList.toggle('ziel', s === s2); });
-      };
-      var up = function (e2) {
-        chip.removeEventListener('pointermove', move); chip.removeEventListener('pointerup', up);
-        chip.removeEventListener('pointercancel', up);
-        chip.style.position = ''; chip.style.left = ''; chip.style.top = ''; chip.style.zIndex = '';
-        chip.classList.remove('zieht'); document.body.classList.remove('bk-ziehen');
-        var s2 = slotUnter(e2.clientX, e2.clientY);
-        alleSlots(function (s) { s.classList.remove('ziel'); });
-        if (s2) { var alt = s2.querySelector('.bk-chip'); if (alt) el('bk-chips').appendChild(alt); s2.appendChild(chip); }
-        else { el('bk-chips').appendChild(chip); }
-      };
-      chip.addEventListener('pointermove', move);
-      chip.addEventListener('pointerup', up);
-      chip.addEventListener('pointercancel', up);
+  function kartePos(x, y) {
+    var r = el('bk-vorschau').getBoundingClientRect();
+    return { x: (x - r.left) / r.width * 100, y: (y - r.top) / r.height * 100,
+      drin: x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 12 && y <= r.bottom + 12 };
+  }
+  function schnapp(p, schaltbar) {
+    var s = { x: Math.max(4, Math.min(96, p.x)), y: Math.max(5, Math.min(95, p.y)), pos: '', mitte: false };
+    s.mitte = !!schaltbar && Math.abs(p.x - 50) < 24 && Math.abs(p.y - 50) < 26;
+    if (s.mitte) return s;
+    for (var k in ECKEN) { var e = ECKEN[k];
+      if (Math.abs(p.x - e[0]) < 12 && Math.abs(p.y - e[1]) < 13) { s.x = e[0]; s.y = e[1]; s.pos = k; return s; } }
+    if (Math.abs(p.x - 50) < 6) s.x = 50;
+    if (Math.abs(p.y - 50) < 7) s.y = 50;
+    return s;
+  }
+  function hilfenZeig(s) {
+    var H = el('bk-hilfen');
+    H.querySelector('.bk-linie.v').classList.toggle('an', !!s && !s.pos && !s.mitte && s.x === 50);
+    H.querySelector('.bk-linie.h').classList.toggle('an', !!s && !s.pos && !s.mitte && s.y === 50);
+    Array.prototype.forEach.call(H.querySelectorAll('.bk-punkt'), function (pk) {
+      pk.classList.toggle('an', !!s && s.pos === pk.dataset.a); });
+    H.querySelector('.bk-mittezone').classList.toggle('an', !!s && s.mitte);
+  }
+  function hauptGeraet(entity) {
+    el('bk-entity').value = entity;
+    symbolWahl = ''; markiereGitter(); felder(); vorschau();
+    var ico = el('bk-ico'); ico.classList.remove('pop'); void ico.offsetWidth; ico.classList.add('pop');
+    setTimeout(function () { ico.classList.remove('pop'); }, 600);
+  }
+  function platziere(chip, s) {
+    chip.classList.add('auf-karte');
+    chip.style.left = s.x.toFixed(0) + '%'; chip.style.top = s.y.toFixed(0) + '%';
+    chip.dataset.pos = s.pos || ''; chip.dataset.x = s.x.toFixed(0); chip.dataset.y = s.y.toFixed(0);
+    el('bk-vorschau').appendChild(chip);
+    chip.classList.remove('plopp'); void chip.offsetWidth; chip.classList.add('plopp');
+  }
+  function ziehStart(ev, quelle, istNeu) {
+    ev.preventDefault();
+    var start = { x: ev.clientX, y: ev.clientY }, aktiv = false, geist = null;
+    var schaltbar = SCHALTBAR.indexOf((quelle.dataset.entity || '').split('.')[0]) >= 0;
+    var move = function (e2) {
+      if (!aktiv && Math.abs(e2.clientX - start.x) + Math.abs(e2.clientY - start.y) < 7) return;
+      if (!aktiv) {
+        aktiv = true;
+        geist = istNeu ? chipBau(quelle.dataset.entity, quelle.dataset.name, quelle.dataset.wert) : quelle;
+        if (istNeu) document.body.appendChild(geist);
+        geist.classList.add('zieht'); document.body.classList.add('bk-ziehen');
+      }
+      geist.style.position = 'fixed'; geist.style.left = (e2.clientX - 34) + 'px';
+      geist.style.top = (e2.clientY - 14) + 'px'; geist.style.zIndex = '99'; geist.style.transform = 'none';
+      var p = kartePos(e2.clientX, e2.clientY);
+      el('bk-vorschau').classList.toggle('magnet', p.drin);
+      hilfenZeig(p.drin ? schnapp(p, schaltbar) : null);
+    };
+    var up = function (e2) {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      if (!aktiv) return;
+      ebenGezogen = Date.now();
+      document.body.classList.remove('bk-ziehen');
+      el('bk-vorschau').classList.remove('magnet');
+      hilfenZeig(null);
+      geist.classList.remove('zieht');
+      geist.style.position = ''; geist.style.left = ''; geist.style.top = '';
+      geist.style.zIndex = ''; geist.style.transform = '';
+      var p = kartePos(e2.clientX, e2.clientY);
+      if (!p.drin) { geist.remove(); return; }
+      var s = schnapp(p, schaltbar);
+      if (s.mitte) { geist.remove(); hauptGeraet(quelle.dataset.entity); return; }
+      if (istNeu && el('bk-vorschau').querySelectorAll('.bk-chip.auf-karte').length >= 6) { geist.remove(); return; }
+      platziere(geist, s);
+      if (istNeu) kartenZiehbar(geist);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
+  function paletteZiehbar(chip) { chip.addEventListener('pointerdown', function (ev) { ziehStart(ev, chip, true); }); }
+  function kartenZiehbar(chip) { chip.addEventListener('pointerdown', function (ev) { ziehStart(ev, chip, false); }); }
+  function bauePalette(d) {
+    var pal = el('bk-palette'); pal.innerHTML = '';
+    var grp = [['sensors', 'Sensoren'], ['locks', 'Schlösser'], ['lights', 'Lichter'], ['switches', 'Schalter'],
+      ['fans', 'Ventilatoren'], ['covers', 'Rollläden'], ['scenes', 'Szenen'], ['scripts', 'Skripte'],
+      ['buttons', 'Knöpfe'], ['input_booleans', 'Helfer (an/aus)'], ['media_players', 'Medien']];
+    grp.forEach(function (g) {
+      var L = d[g[0]] || []; if (!L.length) return;
+      var kopf = document.createElement('div'); kopf.className = 'bk-pal-kopf'; kopf.textContent = wt(g[1]);
+      pal.appendChild(kopf);
+      L.forEach(function (e) { var c = chipBau(e.entity, e.name, e.wert || ''); paletteZiehbar(c); pal.appendChild(c); });
     });
+    el('bk-suche').placeholder = wt('Suchen …');
   }
-  el('bk-sensor-add').addEventListener('click', function () {
-    var o = el('bk-sensor').selectedOptions && el('bk-sensor').selectedOptions[0];
-    if (!o || !o.value) return;
-    if (el('bk-body').querySelectorAll('.bk-chip').length >= 8) return;
-    var chip = document.createElement('span'); chip.className = 'bk-chip'; chip.dataset.entity = o.value;
-    var b = document.createElement('b'); b.textContent = o.dataset.wert || '–';
-    var i2 = document.createElement('i'); i2.textContent = o.dataset.name || o.value;
-    var x = document.createElement('u'); x.className = 'bk-chip-x'; x.textContent = '×';
-    x.addEventListener('click', function () { chip.remove(); });
-    chip.appendChild(b); chip.appendChild(i2); chip.appendChild(x);
-    ziehbar(chip); el('bk-chips').appendChild(chip);
+  el('bk-suche').addEventListener('input', function () {
+    var q = this.value.trim().toLowerCase();
+    var kopf = null, sichtbar = 0;
+    Array.prototype.forEach.call(el('bk-palette').children, function (k) {
+      if (k.classList.contains('bk-pal-kopf')) {
+        if (kopf) kopf.hidden = sichtbar === 0;
+        kopf = k; sichtbar = 0; return;
+      }
+      var passt = !q || ((k.dataset.name || '') + ' ' + (k.dataset.entity || '')).toLowerCase().indexOf(q) >= 0;
+      k.hidden = !passt; if (passt) sichtbar++;
+    });
+    if (kopf) kopf.hidden = sichtbar === 0;
   });
 
   /* ---- Laden ---- */
@@ -1540,12 +1647,7 @@ function yamlEscape(s) {
           o.textContent = e.name + ' (' + e.entity + ')'; o.dataset.name = e.name; og.appendChild(o); });
         sel.appendChild(og);
       });
-      var sn = el('bk-sensor'); sn.innerHTML = '';
-      (d.sensors || []).forEach(function (e) { var o = document.createElement('option'); o.value = e.entity;
-        o.textContent = e.name + (e.wert ? ' — ' + e.wert : ''); o.dataset.name = e.name;
-        o.dataset.wert = e.wert || ''; sn.appendChild(o); });
-      if (!(d.sensors || []).length) { var o0 = document.createElement('option'); o0.value = '';
-        o0.textContent = wt('Keine Sensoren gefunden.'); sn.appendChild(o0); }
+      bauePalette(d);
       var stil = el('bk-stil'); stil.innerHTML = '';
       var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'basics'; })[0];
       var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
@@ -1596,8 +1698,13 @@ function yamlEscape(s) {
     if (!los && el('bk-motion').value !== 'std') L.push('motion: ' + el('bk-motion').value);
     if (el('bk-groesse').value === 'kompakt') L.push('groesse: kompakt');
     var ex = [];
-    alleSlots(function (s) { var c = s.querySelector('.bk-chip'); if (c) ex.push({ entity: c.dataset.entity, pos: s.dataset.pos }); });
-    if (ex.length) { L.push('extras:'); ex.forEach(function (e) { L.push('  - entity: ' + e.entity); L.push('    pos: ' + e.pos); }); }
+    Array.prototype.forEach.call(el('bk-vorschau').querySelectorAll('.bk-chip.auf-karte'), function (c) {
+      ex.push({ entity: c.dataset.entity, pos: c.dataset.pos || '', x: c.dataset.x, y: c.dataset.y });
+    });
+    if (ex.length) { L.push('extras:'); ex.forEach(function (e) {
+      L.push('  - entity: ' + e.entity);
+      if (e.pos) { L.push('    pos: ' + e.pos); }
+      else { L.push('    x: ' + e.x); L.push('    y: ' + e.y); } }); }
     el('bk-ergebnis').hidden = false;
     el('bk-yaml').textContent = L.join(NL);
     kopiereBk();
