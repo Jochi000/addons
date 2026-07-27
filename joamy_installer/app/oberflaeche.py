@@ -965,7 +965,7 @@ function yamlEscape(s) {
     if (el('bx-groesse').value === 'kompakt') L.push('groesse: kompakt');
     L.push('entities:');
     entities.forEach(function (e2) { L.push('  - ' + e2); });
-    return L.join('\n');
+    return L.join('\\n');
   }
   el('bx-erzeugen').addEventListener('click', function () {
     var li = angehakte('bx-lights'), co = angehakte('bx-covers');
