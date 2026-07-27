@@ -425,7 +425,7 @@ SEITE = """<!doctype html>
       deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer
       Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten.
       Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
-    <button id="bx-laden" type="button">Meine Lichter &amp; Rollläden laden</button>
+    <button id="bx-laden" type="button" data-i18n>Meine Lichter &amp; Rollläden laden</button>
     <div id="bx-body" hidden>
       <div class="kf-abschnitt">
         <span class="kf-titel" data-i18n>Lichter für die Beleuchtungs-Karte</span>
@@ -436,10 +436,18 @@ SEITE = """<!doctype html>
         <div id="bx-covers"></div>
       </div>
       <div class="kf-abschnitt">
+        <label class="kf-titel" for="bx-rahmen" data-i18n>Darstellung</label>
+        <select id="bx-rahmen">
+          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
+          <option value="frei" data-i18n>Jede Lampe / jeder Rollladen als freie Einzelkarte</option>
+        </select>
+        <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
+      </div>
+      <div class="kf-abschnitt">
         <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
         <select id="bx-groesse">
-          <option value="normal">Normal — wie im JoAmy-Vorbild</option>
-          <option value="kompakt">Kompakt — eine Stufe kleiner</option>
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
         </select>
       </div>
       <div class="kf-abschnitt">
@@ -483,6 +491,34 @@ function el(id) { return document.getElementById(id); }
    (darf HTML enthalten). Kein Treffer ⇒ Deutsch bleibt stehen. Gemerkt wird die
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
+  'Basics einrichten — Beleuchtung & Jalousie': 'Set up the Basics — lighting & blinds',
+  'Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die Karten soll, und füge den fertigen Code in dein Dashboard ein.':
+    'Two cards in one module: lights and blinds. Both detect on their own what your device can do — dimming, white tones, colour, slats. Pick below what goes on the cards and paste the finished code into your dashboard.',
+  'Favoritenstellung:': 'Favourite position:',
+  'Fahre Lampe oder Rollladen in deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten. Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.':
+    'Move a lamp or blind into your favourite position and hold the star for 2 seconds — it locks in. From then on a short press on the star recalls exactly that position. Holding for 2 seconds again deletes the favourite. Every device has its own favourite, and Home Assistant remembers them across restarts.',
+  'Meine Lichter & Rollläden laden': 'Load my lights & blinds',
+  'Lichter für die Beleuchtungs-Karte': 'Lights for the lighting card',
+  'Rollläden für die Jalousie-Karte': 'Blinds for the blinds card',
+  'Darstellung': 'Layout',
+  'Eine Karte mit Überschrift und Hintergrund': 'One card with heading and background',
+  'Jede Lampe / jeder Rollladen als freie Einzelkarte': 'Every lamp / blind as a free standalone card',
+  '„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.':
+    '“Free” creates its own code per device — each card can be placed individually in your dashboard.',
+  '# ─── nächste Karte — einzeln unter „Manuell“ einfügen ───': '# ─── next card — paste separately via “Manual” ───',
+  'Größe': 'Size',
+  'Normal — wie im JoAmy-Vorbild': 'Normal — like the JoAmy original',
+  'Kompakt — eine Stufe kleiner': 'Compact — one step smaller',
+  'Beleuchtungs-Karte — beim Hinzufügen unter „Manuell“ einfügen': 'Lighting card — paste via “Manual” when adding a card',
+  'Jalousie-Karte — als zweite Karte genauso einfügen': 'Blinds card — paste the same way as a second card',
+  'Licht-Code kopieren': 'Copy lighting code',
+  'Jalousie-Code kopieren': 'Copy blinds code',
+  'Keine gefunden.': 'None found.',
+  'Lade …': 'Loading …',
+  'Neu laden': 'Reload',
+  '# Kein Licht angehakt.': '# No light ticked.',
+  '# Kein Rollladen angehakt.': '# No blind ticked.',
+  'Hier stehen nach dem Kauf nur deine Styles.': 'After your purchase only your styles are listed here.',
   'Wie füge ich den Code ins Dashboard ein? (kurzes Video)': 'How do I paste the code into my dashboard? (short video)',
   'Dashboard öffnen → Menü oben rechts → Dashboard bearbeiten': 'Open your dashboard → menu top right → Edit dashboard',
   'Auf + tippen → Reiter Nach Karte → nach Manuell suchen': 'Tap + → tab By card → search for Manual',
@@ -961,11 +997,20 @@ function yamlEscape(s) {
     return Array.prototype.slice.call(el(ziel).querySelectorAll('input:checked')).map(function (c) { return c.dataset.entity; });
   }
   function baueYaml(typ, entities) {
-    var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
-    if (el('bx-groesse').value === 'kompakt') L.push('groesse: kompakt');
-    L.push('entities:');
-    entities.forEach(function (e2) { L.push('  - ' + e2); });
-    return L.join('\\n');
+    var frei = el('bx-rahmen') && el('bx-rahmen').value === 'frei';
+    var kompakt = el('bx-groesse').value === 'kompakt';
+    function eine(liste) {
+      var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
+      if (frei) L.push('rahmen: frei');
+      if (kompakt) L.push('groesse: kompakt');
+      L.push('entities:');
+      liste.forEach(function (e2) { L.push('  - ' + e2); });
+      return L.join('\\n');
+    }
+    if (!frei) return eine(entities);
+    // frei: jedes Gerät bekommt seinen eigenen Code — einzeln einfügen.
+    return entities.map(function (e2) { return eine([e2]); })
+      .join('\\n\\n' + wt('# ─── nächste Karte — einzeln unter „Manuell“ einfügen ───') + '\\n');
   }
   el('bx-erzeugen').addEventListener('click', function () {
     var li = angehakte('bx-lights'), co = angehakte('bx-covers');
