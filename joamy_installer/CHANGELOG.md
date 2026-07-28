@@ -1,5 +1,18 @@
 # Änderungsprotokoll
 
+## 0.1.35
+
+- Beschriftungen und Sprungziele mit Sonderzeichen (@, -, *, Doppelpunkt,
+  Apostroph) erzeugen jetzt gültigen Code — vorher lehnte Home Assistant ihn ab,
+  während die Seite „Kopiert!" meldete.
+- Der Sprachwechsel erreicht jetzt ALLE Bereiche: Baukasten-Palette, Gerätegruppen,
+  Suchfeld, Vorschau und die Lade-Knöpfe von Basics und Kalender.
+- „Jede Lampe als freie Einzelkarte" liefert je Karte einen eigenen Code mit
+  eigenem Kopierknopf (zusammen eingefügt lehnte Home Assistant sie ab).
+- Ohne Kalender in Home Assistant sagt der Konfigurator das ehrlich, statt einen
+  leeren Code als „Kopiert!" zu melden.
+- Klappt das Kopieren nicht, steht das jetzt da — statt einer falschen Erfolgsmeldung.
+
 ## 0.1.34
 
 - Neuer Baustein: KALENDER. Der Konfigurator findet deine Kalender automatisch

@@ -236,6 +236,9 @@ SEITE = """<!doctype html>
   .mk-lage { font: 12.5px var(--mono); color: var(--tinte-3); }
   /* ---- Button-Baukasten (Basics) ---- */
   .bk-trenn { border-top: 1px solid var(--nacht-linie); margin: 28px 0 18px; }
+  .bx-extra-code { display: grid; gap: 8px; margin-top: 12px; }
+  .bx-extra-code pre { font: 13px/1.6 var(--mono); color: var(--tinte-2); background: var(--nacht-vertieft);
+    border: 1px solid var(--nacht-linie); border-radius: var(--r-12); padding: 13px 15px; overflow-x: auto; white-space: pre; }
   .bk-zeilen { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: start; }
   @media (max-width: 640px) { .bk-zeilen { grid-template-columns: 1fr; } }
   .bk-buehne { display: grid; gap: 10px; justify-items: center; }
@@ -878,6 +881,11 @@ var UEB = {
   'an': 'on',
   'aus': 'off',
   'Keine gefunden.': 'None found.',
+  'Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.':
+    'Copying did not work — please select the code above and copy it by hand.',
+  'Karte %n kopieren': 'Copy card %n',
+  'Jede Karte einzeln einfügen — Home Assistant nimmt immer nur eine auf einmal.':
+    'Paste each card separately — Home Assistant only accepts one at a time.',
   'Lade …': 'Loading …',
   'Neu laden': 'Reload',
   '# Kein Licht angehakt.': '# No light ticked.',
@@ -1032,8 +1040,10 @@ function setzeSprache(l) {
   try { localStorage.setItem('joamy-addon-lang', sprache); } catch (e) {}
   spracheAnwenden();
   male(letzterStand);                                  // Status-Zeilen neu beschriften
-  if (window.__kfSprache) window.__kfSprache();         // Kamera-Konfigurator ebenso
-  if (window.__mkSprache) window.__mkSprache();         // Musik-Konfigurator ebenso
+  // STANDING RULE (Frank 28.07.): Der Sprachwechsel MUSS jede Sektion erreichen —
+  // auch alles, was per JavaScript gesetzt wurde (Platzhalter, Listen, Statuszeilen).
+  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache']
+    .forEach(function (n) { if (window[n]) { try { window[n](); } catch (e) {} } });
 }
 (function () {
   var o = document.querySelectorAll('.lang-opt');
@@ -1356,7 +1366,7 @@ function yamlEscape(s) {
   el('zs-kopieren').addEventListener('click', function () {
     var t2 = el('zs-yaml').textContent;
     var fertig = function () { el('zs-meldung').style.color = 'var(--gruen)'; el('zs-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
-    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('zs-meldung').style.color = 'var(--rot)'; el('zs-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   });
 })();
@@ -1415,22 +1425,50 @@ function yamlEscape(s) {
     }
     // Nebeneinander braucht die Geräte in EINEM Code — sonst stünden sie
     // nie in einer Reihe. Nur frei OHNE Spalten trennt je Gerät.
-    if (!frei || spalten > 1) return eine(entities);
-    return entities.map(function (e2) { return eine([e2]); })
-      .join('\\n\\n' + wt('# ─── nächste Karte — einzeln unter „Manuell“ einfügen ───') + '\\n');
+    if (!frei || spalten > 1) return [eine(entities)];
+    // Mehrere Einzelkarten: NIE am Stück ausgeben — zusammen eingefügt lehnt
+    // Home Assistant sie ab („duplicated mapping key"). Je Karte ein eigener
+    // Block mit eigenem Kopierknopf (28.07.).
+    return entities.map(function (e2) { return eine([e2]); });
+  }
+  // Zeigt einen oder mehrere Codes an; ab dem zweiten je ein eigener Kopierknopf.
+  function zeigeCodes(pre, codes, leerText) {
+    var halter = pre.parentNode;
+    var alt = halter.querySelectorAll('.bx-extra-code');
+    for (var i = 0; i < alt.length; i++) halter.removeChild(alt[i]);
+    if (!codes.length) { pre.textContent = leerText; return; }
+    pre.textContent = codes[0];
+    for (var j = 1; j < codes.length; j++) {
+      (function (code, nr) {
+        var box = document.createElement('div'); box.className = 'bx-extra-code';
+        var p2 = document.createElement('pre'); p2.textContent = code;
+        var k = document.createElement('button'); k.type = 'button';
+        k.textContent = wt('Karte %n kopieren').replace('%n', String(nr));
+        k.addEventListener('click', function () { kopiereText(code); });
+        box.appendChild(p2); box.appendChild(k); halter.appendChild(box);
+      })(codes[j], j + 1);
+    }
+    if (codes.length > 1) {
+      var hin = document.createElement('span'); hin.className = 'hinweis bx-extra-code';
+      hin.textContent = wt('Jede Karte einzeln einfügen — Home Assistant nimmt immer nur eine auf einmal.');
+      halter.insertBefore(hin, halter.firstChild);
+    }
   }
   el('bx-erzeugen').addEventListener('click', function () {
     var li = angehakte('bx-lights'), co = angehakte('bx-covers');
     el('bx-ergebnis').hidden = false; el('bx-meldung').textContent = '';
-    el('bx-yaml-licht').textContent = li.length ? baueYaml('joamy-licht-card', li) : wt('# Kein Licht angehakt.');
-    el('bx-yaml-jal').textContent = co.length ? baueYaml('joamy-jalousie-card', co) : wt('# Kein Rollladen angehakt.');
+    zeigeCodes(el('bx-yaml-licht'), li.length ? baueYaml('joamy-licht-card', li) : [], wt('# Kein Licht angehakt.'));
+    zeigeCodes(el('bx-yaml-jal'), co.length ? baueYaml('joamy-jalousie-card', co) : [], wt('# Kein Rollladen angehakt.'));
   });
-  function kopiere(quelle) {
-    var t2 = el(quelle).textContent;
+  function kopiere(quelle) { kopiereText(el(quelle).textContent); }
+  function kopiereText(t2) {
     var fertig = function () { el('bx-meldung').style.color = 'var(--gruen)'; el('bx-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
-    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('bx-meldung').style.color = 'var(--rot)'; el('bx-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   }
+  window.__bxSprache = function () {
+    var b = el('bx-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Meine Lichter & Rollläden laden');
+  };
   el('bx-kopieren-licht').addEventListener('click', function () { kopiere('bx-yaml-licht'); });
   el('bx-kopieren-jal').addEventListener('click', function () { kopiere('bx-yaml-jal'); });
 })();
@@ -1663,7 +1701,7 @@ function yamlEscape(s) {
       ['buttons', 'Knöpfe'], ['input_booleans', 'Helfer (an/aus)'], ['media_players', 'Medien']];
     grp.forEach(function (g) {
       var L = d[g[0]] || []; if (!L.length) return;
-      var kopf = document.createElement('div'); kopf.className = 'bk-pal-kopf'; kopf.textContent = wt(g[1]);
+      var kopf = document.createElement('div'); kopf.className = 'bk-pal-kopf'; kopf.dataset.de = g[1]; kopf.textContent = wt(g[1]);
       pal.appendChild(kopf);
       L.forEach(function (e) { var c = chipBau(e.entity, e.name, e.wert || ''); paletteZiehbar(c); pal.appendChild(c); });
     });
@@ -1693,7 +1731,7 @@ function yamlEscape(s) {
       var sel = el('bk-entity'); sel.innerHTML = '';
       grp.forEach(function (g) {
         var L = d[g[0]] || []; if (!L.length) return;
-        var og = document.createElement('optgroup'); og.label = wt(g[1]);
+        var og = document.createElement('optgroup'); og.dataset.de = g[1]; og.label = wt(g[1]);
         L.forEach(function (e) { var o = document.createElement('option'); o.value = e.entity;
           o.textContent = e.name + ' (' + e.entity + ')'; o.dataset.name = e.name; og.appendChild(o); });
         sel.appendChild(og);
@@ -1727,20 +1765,37 @@ function yamlEscape(s) {
   function kopiereBk() {
     var t2 = el('bk-yaml').textContent;
     var fertig = function () { el('bk-meldung').style.color = 'var(--gruen)'; el('bk-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
-    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('bk-meldung').style.color = 'var(--rot)'; el('bk-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   }
+  window.__bkSprache = function () {
+    var b = el('bk-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Meine Geräte & Sensoren laden');
+    var s = el('bk-suche'); if (s) s.placeholder = wt('Suchen …');
+    var lb = el('bk-label'); if (lb) lb.placeholder = wt('automatisch — Name des Geräts');
+    // Paletten-Überschriften + Gerätegruppen neu beschriften
+    Array.prototype.forEach.call(document.querySelectorAll('#bk-palette .bk-pal-kopf'), function (k) {
+      if (k.dataset.de) k.textContent = wt(k.dataset.de);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#bk-entity optgroup'), function (g) {
+      if (g.dataset.de) g.label = wt(g.dataset.de);
+    });
+    var auto = document.querySelector('#bk-symgrid button[data-sym=""]');
+    if (auto) { auto.textContent = wt('Automatisch').slice(0, 4); auto.title = wt('Automatisch'); }
+    felder(); vorschau();
+  };
   el('bk-erzeugen').addEventListener('click', function () {
     var fn = el('bk-funktion').value, d = domainJetzt(), los = istStatuslos();
     el('bk-meldung').textContent = '';
     var L = ['type: custom:joamy-button-card', 'stil: ' + el('bk-stil').value];
-    if (fn === 'sprung') { L.push('aktion: sprung'); L.push('ziel: ' + (el('bk-ziel').value || '/')); }
+    if (fn === 'sprung') { L.push('aktion: sprung'); L.push('ziel: ' + yamlEscape(el('bk-ziel').value || '/')); }
     else {
       if (!el('bk-entity').value) { el('bk-meldung').style.color = 'var(--rot)';
         el('bk-meldung').textContent = wt('Erst ein Gerät wählen — oder oben auf „Sprung“ stellen.'); return; }
       L.push('entity: ' + el('bk-entity').value);
     }
-    if (el('bk-label').value) L.push('label: ' + (/[:#"]/.test(el('bk-label').value) ? "'" + el('bk-label').value.replace(/'/g, '') + "'" : el('bk-label').value));
+    // yamlEscape kennt @ & * - [ { ! | > % ? und Leerzeichen — Eigenbau-Quoting
+    // erzeugte bei „@Zuhause" oder „- Küche" YAML, das HA ablehnt (28.07.).
+    if (el('bk-label').value) L.push('label: ' + yamlEscape(el('bk-label').value));
     if (symbolWahl) L.push('symbol: ' + symbolWahl);
     if (!los && d !== 'lock' && el('bk-farben-eigene').checked) {
       L.push('farbe_an: "' + el('bk-farbe-an').value + '"');
@@ -1794,6 +1849,9 @@ function yamlEscape(s) {
       el('kl-body').hidden = false;
     }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Meine Kalender laden'); });
   });
+  window.__klSprache = function () {
+    var b = el('kl-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Meine Kalender laden');
+  };
   el('kl-erzeugen').addEventListener('click', function () {
     var alle = Array.prototype.slice.call(el('kl-liste').querySelectorAll('input[type=checkbox]'));
     var an = alle.filter(function (c) { return c.checked; });
@@ -1805,14 +1863,16 @@ function yamlEscape(s) {
       L.push('entities:');
       an.forEach(function (c) { L.push('  - ' + c.dataset.entity); });
     }
-    if (alle.length && !an.length) { el('kl-meldung').style.color = 'var(--rot)';
+    if (!alle.length) { el('kl-meldung').style.color = 'var(--rot)';
+      el('kl-meldung').textContent = wt('Keine Kalender gefunden — in Home Assistant unter Einstellungen → Integrationen einen „Lokalen Kalender" anlegen.'); return; }
+    if (!an.length) { el('kl-meldung').style.color = 'var(--rot)';
       el('kl-meldung').textContent = wt('Mindestens einen Kalender anhaken.'); return; }
     if (el('kl-groesse').value === 'kompakt') L.push('groesse: kompakt');
     el('kl-ergebnis').hidden = false;
     el('kl-yaml').textContent = L.join(NL);
     var t2 = el('kl-yaml').textContent;
     var fertig = function () { el('kl-meldung').style.color = 'var(--gruen)'; el('kl-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
-    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); fertig(); } catch (e) {} document.body.removeChild(ta); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('kl-meldung').style.color = 'var(--rot)'; el('kl-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   });
 })();
