@@ -422,6 +422,14 @@ class ZeitschaltuhrEngine:
                 # Baustein (Karte) noch nicht installiert → der Hub kennt die
                 # WS-Kommandos nicht. Leise schlafen statt Fehlerflut — sobald
                 # die Karte einzieht, greift der nächste Anlauf.
+                # Waehrend ein Baustein installiert wird, laedt der Hub kurz neu —
+                # ein erwarteter Zustand, kein Absturz. Ruhig protokollieren und rasch
+                # erneut versuchen; das 90-s-Feuerfenster faengt faellige Schaltungen auf.
+                if "not_loaded" in str(e):
+                    LOG.info("Zeitschaltuhr: Hub laedt gerade neu — naechster Anlauf in 5 s.")
+                    await asyncio.sleep(5)
+                    erst_lauf = True
+                    continue
                 if "unknown_command" in str(e):
                     LOG.info("Zeitschaltuhr: Baustein noch nicht installiert — schlafe 5 min.")
                     await asyncio.sleep(300)

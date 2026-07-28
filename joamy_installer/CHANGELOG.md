@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.1.36
+
+- Während ein Kauf installiert wird, lädt der Hub kurz neu — die Zeitschaltuhr
+  schreibt dafür keinen Fehlerbericht mehr ins Log, sondern versucht es ruhig
+  erneut. Fällige Schaltungen gehen dabei wie bisher nicht verloren.
+
 ## 0.1.35
 
 - Beschriftungen und Sprungziele mit Sonderzeichen (@, -, *, Doppelpunkt,
