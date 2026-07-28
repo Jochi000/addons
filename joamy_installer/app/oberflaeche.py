@@ -1379,7 +1379,7 @@ function yamlEscape(s) {
     var wrap = el(ziel); wrap.innerHTML = '';
     liste.forEach(function (e, i) {
       var z = document.createElement('label'); z.className = 'kf-cam';
-      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 8; cb.dataset.entity = e.entity;
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 3;   // Voreinstellung bewusst klein: 8 Geraete ergaben eine 3,5-m-Karte cb.dataset.entity = e.entity;
       var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
       z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
     });
@@ -1611,7 +1611,11 @@ function yamlEscape(s) {
     var b = document.createElement('b'); b.textContent = wert || '';
     var i2 = document.createElement('i'); i2.textContent = name || entity;
     chip.appendChild(b); chip.appendChild(i2);
-    if (!wert) chip.classList.add('geraet');
+    // Ein Sensor OHNE Wert ist trotzdem ein Sensor — nur schaltbare Domaenen
+    // duerfen wie ein Geraet aussehen (sonst landen 5 wertlose Sensoren als 'Geraet').
+    var _dom = String(entity).split('.')[0];
+    if (!wert && SCHALTBAR.indexOf(_dom) >= 0) chip.classList.add('geraet');
+    else if (!wert) { b.textContent = '—'; }
     return chip;
   }
   function kartePos(x, y) {

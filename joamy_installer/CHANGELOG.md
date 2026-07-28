@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.1.37
+
+- Basics schlägt jetzt drei statt acht Geräte vor — acht ergaben eine über drei
+  Meter hohe Karte als Voreinstellung.
+- Sensoren ohne aktuellen Wert sehen im Baukasten nicht mehr wie schaltbare Geräte aus.
+
 ## 0.1.36
 
 - Während ein Kauf installiert wird, lädt der Hub kurz neu — die Zeitschaltuhr
