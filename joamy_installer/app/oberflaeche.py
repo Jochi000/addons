@@ -214,6 +214,8 @@ SEITE = """<!doctype html>
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
+  #knopf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
+  #knopf-meldung.fehler { color: var(--rot); }
   /* Musik-Karte: Platzierung am nachgebauten Dashboard */
   .mk-hinweis { padding: 11px 13px; margin-bottom: 12px; border-radius: var(--r-12); font-size: 13.5px;
     line-height: 1.5; background: rgba(194, 154, 108, .09); border: 1px solid rgba(194, 154, 108, .32);
@@ -683,6 +685,19 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
+  <section class="karte" id="knopf-karte" hidden>
+    <h2 data-i18n>JoAmy-Knopf</h2>
+    <p class="kf-intro" data-i18n>Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi
+      (zum Beispiel „Karten werfen"). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist,
+      und lässt sich mit dem Finger frei verschieben.</p>
+    <div class="kf-abschnitt">
+      <label><input type="checkbox" id="knopf-schalter"> <b data-i18n>JoAmy-Knopf auf dem Dashboard anzeigen</b></label>
+      <span class="hinweis" data-i18n>Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst
+        laufen unverändert weiter — nur die Bedienstelle verschwindet.</span>
+    </div>
+    <div id="knopf-meldung"></div>
+  </section>
+
   <section class="karte" id="zs-karte" hidden>
     <h2 data-i18n>Zeitschaltuhr einrichten</h2>
     <p class="kf-intro" data-i18n>Wie an einer klassischen Zeitschaltuhr: Gerät wählen, Ein- und
@@ -861,6 +876,16 @@ var UEB = {
   'Beim Ziehen erscheinen Magnet-Linien: Ecken und Mittelachsen rasten sanft ein. Zum Entfernen einen Wert einfach von der Karte herunterziehen.':
     'While dragging, magnet lines appear: corners and centre axes snap gently. To remove a value, just drag it off the card.',
   'Sensoren': 'Sensors',
+  'JoAmy-Knopf': 'JoAmy button',
+  'Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi (zum Beispiel „Karten werfen"). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist, und lässt sich mit dem Finger frei verschieben.':
+    'The small round button on the dashboard opens the JoAmy modes (for example \u201cThrow cards\u201d). It appears automatically as soon as a JoAmy card is loaded and can be moved freely with your finger.',
+  'JoAmy-Knopf auf dem Dashboard anzeigen': 'Show the JoAmy button on the dashboard',
+  'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
+    'Hidden applies everywhere and for all users. The modes themselves keep running — only the control disappears.',
+  'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
+  'Ausgeblendet — überall und sofort.': 'Hidden — everywhere, immediately.',
+  'Das hat nicht geklappt — Home Assistant war nicht erreichbar.':
+    'That did not work — Home Assistant was not reachable.',
   'Kalender einrichten': 'Set up the calendar',
   'Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen willst. Liegt ein Termin in der aktuellen Uhrzeit, legt er sich groß über die Karte; der Kalender bleibt dahinter verschwommen sichtbar, ein Fingertipp blendet ihn aus.':
     'Your calendars are found automatically — untick what you don’t want to see. When an appointment falls on the current time it lays itself large over the card; the calendar stays blurred behind it, one tap hides it.',
@@ -1018,6 +1043,47 @@ var sprache = (function () {
 })();
 // wt(): deutscher Text rein, englischer zurück (sonst unverändert).
 function wt(s) { if (sprache !== 'en') return s; var t = LOOKUP[norm(s)]; return t == null ? s : t; }
+
+/* --- JoAmy-Knopf: Sichtbarkeit lädt/setzt den Hub-Store über das Add-on --- */
+function ladeKnopf() {
+  fetch('knopf', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (t) {
+      if (!t || !t.verfuegbar) return;           // Baustein nicht da → Sektion bleibt weg
+      window.__knopfDa = true;
+      var karte = el('knopf-karte'), schalter = el('knopf-schalter');
+      if (!karte || !schalter) return;
+      karte.hidden = false;
+      schalter.checked = !!t.sichtbar;
+      if (schalter.dataset.verdrahtet) return;
+      schalter.dataset.verdrahtet = '1';
+      schalter.addEventListener('change', function () {
+        var soll = schalter.checked;
+        schalter.disabled = true;
+        fetch('knopf', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sichtbar: soll }) })
+          .then(function (r) { return r.json(); })
+          .then(function (a) {
+            schalter.disabled = false;
+            var m = el('knopf-meldung');
+            if (a && a.ok) {
+              schalter.checked = !!a.sichtbar;   // der ECHTE Stand aus dem Store
+              if (m) { m.textContent = a.sichtbar ? wt('Der Knopf ist wieder da — überall.') : wt('Ausgeblendet — überall und sofort.'); m.className = ''; }
+            } else {
+              schalter.checked = !soll;          // nichts vorgaukeln
+              if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
+            }
+          })
+          .catch(function () {
+            schalter.disabled = false; schalter.checked = !soll;
+            var m = el('knopf-meldung');
+            if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
+          });
+      });
+    })
+    .catch(function () {});
+}
+ladeKnopf();
 function elementRendern(e) {
   if (e.__i18nHtml === undefined) { e.__i18nHtml = e.innerHTML; e.__i18nKey = norm(e.textContent); }
   var ziel = e.__i18nHtml;
@@ -1121,6 +1187,9 @@ function male(st) {
   if (el('zs-karte')) el('zs-karte').hidden = !gekauftB.zeitschaltuhr;
   if (el('kal-karte')) el('kal-karte').hidden = !gekauftB.kalender;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
+  // JoAmy-Knopf: sichtbar, wenn der toss-Baustein WIRKLICH antwortet (ladeKnopf
+  // fragt nach). Der Status-Poll (alle 5 s) darf die Entscheidung nicht umwerfen.
+  if (el('knopf-karte')) el('knopf-karte').hidden = !(gekauftB.toss || window.__knopfDa);
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
 }
@@ -2075,6 +2144,21 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Medienquellen-Endpunkt fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e), "quellen": []}, status=500)
 
+    async def knopf_get(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.knopf_status())
+        except Exception as e:
+            LOG.error("Knopf-Status fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "verfuegbar": False, "fehler": str(e)}, status=500)
+
+    async def knopf_post(request: web.Request) -> web.Response:
+        try:
+            daten = await request.json()
+            return web.json_response(await installer.knopf_schalten(bool(daten.get("sichtbar"))))
+        except Exception as e:
+            LOG.error("Knopf-Schalten fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
     async def anleitung(request: web.Request) -> web.StreamResponse:
         weg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "anleitung.mp4")
         if not os.path.exists(weg):
@@ -2098,5 +2182,7 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/logs", logs)
     app.router.add_get("/entities", entities)
     app.router.add_get("/medienquellen", medienquellen)
+    app.router.add_get("/knopf", knopf_get)
+    app.router.add_post("/knopf", knopf_post)
     app.router.add_get("/anleitung.mp4", anleitung)
     return app
