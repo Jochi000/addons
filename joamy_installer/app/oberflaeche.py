@@ -737,6 +737,45 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
+  <section class="karte" id="sz-karte" hidden>
+    <h2 data-i18n>Szenen-Karte einrichten</h2>
+    <p class="kf-intro" data-i18n>Deine Szenen werden automatisch gefunden — hake ab, was nicht auf die
+      Karte soll. Auf dem Dashboard gilt: Antippen schaltet die Szene, Halten zeigt als Traum, was sie
+      verändern würde — mit allem, was gerade nicht im Bild ist.</p>
+    <button id="sz-laden" type="button" data-i18n>Meine Szenen laden</button>
+    <div id="sz-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Diese Szenen zeigt die Karte</span>
+        <div id="sz-liste"></div>
+        <span class="hinweis" data-i18n>Alle angehakt heißt: die Karte erkennt auch später neu angelegte Szenen von selbst. Wählst du ab, zeigt sie genau deine Auswahl.</span>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="sz-titel" data-i18n>Überschrift auf der Karte</label>
+        <input id="sz-titel" type="text" placeholder="Szenen">
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="sz-groesse" data-i18n>Größe</label>
+        <select id="sz-groesse">
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="sz-stil" data-i18n>Style</label>
+        <span id="sz-stil-hinweis" class="hinweis" hidden></span>
+        <select id="sz-stil"></select>
+      </div>
+      <button id="sz-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
+      <div id="sz-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
+          <pre id="sz-yaml"></pre>
+        </div>
+        <div id="sz-meldung"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="karte" id="kal-karte" hidden>
     <h2 data-i18n>Kalender einrichten</h2>
     <p class="kf-intro" data-i18n>Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen
@@ -877,6 +916,17 @@ var UEB = {
     'While dragging, magnet lines appear: corners and centre axes snap gently. To remove a value, just drag it off the card.',
   'Sensoren': 'Sensors',
   'JoAmy-Knopf': 'JoAmy button',
+  'Szenen-Karte einrichten': 'Set up the scene card',
+  'Deine Szenen werden automatisch gefunden — hake ab, was nicht auf die Karte soll. Auf dem Dashboard gilt: Antippen schaltet die Szene, Halten zeigt als Traum, was sie verändern würde — mit allem, was gerade nicht im Bild ist.':
+    'Your scenes are found automatically — untick what should not be on the card. On the dashboard: tap runs the scene, holding shows as a dream what it would change — including everything not currently on screen.',
+  'Meine Szenen laden': 'Load my scenes',
+  'Diese Szenen zeigt die Karte': 'These scenes appear on the card',
+  'Alle angehakt heißt: die Karte erkennt auch später neu angelegte Szenen von selbst. Wählst du ab, zeigt sie genau deine Auswahl.':
+    'All ticked means: the card also picks up scenes you create later. If you untick some, it shows exactly your selection.',
+  'Überschrift auf der Karte': 'Card headline',
+  'Keine Szenen gefunden — in Home Assistant unter Einstellungen → Automatisierungen eine Szene anlegen.':
+    'No scenes found — create a scene in Home Assistant under Settings → Automations.',
+  'Mindestens eine Szene anhaken.': 'Tick at least one scene.',
   'Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi (zum Beispiel „Karten werfen"). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist, und lässt sich mit dem Finger frei verschieben.':
     'The small round button on the dashboard opens the JoAmy modes (for example \u201cThrow cards\u201d). It appears automatically as soon as a JoAmy card is loaded and can be moved freely with your finger.',
   'JoAmy-Knopf auf dem Dashboard anzeigen': 'Show the JoAmy button on the dashboard',
@@ -1108,7 +1158,7 @@ function setzeSprache(l) {
   male(letzterStand);                                  // Status-Zeilen neu beschriften
   // STANDING RULE (Frank 28.07.): Der Sprachwechsel MUSS jede Sektion erreichen —
   // auch alles, was per JavaScript gesetzt wurde (Platzhalter, Listen, Statuszeilen).
-  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache']
+  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache', '__szSprache']
     .forEach(function (n) { if (window[n]) { try { window[n](); } catch (e) {} } });
 }
 (function () {
@@ -1190,6 +1240,7 @@ function male(st) {
   // JoAmy-Knopf: sichtbar, wenn der toss-Baustein WIRKLICH antwortet (ladeKnopf
   // fragt nach). Der Status-Poll (alle 5 s) darf die Entscheidung nicht umwerfen.
   if (el('knopf-karte')) el('knopf-karte').hidden = !(gekauftB.toss || window.__knopfDa);
+  if (el('sz-karte')) el('sz-karte').hidden = !(gekauftB.traum || window.__szDa);
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
 }
@@ -1890,6 +1941,70 @@ function yamlEscape(s) {
   });
 })();
 
+/* ---- Szenen-Karte: Auto-Vorschlag (abwählbar) → Ein-Klick-Code ---- */
+(function () {
+  if (!document.getElementById('sz-laden')) return;
+  var NL = String.fromCharCode(10);
+  var geladen = false;
+  fetch('traum', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (t) {
+    if (t && t.verfuegbar) { window.__szDa = true; el('sz-karte').hidden = false; }
+  }).catch(function () {});
+  el('sz-laden').addEventListener('click', function () {
+    var b = this; b.disabled = true; b.textContent = wt('Lade …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      var wrap = el('sz-liste'); wrap.innerHTML = '';
+      var L = d.scenes || [];
+      L.forEach(function (e) {
+        var z = document.createElement('label'); z.className = 'kf-cam';
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.dataset.entity = e.entity;
+        var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
+        z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
+      });
+      if (!L.length) { var p2 = document.createElement('p'); p2.className = 'hinweis';
+        p2.textContent = wt('Keine Szenen gefunden — in Home Assistant unter Einstellungen → Automatisierungen eine Szene anlegen.'); wrap.appendChild(p2); }
+      var stil = el('sz-stil'); stil.innerHTML = '';
+      var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'traum'; })[0];
+      var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
+      var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
+      liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
+      var hw = el('sz-stil-hinweis');
+      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      el('sz-body').hidden = false; geladen = true;
+    }).catch(function () {
+      el('sz-meldung').style.color = 'var(--rot)';
+      el('sz-meldung').textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('sz-body').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Meine Szenen laden'); });
+  });
+  window.__szSprache = function () {
+    var b = el('sz-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Meine Szenen laden');
+  };
+  el('sz-erzeugen').addEventListener('click', function () {
+    var alle = Array.prototype.slice.call(el('sz-liste').querySelectorAll('input[type=checkbox]'));
+    var an = alle.filter(function (c) { return c.checked; });
+    el('sz-meldung').textContent = '';
+    if (!alle.length) { el('sz-meldung').style.color = 'var(--rot)';
+      el('sz-meldung').textContent = wt('Keine Szenen gefunden — in Home Assistant unter Einstellungen → Automatisierungen eine Szene anlegen.'); return; }
+    if (!an.length) { el('sz-meldung').style.color = 'var(--rot)';
+      el('sz-meldung').textContent = wt('Mindestens eine Szene anhaken.'); return; }
+    var L = ['type: custom:joamy-traum-card', 'stil: ' + el('sz-stil').value];
+    if (el('sz-titel').value) L.push('titel: ' + yamlEscape(el('sz-titel').value));
+    // Alle angehakt = Auto-Modus (KEINE scenes-Zeile): die Karte findet auch
+    // kuenftige Szenen von selbst. Teilmenge = explizite Liste.
+    if (an.length < alle.length) {
+      L.push('scenes:');
+      an.forEach(function (c) { L.push('  - ' + c.dataset.entity); });
+    }
+    if (el('sz-groesse').value === 'kompakt') L.push('groesse: kompakt');
+    el('sz-ergebnis').hidden = false;
+    el('sz-yaml').textContent = L.join(NL);
+    var t2 = el('sz-yaml').textContent;
+    var fertig = function () { el('sz-meldung').style.color = 'var(--gruen)'; el('sz-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('sz-meldung').style.color = 'var(--rot)'; el('sz-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
+  });
+})();
+
 /* ---- Kalender: Auto-Vorschlag (abwählbar) → Ein-Klick-Code ---- */
 (function () {
   if (!document.getElementById('kl-laden')) return;
@@ -2144,6 +2259,13 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Medienquellen-Endpunkt fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e), "quellen": []}, status=500)
 
+    async def traum_get(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.traum_status())
+        except Exception as e:
+            LOG.error("Traum-Status fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "verfuegbar": False, "fehler": str(e)}, status=500)
+
     async def knopf_get(request: web.Request) -> web.Response:
         try:
             return web.json_response(await installer.knopf_status())
@@ -2182,6 +2304,7 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/logs", logs)
     app.router.add_get("/entities", entities)
     app.router.add_get("/medienquellen", medienquellen)
+    app.router.add_get("/traum", traum_get)
     app.router.add_get("/knopf", knopf_get)
     app.router.add_post("/knopf", knopf_post)
     app.router.add_get("/anleitung.mp4", anleitung)

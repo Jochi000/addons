@@ -792,6 +792,13 @@ class Installer:
             LOG.debug("Core-WS nicht erreichbar: %s", e)
             return None
 
+    async def traum_status(self) -> dict:
+        """Ist die Szenen-Karte (Baustein traum) installiert? Steuert, ob der
+        Konfigurator auf der Seite erscheint (Franks Regel: nichts fuer nie
+        Gekauftes zeigen — installiert heisst beim Kunden gekauft)."""
+        res = await self._core_ws_befehle([{"type": "joamy_traum/store/get"}])
+        return {"ok": True, "verfuegbar": bool(res and res[0] is not None)}
+
     async def knopf_status(self) -> dict:
         """Gibt es den JoAmy-Knopf (toss-Baustein installiert), und ist er sichtbar?
 
@@ -895,7 +902,16 @@ class Installer:
             out.sort(key=lambda x: x["name"].lower())
             return out
 
+        szenen = []
+        for st in states:
+            eid = st.get("entity_id", "")
+            if isinstance(eid, str) and eid.startswith("scene."):
+                att = st.get("attributes") or {}
+                szenen.append({"entity": eid, "name": str(att.get("friendly_name") or eid)})
+        szenen.sort(key=lambda x: x["name"].lower())
+
         return {
+            "scenes": szenen,
             "cameras": liste("camera."),
             "binary_sensors": liste("binary_sensor."),
             "buttons": liste("button."),
