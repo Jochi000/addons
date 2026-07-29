@@ -214,8 +214,6 @@ SEITE = """<!doctype html>
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
-  #toss-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
-  #toss-meldung.fehler { color: var(--rot, #c0392b); }
   /* Musik-Karte: Platzierung am nachgebauten Dashboard */
   .mk-hinweis { padding: 11px 13px; margin-bottom: 12px; border-radius: var(--r-12); font-size: 13.5px;
     line-height: 1.5; background: rgba(194, 154, 108, .09); border: 1px solid rgba(194, 154, 108, .32);
@@ -685,19 +683,6 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
-  <section class="karte" id="toss-karte" hidden>
-    <h2 data-i18n>Karten werfen</h2>
-    <p class="kf-intro" data-i18n>Halte eine JoAmy-Karte 2 Sekunden fest, wische sie weg und wähle,
-      wer sie fangen soll — beim Empfänger erscheint die Karte live über seinem Dashboard, mit
-      Behalten, Schließen und Zurückwerfen.</p>
-    <div class="kf-abschnitt">
-      <label><input type="checkbox" id="toss-schalter"> <b data-i18n>Karten werfen ist eingeschaltet</b></label>
-      <span class="hinweis" data-i18n>Gilt sofort für alle Nutzer und alle JoAmy-Karten. Ausgeschaltet
-        bleibt dein Kauf natürlich erhalten — du kannst jederzeit wieder einschalten.</span>
-    </div>
-    <div id="toss-meldung"></div>
-  </section>
-
   <section class="karte" id="zs-karte" hidden>
     <h2 data-i18n>Zeitschaltuhr einrichten</h2>
     <p class="kf-intro" data-i18n>Wie an einer klassischen Zeitschaltuhr: Gerät wählen, Ein- und
@@ -876,16 +861,6 @@ var UEB = {
   'Beim Ziehen erscheinen Magnet-Linien: Ecken und Mittelachsen rasten sanft ein. Zum Entfernen einen Wert einfach von der Karte herunterziehen.':
     'While dragging, magnet lines appear: corners and centre axes snap gently. To remove a value, just drag it off the card.',
   'Sensoren': 'Sensors',
-  'Karten werfen': 'Throw cards',
-  'Halte eine JoAmy-Karte 2 Sekunden fest, wische sie weg und wähle, wer sie fangen soll — beim Empfänger erscheint die Karte live über seinem Dashboard, mit Behalten, Schließen und Zurückwerfen.':
-    'Hold any JoAmy card for 2 seconds, flick it away and choose who should catch it — the card appears live above the recipient\u2019s dashboard, with Keep, Close and Throw back.',
-  'Karten werfen ist eingeschaltet': 'Throwing cards is switched on',
-  'Gilt sofort für alle Nutzer und alle JoAmy-Karten. Ausgeschaltet bleibt dein Kauf natürlich erhalten — du kannst jederzeit wieder einschalten.':
-    'Applies immediately to all users and all JoAmy cards. When switched off your purchase is of course kept — you can switch it back on any time.',
-  'Eingeschaltet — auf allen Geräten aktiv.': 'Switched on — active on all devices.',
-  'Ausgeschaltet.': 'Switched off.',
-  'Das hat nicht geklappt — Home Assistant war nicht erreichbar.':
-    'That did not work — Home Assistant was not reachable.',
   'Kalender einrichten': 'Set up the calendar',
   'Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen willst. Liegt ein Termin in der aktuellen Uhrzeit, legt er sich groß über die Karte; der Kalender bleibt dahinter verschwommen sichtbar, ein Fingertipp blendet ihn aus.':
     'Your calendars are found automatically — untick what you don’t want to see. When an appointment falls on the current time it lays itself large over the card; the calendar stays blurred behind it, one tap hides it.',
@@ -1043,47 +1018,6 @@ var sprache = (function () {
 })();
 // wt(): deutscher Text rein, englischer zurück (sonst unverändert).
 function wt(s) { if (sprache !== 'en') return s; var t = LOOKUP[norm(s)]; return t == null ? s : t; }
-
-/* --- „Karten werfen" (toss): Schalter lädt/setzt den Hub-Store über das Add-on --- */
-function ladeToss() {
-  fetch('toss', { cache: 'no-store' })
-    .then(function (r) { return r.json(); })
-    .then(function (t) {
-      if (!t || !t.verfuegbar) return;           // Baustein nicht da → Sektion bleibt weg
-      window.__tossDa = true;
-      var karte = el('toss-karte'), schalter = el('toss-schalter');
-      if (!karte || !schalter) return;
-      karte.hidden = false;
-      schalter.checked = !!t.aktiv;
-      if (schalter.dataset.verdrahtet) return;
-      schalter.dataset.verdrahtet = '1';
-      schalter.addEventListener('change', function () {
-        var soll = schalter.checked;
-        schalter.disabled = true;
-        fetch('toss', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ aktiv: soll }) })
-          .then(function (r) { return r.json(); })
-          .then(function (a) {
-            schalter.disabled = false;
-            var m = el('toss-meldung');
-            if (a && a.ok) {
-              schalter.checked = !!a.aktiv;      // der ECHTE Stand aus dem Store
-              if (m) { m.textContent = a.aktiv ? wt('Eingeschaltet — auf allen Geräten aktiv.') : wt('Ausgeschaltet.'); m.className = ''; }
-            } else {
-              schalter.checked = !soll;          // nichts vorgaukeln
-              if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
-            }
-          })
-          .catch(function () {
-            schalter.disabled = false; schalter.checked = !soll;
-            var m = el('toss-meldung');
-            if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
-          });
-      });
-    })
-    .catch(function () {});
-}
-ladeToss();
 function elementRendern(e) {
   if (e.__i18nHtml === undefined) { e.__i18nHtml = e.innerHTML; e.__i18nKey = norm(e.textContent); }
   var ziel = e.__i18nHtml;
@@ -1187,10 +1121,6 @@ function male(st) {
   if (el('zs-karte')) el('zs-karte').hidden = !gekauftB.zeitschaltuhr;
   if (el('kal-karte')) el('kal-karte').hidden = !gekauftB.kalender;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
-  // toss: sichtbar, wenn der Baustein WIRKLICH antwortet (ladeToss fragt nach) —
-  // nicht nur, wenn er in der Kaufliste steht. Der Status-Poll (alle 5 s) darf
-  // die einmal getroffene Entscheidung nicht wieder umwerfen.
-  if (el('toss-karte')) el('toss-karte').hidden = !(gekauftB.toss || window.__tossDa);
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
 }
@@ -2145,21 +2075,6 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Medienquellen-Endpunkt fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e), "quellen": []}, status=500)
 
-    async def toss_get(request: web.Request) -> web.Response:
-        try:
-            return web.json_response(await installer.toss_status())
-        except Exception as e:
-            LOG.error("Toss-Status fehlgeschlagen: %s", e)
-            return web.json_response({"ok": False, "verfuegbar": False, "fehler": str(e)}, status=500)
-
-    async def toss_post(request: web.Request) -> web.Response:
-        try:
-            daten = await request.json()
-            return web.json_response(await installer.toss_schalten(bool(daten.get("aktiv"))))
-        except Exception as e:
-            LOG.error("Toss-Schalten fehlgeschlagen: %s", e)
-            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
-
     async def anleitung(request: web.Request) -> web.StreamResponse:
         weg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "anleitung.mp4")
         if not os.path.exists(weg):
@@ -2183,7 +2098,5 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/logs", logs)
     app.router.add_get("/entities", entities)
     app.router.add_get("/medienquellen", medienquellen)
-    app.router.add_get("/toss", toss_get)
-    app.router.add_post("/toss", toss_post)
     app.router.add_get("/anleitung.mp4", anleitung)
     return app
