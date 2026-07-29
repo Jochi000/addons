@@ -759,6 +759,64 @@ class Installer:
             LOG.debug("Core-API nicht erreichbar (%s %s): %s", methode, pfad, e)
             return None
 
+    async def _core_ws_befehle(self, befehle: list) -> list | None:
+        """Mehrere WebSocket-Kommandos an den Core in EINER Sitzung.
+
+        Die JoAmy-Store-Kommandos (joamy_toss/…) existieren nur über WebSocket —
+        die REST-Core-API kennt sie nicht. Rückgabe: Ergebnis je Befehl
+        (None, wenn der einzelne Befehl scheiterte), oder None, wenn schon die
+        Verbindung/Anmeldung nicht zustande kam.
+        """
+        url = f"{SUPERVISOR_URL}/core/websocket"
+        token = os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN)
+        try:
+            async with self.session.ws_connect(url, heartbeat=25) as ws:
+                while True:
+                    erst = await asyncio.wait_for(ws.receive_json(), timeout=20)
+                    if erst.get("type") == "auth_required":
+                        await ws.send_json({"type": "auth", "access_token": token})
+                    elif erst.get("type") == "auth_ok":
+                        break
+                    elif erst.get("type") == "auth_invalid":
+                        return None
+                ergebnisse = []
+                for nr, befehl in enumerate(befehle, start=1):
+                    await ws.send_json(dict(befehl, id=nr))
+                    while True:
+                        msg = await asyncio.wait_for(ws.receive_json(), timeout=20)
+                        if msg.get("id") == nr and msg.get("type") == "result":
+                            ergebnisse.append(msg.get("result") if msg.get("success") else None)
+                            break
+                return ergebnisse
+        except Exception as e:
+            LOG.debug("Core-WS nicht erreichbar: %s", e)
+            return None
+
+    async def toss_status(self) -> dict:
+        """Ist „Karten werfen" installiert, und steht der Schalter auf Ein?
+
+        Antwortet joamy_toss/store/get nicht (Baustein fehlt), bleibt die
+        Sektion auf der Seite verborgen — Einstellungen für nie Gekauftes
+        verwirren nur (Franks Regel).
+        """
+        res = await self._core_ws_befehle([{"type": "joamy_toss/store/get"}])
+        if not res or res[0] is None:
+            return {"ok": True, "verfuegbar": False, "aktiv": False}
+        g = (res[0] or {}).get("global") or {}
+        return {"ok": True, "verfuegbar": True, "aktiv": g.get("aktiv") is not False}
+
+    async def toss_schalten(self, aktiv: bool) -> dict:
+        """Schalter setzen und den ECHTEN Stand zurücklesen (nie nur „ok" glauben)."""
+        res = await self._core_ws_befehle([
+            {"type": "joamy_toss/store/patch", "scope": "global",
+             "data": {"aktiv": bool(aktiv)}},
+            {"type": "joamy_toss/store/get"},
+        ])
+        if not res or res[0] is None or res[1] is None:
+            return {"ok": False, "fehler": "Home Assistant nicht erreichbar."}
+        g = (res[1] or {}).get("global") or {}
+        return {"ok": True, "aktiv": g.get("aktiv") is not False}
+
     async def medienquellen(self) -> dict:
         """Ordner aus den Medienquellen von Home Assistant — Vorlage fuer die
         Kamera-Ereignisse.

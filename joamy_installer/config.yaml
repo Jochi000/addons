@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.37"
+version: "0.1.38"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Käufe installieren sich von selbst
 url: https://joamy.uk
