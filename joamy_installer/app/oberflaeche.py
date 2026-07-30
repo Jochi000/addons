@@ -94,6 +94,21 @@ SEITE = """<!doctype html>
     background: var(--nacht-karte); border: 1px solid var(--nacht-linie);
     border-radius: var(--r-20); padding: 20px 20px;
   }
+  /* Kaffee-Karte: fällt bewusst auf (BMC-Gelb), bleibt aber ruhig genug,
+     dass sie neben dem Kopplungscode nicht wichtiger wirkt als der. */
+  .kaffee-karte { border-color: rgba(255,221,0,.38); background:
+    linear-gradient(160deg, rgba(255,221,0,.09), rgba(255,221,0,.02) 60%), var(--nacht-karte); }
+  .kaffee-karte h2 { color: #ffdd00; }
+  .kaffee-btn {
+    display: inline-flex; align-items: center; gap: 9px; margin-top: 12px;
+    background: #ffdd00; color: #14120c; text-decoration: none;
+    font-weight: 700; font-size: 15px; padding: 11px 20px; border-radius: 999px;
+    box-shadow: 0 6px 18px -8px rgba(255,221,0,.75); transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .kaffee-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -8px rgba(255,221,0,.9); }
+  .kaffee-btn:active { transform: translateY(1px); box-shadow: 0 3px 10px -6px rgba(255,221,0,.8); }
+  .kaffee-tasse { font-size: 18px; }
+  .kaffee-klein { margin-top: 9px; font-size: 12px; color: var(--tinte-2); }
   .karte h2 {
     font-size: 12.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
     color: var(--akzent); margin-bottom: 12px;
@@ -354,6 +369,20 @@ SEITE = """<!doctype html>
     <p class="code-hinweis" data-i18n>Diesen Code beim Kauf auf <b>joamy.uk</b> eingeben
        (oder auf <b>joamy.uk/verbinden</b>), um dein Zuhause mit JoAmy zu verbinden.</p>
     <p id="code-rest"></p>
+  </section>
+
+  <!-- Freiwillige Unterstützung (Frank 30.07.): Die Karten gibt es kostenlos —
+       wer mag, gibt einen Kaffee aus. Bewusst KEIN CDN-Widget: Das Add-on läuft
+       im Ingress und soll ohne Internet-Skripte auskommen; der Knopf ist ein
+       einfacher Link im Buy-me-a-coffee-Gelb. -->
+  <section class="karte kaffee-karte">
+    <h2 data-i18n>Gefällt dir JoAmy?</h2>
+    <p data-i18n>Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin.
+       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.
+       Freiwillig, einmalig, ohne Konto.</p>
+    <a class="kaffee-btn" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
+      <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Spendier mir einen Kaffee</span></a>
+    <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
   </section>
 
   <section class="karte">
@@ -999,6 +1028,10 @@ var UEB = {
   'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
     'Hidden applies everywhere and for all users. The modes themselves keep running — only the control disappears.',
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
+  'Gefällt dir JoAmy?': 'Do you like JoAmy?',
+  'Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee. Freiwillig, einmalig, ohne Konto.': 'All cards are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee. Voluntary, one-off, no account needed.',
+  'Spendier mir einen Kaffee': 'Buy me a coffee',
+  'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
   'Style-Auswahl': 'Style selection',
   'Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist': 'Global — pick the style once in the settings popup (J button); it applies to every card where that style is purchased',
   'Einzeln — jede Karte behält ihren eigenen Style-Knopf, die Auswahl im Settings-Popup entfällt': 'Per card — every card keeps its own style button; the settings popup entry disappears',

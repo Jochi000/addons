@@ -1,3 +1,7 @@
+## 0.1.44
+- Neue Karte „Gefällt dir JoAmy?" mit Buy-me-a-coffee-Knopf: Die Karten sind
+  kostenlos — wer mag, gibt freiwillig einen Kaffee aus.
+
 ## 0.1.43
 - Neue Option „Style-Auswahl" in der JoAmy-Knopf-Sektion: Global (der Style wird
   einmal im Settings-Popup gewählt, Standard) oder Einzeln (jede Karte behält
