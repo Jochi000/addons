@@ -1,3 +1,6 @@
+## 0.1.42
+- Neuer Konfigurator „Wetter-Atmosphäre" (nur sichtbar, wenn der Baustein installiert ist): Wetter-Quelle wählbar, Stadt-Eingabe als Standort-Fallback (Geocoding einmalig im Browser, nichts zu installieren).
+
 # Änderungsprotokoll
 
 ## 0.1.37

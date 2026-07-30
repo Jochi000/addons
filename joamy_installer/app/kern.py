@@ -799,6 +799,19 @@ class Installer:
         res = await self._core_ws_befehle([{"type": "joamy_traum/store/get"}])
         return {"ok": True, "verfuegbar": bool(res and res[0] is not None)}
 
+    async def wetter_status(self) -> dict:
+        """Ist die Wetter-Atmosphäre (Baustein wetter) installiert? Steuert die
+        Konfigurator-Sektion. Dazu: hat Home Assistant einen Standort gesetzt?
+        (Wenn ja, braucht niemand die Stadt-Eingabe — sie ist nur der Fallback.)"""
+        res = await self._core_ws_befehle([{"type": "joamy_wetter/store/get"}])
+        standort = False
+        try:
+            cfg = await self._core_api("GET", "/config")
+            standort = bool(isinstance(cfg, dict) and cfg.get("latitude") is not None)
+        except Exception:
+            standort = False
+        return {"ok": True, "verfuegbar": bool(res and res[0] is not None), "standort": standort}
+
     async def knopf_status(self) -> dict:
         """Gibt es den JoAmy-Knopf (toss-Baustein installiert), und ist er sichtbar?
 
@@ -927,6 +940,7 @@ class Installer:
             "scripts": liste("script."),
             "input_booleans": liste("input_boolean."),
             "calendars": liste("calendar."),
+            "weather": liste("weather."),
             "sensors": self._sensoren_mit_wert(states),
         }
 

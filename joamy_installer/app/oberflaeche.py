@@ -776,6 +776,36 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
+  <section class="karte" id="wx-karte" hidden>
+    <h2 data-i18n>Wetter-Atmosphäre einrichten</h2>
+    <p class="kf-intro" data-i18n>Dein Dashboard lebt mit dem echten Wetter — Sonnenstand, Mondstand und
+      Mondphase kommen aus deinem Standort, ganz ohne Zusatzinstallation. Hier holst du dir den Code für
+      die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe" am JoAmy-Knopf.</p>
+    <button id="wx-laden" type="button" data-i18n>Vorbereiten</button>
+    <div id="wx-body" hidden>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="wx-entity" data-i18n>Wetter-Quelle</label>
+        <select id="wx-entity"></select>
+        <span class="hinweis" data-i18n>Automatik heißt: die Karte nimmt deine erste Wetter-Integration von selbst.</span>
+      </div>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Standort</span>
+        <span class="hinweis" id="wx-standort-stand"></span>
+        <input id="wx-stadt" type="text" placeholder="z. B. Hamburg" hidden>
+        <button id="wx-suchen" type="button" data-i18n hidden>Stadt suchen</button>
+        <span class="hinweis" id="wx-stadt-ergebnis"></span>
+      </div>
+      <button id="wx-erzeugen" type="button" data-i18n>Code anzeigen und kopieren</button>
+      <div id="wx-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Fertiger Code — beim Hinzufügen der Karte einfügen</span>
+          <pre id="wx-yaml"></pre>
+        </div>
+        <div id="wx-meldung"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="karte" id="kal-karte" hidden>
     <h2 data-i18n>Kalender einrichten</h2>
     <p class="kf-intro" data-i18n>Deine Kalender werden automatisch gefunden — hake ab, was du nicht sehen
@@ -827,6 +857,24 @@ function el(id) { return document.getElementById(id); }
    (darf HTML enthalten). Kein Treffer ⇒ Deutsch bleibt stehen. Gemerkt wird die
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
+  'Wetter-Atmosphäre einrichten': 'Set up the weather atmosphere',
+  'Dein Dashboard lebt mit dem echten Wetter — Sonnenstand, Mondstand und Mondphase kommen aus deinem Standort, ganz ohne Zusatzinstallation. Hier holst du dir den Code für die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe" am JoAmy-Knopf.':
+    'Your dashboard lives with the real weather — sun position, moon position and moon phase come from your location, without any extra installation. Grab the code for the invisible card here; the stage is switched on under "Backgrounds" on the JoAmy button.',
+  'Vorbereiten': 'Prepare',
+  'Wetter-Quelle': 'Weather source',
+  'Automatik heißt: die Karte nimmt deine erste Wetter-Integration von selbst.': 'Automatic means: the card picks your first weather integration by itself.',
+  'Automatik — erste Wetter-Integration': 'Automatic — first weather integration',
+  'Standort': 'Location',
+  'Dein Home Assistant kennt seinen Standort — Sonne, Mond und Mondphase stimmen von selbst.': 'Your Home Assistant knows its location — sun, moon and moon phase are correct by themselves.',
+  'Home Assistant hat KEINEN Standort gesetzt — gib deine Stadt an, damit Sonne und Mond richtig stehen.': 'Home Assistant has NO location set — enter your city so sun and moon are positioned correctly.',
+  'Stadt suchen': 'Find city',
+  'Bitte eine Stadt eintippen.': 'Please type a city.',
+  'Suche …': 'Searching …',
+  'Nichts gefunden — anders schreiben oder größere Stadt in der Nähe nehmen.': 'Nothing found — try a different spelling or a larger city nearby.',
+  'Gefunden:': 'Found:',
+  'Suche nicht erreichbar — bitte später erneut versuchen.': 'Search not reachable — please try again later.',
+  'Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen. Die Karte ist unsichtbar — angeschaltet wird unter „Hintergründe“ am JoAmy-Knopf.':
+    'Copied! Now paste it under "Add card" → "Manual". The card is invisible — switch the stage on under "Backgrounds" on the JoAmy button.',
   'Zeitschaltuhr einrichten': 'Set up the timer switch',
   'Darstellung der Karte': 'Card layout',
   'Alles auf den ersten Blick — alle Zeitpläne direkt in der Karte': 'Everything at a glance — all schedules right in the card',
@@ -1158,7 +1206,7 @@ function setzeSprache(l) {
   male(letzterStand);                                  // Status-Zeilen neu beschriften
   // STANDING RULE (Frank 28.07.): Der Sprachwechsel MUSS jede Sektion erreichen —
   // auch alles, was per JavaScript gesetzt wurde (Platzhalter, Listen, Statuszeilen).
-  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache', '__szSprache']
+  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache', '__szSprache', '__wxSprache']
     .forEach(function (n) { if (window[n]) { try { window[n](); } catch (e) {} } });
 }
 (function () {
@@ -1241,6 +1289,7 @@ function male(st) {
   // fragt nach). Der Status-Poll (alle 5 s) darf die Entscheidung nicht umwerfen.
   if (el('knopf-karte')) el('knopf-karte').hidden = !(gekauftB.toss || window.__knopfDa);
   if (el('sz-karte')) el('sz-karte').hidden = !(gekauftB.traum || window.__szDa);
+  if (el('wx-karte')) el('wx-karte').hidden = !(gekauftB.wetter || window.__wxDa);
   el('logs').textContent = (st.logs || []).join('\\n') || '—';
   stileAnbieten(st);
 }
@@ -1946,6 +1995,10 @@ function yamlEscape(s) {
   if (!document.getElementById('sz-laden')) return;
   var NL = String.fromCharCode(10);
   var geladen = false;
+  fetch('wetter', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (t) {
+    if (t && t.verfuegbar) { window.__wxDa = true; el('wx-karte').hidden = false; }
+    window.__wxStandort = !!(t && t.standort);
+  }).catch(function () {});
   fetch('traum', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (t) {
     if (t && t.verfuegbar) { window.__szDa = true; el('sz-karte').hidden = false; }
   }).catch(function () {});
@@ -2001,6 +2054,73 @@ function yamlEscape(s) {
     var t2 = el('sz-yaml').textContent;
     var fertig = function () { el('sz-meldung').style.color = 'var(--gruen)'; el('sz-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
     var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('sz-meldung').style.color = 'var(--rot)'; el('sz-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
+  });
+})();
+
+/* ---- Wetter-Atmosphäre: Quelle + Standort-Fallback → Ein-Klick-Code ---- */
+(function () {
+  if (!document.getElementById('wx-laden')) return;
+  var NL = String.fromCharCode(10);
+  var geladen = false;
+  var stadt = null;   // { lat, lon, name } — nur gesetzt, wenn gesucht wurde
+  el('wx-laden').addEventListener('click', function () {
+    var b = this; b.disabled = true; b.textContent = wt('Lade …');
+    fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      var sel = el('wx-entity'); sel.innerHTML = '';
+      var auto = document.createElement('option'); auto.value = ''; auto.textContent = wt('Automatik — erste Wetter-Integration');
+      sel.appendChild(auto);
+      (d.weather || []).forEach(function (e) {
+        var op = document.createElement('option'); op.value = e.entity; op.textContent = e.name + ' (' + e.entity + ')';
+        sel.appendChild(op);
+      });
+      var stand = el('wx-standort-stand');
+      if (window.__wxStandort) {
+        stand.textContent = wt('Dein Home Assistant kennt seinen Standort — Sonne, Mond und Mondphase stimmen von selbst.');
+        el('wx-stadt').hidden = true; el('wx-suchen').hidden = true;
+      } else {
+        stand.textContent = wt('Home Assistant hat KEINEN Standort gesetzt — gib deine Stadt an, damit Sonne und Mond richtig stehen.');
+        el('wx-stadt').hidden = false; el('wx-suchen').hidden = false;
+      }
+      el('wx-body').hidden = false; geladen = true;
+    }).catch(function () {
+      var m = el('wx-meldung'); m.style.color = 'var(--rot)';
+      m.textContent = wt('Konnte Home Assistant nicht erreichen.');
+      el('wx-body').hidden = false; el('wx-ergebnis').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Vorbereiten'); });
+  });
+  window.__wxSprache = function () {
+    var b = el('wx-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Vorbereiten');
+  };
+  el('wx-suchen').addEventListener('click', function () {
+    var name = (el('wx-stadt').value || '').trim();
+    var aus = el('wx-stadt-ergebnis');
+    if (!name) { aus.textContent = wt('Bitte eine Stadt eintippen.'); return; }
+    var b = this; b.disabled = true;
+    aus.textContent = wt('Suche …');
+    // Open-Meteo-Geocoding: kostenlos, ohne Schlüssel, einmalig im Browser —
+    // es wird NICHTS installiert und nichts dauerhaft abgefragt.
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=de&name=' + encodeURIComponent(name))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var t = d && d.results && d.results[0];
+        if (!t) { stadt = null; aus.textContent = wt('Nichts gefunden — anders schreiben oder größere Stadt in der Nähe nehmen.'); return; }
+        stadt = { lat: Math.round(t.latitude * 10000) / 10000, lon: Math.round(t.longitude * 10000) / 10000, name: t.name + (t.country ? ', ' + t.country : '') };
+        aus.textContent = wt('Gefunden:') + ' ' + stadt.name + ' (' + stadt.lat + ', ' + stadt.lon + ')';
+      })
+      .catch(function () { stadt = null; aus.textContent = wt('Suche nicht erreichbar — bitte später erneut versuchen.'); })
+      .finally(function () { b.disabled = false; });
+  });
+  el('wx-erzeugen').addEventListener('click', function () {
+    var L = ['type: custom:joamy-wetter-card'];
+    if (el('wx-entity').value) L.push('entity: ' + el('wx-entity').value);
+    if (!window.__wxStandort && stadt) { L.push('lat: ' + stadt.lat); L.push('lon: ' + stadt.lon); }
+    el('wx-ergebnis').hidden = false;
+    el('wx-yaml').textContent = L.join(NL);
+    var t2 = el('wx-yaml').textContent;
+    var m = el('wx-meldung');
+    var fertig = function () { m.style.color = 'var(--gruen)'; m.textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen. Die Karte ist unsichtbar — angeschaltet wird unter „Hintergründe“ am JoAmy-Knopf.'); };
+    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { m.style.color = 'var(--rot)'; m.textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   });
 })();
@@ -2259,6 +2379,12 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Medienquellen-Endpunkt fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e), "quellen": []}, status=500)
 
+    async def wetter_get(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.wetter_status())
+        except Exception as e:
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
     async def traum_get(request: web.Request) -> web.Response:
         try:
             return web.json_response(await installer.traum_status())
@@ -2305,6 +2431,7 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/entities", entities)
     app.router.add_get("/medienquellen", medienquellen)
     app.router.add_get("/traum", traum_get)
+    app.router.add_get("/wetter", wetter_get)
     app.router.add_get("/knopf", knopf_get)
     app.router.add_post("/knopf", knopf_post)
     app.router.add_get("/anleitung.mp4", anleitung)
