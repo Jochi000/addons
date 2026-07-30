@@ -1,3 +1,8 @@
+## 0.1.43
+- Neue Option „Style-Auswahl" in der JoAmy-Knopf-Sektion: Global (der Style wird
+  einmal im Settings-Popup gewählt, Standard) oder Einzeln (jede Karte behält
+  ihren eigenen Style-Knopf). Dazu ein Settings-Style als Vorgabe fürs Popup.
+
 ## 0.1.42
 - Neuer Konfigurator „Wetter-Atmosphäre" (nur sichtbar, wenn der Baustein installiert ist): Wetter-Quelle wählbar, Stadt-Eingabe als Standort-Fallback (Geocoding einmalig im Browser, nichts zu installieren).
 

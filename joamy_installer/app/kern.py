@@ -837,6 +837,36 @@ class Installer:
         g = (res[1] or {}).get("global") or {}
         return {"ok": True, "sichtbar": g.get("knopf_sichtbar") is not False}
 
+    async def stilwahl_status(self) -> dict:
+        """Style-Auswahl (Frank 30.07.): 'global' (DEFAULT — die Wahl liegt im
+        J-Knopf-Settings, die Karten verstecken ihren eigenen Umschalter) oder
+        'einzeln' (jede Karte hat ihren Umschalter wie früher). Dazu der
+        Settings-Stil (Fallback fürs J-Knopf-Popup, wenn der Nutzer nie
+        gewählt hat). Ohne toss-Baustein bleibt die Sektion verborgen."""
+        res = await self._core_ws_befehle([{"type": "joamy_toss/store/get"}])
+        if not res or res[0] is None:
+            return {"ok": True, "verfuegbar": False, "modus": "global", "stil": ""}
+        g = (res[0] or {}).get("global") or {}
+        return {"ok": True, "verfuegbar": True,
+                "modus": "einzeln" if g.get("stil_wahl") == "einzeln" else "global",
+                "stil": g.get("stil") or ""}
+
+    async def stilwahl_setzen(self, modus: str, stil: str) -> dict:
+        """Modus + Settings-Stil setzen und den ECHTEN Stand zurücklesen."""
+        daten = {"stil_wahl": "einzeln" if modus == "einzeln" else "global"}
+        if stil:
+            daten["stil"] = str(stil)
+        res = await self._core_ws_befehle([
+            {"type": "joamy_toss/store/patch", "scope": "global", "data": daten},
+            {"type": "joamy_toss/store/get"},
+        ])
+        if not res or res[0] is None or res[1] is None:
+            return {"ok": False, "fehler": "Home Assistant nicht erreichbar."}
+        g = (res[1] or {}).get("global") or {}
+        return {"ok": True,
+                "modus": "einzeln" if g.get("stil_wahl") == "einzeln" else "global",
+                "stil": g.get("stil") or ""}
+
     async def medienquellen(self) -> dict:
         """Ordner aus den Medienquellen von Home Assistant — Vorlage fuer die
         Kamera-Ereignisse.

@@ -695,6 +695,24 @@ SEITE = """<!doctype html>
       <span class="hinweis" data-i18n>Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst
         laufen unverändert weiter — nur die Bedienstelle verschwindet.</span>
     </div>
+    <div class="kf-abschnitt" id="stilwahl-block">
+      <b data-i18n>Style-Auswahl</b>
+      <label><input type="radio" name="stilwahl" value="global" id="stilwahl-global">
+        <span data-i18n>Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist</span></label>
+      <label><input type="radio" name="stilwahl" value="einzeln" id="stilwahl-einzeln">
+        <span data-i18n>Einzeln — jede Karte behält ihren eigenen Style-Knopf, die Auswahl im Settings-Popup entfällt</span></label>
+      <label data-i18n-wrap><span data-i18n>Settings-Style (Vorgabe fürs J-Knopf-Popup):</span>
+        <select id="stilwahl-stil">
+          <option value="">—</option>
+          <option value="skizze">Skizze</option><option value="comic">Comic</option>
+          <option value="pinnwand">Pinnwand</option><option value="frost">Frost</option>
+          <option value="terminal">Terminal</option><option value="riso">Riso</option>
+          <option value="almanach">Almanach</option><option value="keramik">Keramik</option>
+          <option value="pigment">Pigment</option>
+        </select></label>
+      <span class="hinweis" data-i18n>Gilt sofort und für alle Nutzer. Nicht gekaufte Styles bleiben
+        in den Karten unberührt — angewendet wird nur, wo der Style lizenziert ist.</span>
+    </div>
     <div id="knopf-meldung"></div>
   </section>
 
@@ -981,6 +999,13 @@ var UEB = {
   'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
     'Hidden applies everywhere and for all users. The modes themselves keep running — only the control disappears.',
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
+  'Style-Auswahl': 'Style selection',
+  'Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist': 'Global — pick the style once in the settings popup (J button); it applies to every card where that style is purchased',
+  'Einzeln — jede Karte behält ihren eigenen Style-Knopf, die Auswahl im Settings-Popup entfällt': 'Per card — every card keeps its own style button; the settings popup entry disappears',
+  'Settings-Style (Vorgabe fürs J-Knopf-Popup):': 'Settings style (default for the J-button popup):',
+  'Gilt sofort und für alle Nutzer. Nicht gekaufte Styles bleiben in den Karten unberührt — angewendet wird nur, wo der Style lizenziert ist.': 'Applies immediately and for all users. Styles you did not purchase stay untouched — the choice is only applied where the style is licensed.',
+  'Einzeln — jede Karte zeigt wieder ihren Style-Knopf.': 'Per card — every card shows its own style button again.',
+  'Global — die Style-Wahl liegt jetzt im Settings-Popup.': 'Global — the style choice now lives in the settings popup.',
   'Ausgeblendet — überall und sofort.': 'Hidden — everywhere, immediately.',
   'Das hat nicht geklappt — Home Assistant war nicht erreichbar.':
     'That did not work — Home Assistant was not reachable.',
@@ -1142,6 +1167,48 @@ var sprache = (function () {
 // wt(): deutscher Text rein, englischer zurück (sonst unverändert).
 function wt(s) { if (sprache !== 'en') return s; var t = LOOKUP[norm(s)]; return t == null ? s : t; }
 
+/* --- Style-Auswahl (Frank 30.07.): global (Settings-Popup) oder einzeln --- */
+function ladeStilwahl() {
+  fetch('stilwahl', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (t) {
+      var block = el('stilwahl-block');
+      if (!block) return;
+      if (!t || !t.verfuegbar) { block.hidden = true; return; }
+      block.hidden = false;
+      var g = el('stilwahl-global'), e = el('stilwahl-einzeln'), st = el('stilwahl-stil');
+      if (!g || !e || !st) return;
+      (t.modus === 'einzeln' ? e : g).checked = true;
+      st.value = t.stil || '';
+      if (block.dataset.verdrahtet) return;
+      block.dataset.verdrahtet = '1';
+      var senden = function () {
+        var modus = e.checked ? 'einzeln' : 'global';
+        fetch('stilwahl', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modus: modus, stil: st.value }) })
+          .then(function (r) { return r.json(); })
+          .then(function (a) {
+            var m = el('knopf-meldung');
+            if (a && a.ok) {
+              (a.modus === 'einzeln' ? e : g).checked = true;
+              st.value = a.stil || '';
+              if (m) { m.textContent = a.modus === 'einzeln'
+                ? wt('Einzeln — jede Karte zeigt wieder ihren Style-Knopf.')
+                : wt('Global — die Style-Wahl liegt jetzt im Settings-Popup.'); m.className = ''; }
+            } else if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
+          })
+          .catch(function () {
+            var m = el('knopf-meldung');
+            if (m) { m.textContent = wt('Das hat nicht geklappt — Home Assistant war nicht erreichbar.'); m.className = 'fehler'; }
+          });
+      };
+      g.addEventListener('change', senden);
+      e.addEventListener('change', senden);
+      st.addEventListener('change', senden);
+    })
+    .catch(function () {});
+}
+
 /* --- JoAmy-Knopf: Sichtbarkeit lädt/setzt den Hub-Store über das Add-on --- */
 function ladeKnopf() {
   fetch('knopf', { cache: 'no-store' })
@@ -1182,6 +1249,7 @@ function ladeKnopf() {
     .catch(function () {});
 }
 ladeKnopf();
+ladeStilwahl();
 function elementRendern(e) {
   if (e.__i18nHtml === undefined) { e.__i18nHtml = e.innerHTML; e.__i18nKey = norm(e.textContent); }
   var ziel = e.__i18nHtml;
@@ -2407,6 +2475,22 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Knopf-Schalten fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e)}, status=500)
 
+    async def stilwahl_get(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.stilwahl_status())
+        except Exception as e:
+            LOG.error("Stilwahl-Status fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "verfuegbar": False, "fehler": str(e)}, status=500)
+
+    async def stilwahl_post(request: web.Request) -> web.Response:
+        try:
+            daten = await request.json()
+            return web.json_response(await installer.stilwahl_setzen(
+                str(daten.get("modus") or "global"), str(daten.get("stil") or "")))
+        except Exception as e:
+            LOG.error("Stilwahl-Setzen fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
     async def anleitung(request: web.Request) -> web.StreamResponse:
         weg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "anleitung.mp4")
         if not os.path.exists(weg):
@@ -2434,5 +2518,7 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/wetter", wetter_get)
     app.router.add_get("/knopf", knopf_get)
     app.router.add_post("/knopf", knopf_post)
+    app.router.add_get("/stilwahl", stilwahl_get)
+    app.router.add_post("/stilwahl", stilwahl_post)
     app.router.add_get("/anleitung.mp4", anleitung)
     return app
