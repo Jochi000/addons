@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.18"
+ADDON_VERSION = "0.1.45"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -730,13 +730,22 @@ class Installer:
                  "Es wird NICHTS eigenmächtig neu gestartet.",
                  "zugestellt" if ok is not None else "Core nicht erreichbar")
 
-    # ENTFERNT (v0.1.14): _core_neustart(). Es gibt in diesem Add-on KEINEN Aufruf
-    # mehr, der Home Assistant neu starten kann — weder automatisch noch über eine
-    # Option. Ein Neustart ist Sache des Nutzers, und nur er löst ihn aus.
-    # Zusätzlich sind `hassio_api`/`hassio_role` aus der config.yaml verschwunden:
-    # ohne diese Rechte darf das Add-on den Supervisor-Endpunkt /core/restart gar
-    # nicht mehr aufrufen. Falls eine Installation wider Erwarten doch einen
-    # Neustart braucht, setzt _melde_neustart_noetig() eine Meldung in HA.
+    # Seit 0.1.14 startet dieses Add-on NIE von allein neu. Seit 0.1.45 kann der
+    # Nutzer den Neustart aber MIT EINEM KLICK auf der Add-on-Seite auslösen —
+    # ausgelöst wird ausschließlich dieser Klick, nichts läuft im Hintergrund.
+    # Der Weg ist der Core-Dienst homeassistant.restart (homeassistant_api),
+    # NICHT der Supervisor-Endpunkt; hassio_api/hassio_role bleiben draußen.
+    async def neustart_status(self) -> dict:
+        """Braucht dieses Home Assistant noch den einmaligen Neustart?"""
+        return {"ok": True, "noetig": bool(self._neustart_gemeldet)}
+
+    async def neustart_jetzt(self) -> dict:
+        """Startet Home Assistant — NUR auf ausdrücklichen Klick des Nutzers."""
+        LOG.info("Neustart vom Nutzer angefordert — homeassistant.restart wird aufgerufen.")
+        antwort = await self._core_api("POST", "/services/homeassistant/restart", {})
+        if antwort is None:
+            return {"ok": False, "fehler": "Home Assistant hat den Neustart nicht angenommen."}
+        return {"ok": True}
 
     async def _core_api(self, methode: str, pfad: str, json_daten=None):
         """Ein Aufruf der Core-API über den Supervisor-Proxy; None bei Fehler.

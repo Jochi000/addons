@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.44"
+version: "0.1.45"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Käufe installieren sich von selbst
 url: https://joamy.uk
@@ -20,9 +20,11 @@ init: false
 # Entpacken und die Hinweis-Meldung.
 #
 # `hassio_api`/`hassio_role: admin` sind seit 0.1.14 ABSICHTLICH weg: nur mit
-# ihnen käme man an den Supervisor-Endpunkt POST /core/restart. Ohne sie kann
-# dieses Add-on Home Assistant nicht neu starten — nicht durch einen Fehler,
-# nicht durch eine Option, gar nicht. Ein Neustart ist Sache des Nutzers.
+# ihnen käme man an den Supervisor-Endpunkt POST /core/restart.
+# Seit 0.1.45 gibt es auf der Add-on-Seite den Knopf „Jetzt neu starten“ —
+# er ruft den CORE-Dienst homeassistant.restart auf und läuft ausschließlich
+# auf den ausdrücklichen Klick des Nutzers. Von allein startet dieses Add-on
+# Home Assistant weiterhin NIE.
 homeassistant_api: true
 # Ingress: die Status-Seite (Kopplungscode, Bausteine, Logs) läuft NUR über den
 # authentifizierten Supervisor-Ingress-Proxy — der Port ist bewusst NICHT unter

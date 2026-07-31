@@ -94,6 +94,15 @@ SEITE = """<!doctype html>
     background: var(--nacht-karte); border: 1px solid var(--nacht-linie);
     border-radius: var(--r-20); padding: 20px 20px;
   }
+  .neustart-karte { border-color: rgba(194,154,108,.5); background:
+    linear-gradient(160deg, rgba(194,154,108,.12), rgba(194,154,108,.02) 60%), var(--nacht-karte); }
+  .neustart-knoepfe { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .neustart-jetzt { background: var(--akzent); color: #14120c; border: none; border-radius: 999px;
+    padding: 11px 20px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .neustart-jetzt:hover { filter: brightness(1.08); }
+  .neustart-spaeter { background: transparent; color: var(--tinte-2); border: 1px solid var(--nacht-linie);
+    border-radius: 999px; padding: 11px 18px; font-size: 15px; cursor: pointer; }
+  .neustart-klein { margin-top: 10px; font-size: 12.5px; color: var(--tinte-2); }
   /* Kaffee-Karte: fällt bewusst auf (BMC-Gelb), bleibt aber ruhig genug,
      dass sie neben dem Kopplungscode nicht wichtiger wirkt als der. */
   .kaffee-karte { border-color: rgba(255,221,0,.38); background:
@@ -362,6 +371,20 @@ SEITE = """<!doctype html>
     <h1 data-i18n>Installer</h1>
     <p data-i18n>Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.</p>
   </header>
+
+  <!-- Einmaliger Neustart: Home Assistant lädt eine NEU hinzugekommene
+       Integration nur beim Start. Wir fragen — und starten nur auf Klick. -->
+  <section class="karte neustart-karte" id="neustart-karte" hidden>
+    <h2 data-i18n>Einmal neu starten</h2>
+    <p data-i18n>Home Assistant hat JoAmy gerade neu bekommen. Damit deine Karten geladen werden,
+       muss Home Assistant <b>einmalig</b> neu starten — danach nie wieder: spätere Bausteine
+       ziehen im laufenden Betrieb ein.</p>
+    <div class="neustart-knoepfe">
+      <button type="button" class="neustart-jetzt" id="neustart-jetzt" data-i18n>Jetzt neu starten</button>
+      <button type="button" class="neustart-spaeter" id="neustart-spaeter" data-i18n>Später</button>
+    </div>
+    <p class="neustart-klein" id="neustart-meldung" data-i18n>Der Neustart dauert etwa eine Minute. Danach die Seite einmal neu laden.</p>
+  </section>
 
   <section class="karte">
     <h2 data-i18n>Kopplungscode</h2>
@@ -1028,6 +1051,15 @@ var UEB = {
   'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
     'Hidden applies everywhere and for all users. The modes themselves keep running — only the control disappears.',
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
+  'Einmal neu starten': 'One restart needed',
+  'Home Assistant hat JoAmy gerade neu bekommen. Damit deine Karten geladen werden, muss Home Assistant einmalig neu starten — danach nie wieder: spätere Bausteine ziehen im laufenden Betrieb ein.': 'Home Assistant has just received JoAmy. To load your cards, Home Assistant needs to restart once — and never again: later building blocks arrive while it keeps running.',
+  'Jetzt neu starten': 'Restart now',
+  'Später': 'Later',
+  'Der Neustart dauert etwa eine Minute. Danach die Seite einmal neu laden.': 'The restart takes about a minute. Reload this page afterwards.',
+  'Home Assistant startet neu — das dauert etwa eine Minute.': 'Home Assistant is restarting — this takes about a minute.',
+  'Neustart läuft. Lade diese Seite in etwa einer Minute neu.': 'Restart running. Reload this page in about a minute.',
+  'Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.': 'The restart could not be triggered — please restart from Home Assistant under Developer tools.',
+  'später — JoAmy lädt erst nach dem Neustart vollständig': 'later — JoAmy will only load fully after the restart',
   'Gefällt dir JoAmy?': 'Do you like JoAmy?',
   'Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee. Freiwillig, einmalig, ohne Konto.': 'All cards are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee. Voluntary, one-off, no account needed.',
   'Spendier mir einen Kaffee': 'Buy me a coffee',
@@ -1200,6 +1232,43 @@ var sprache = (function () {
 // wt(): deutscher Text rein, englischer zurück (sonst unverändert).
 function wt(s) { if (sprache !== 'en') return s; var t = LOOKUP[norm(s)]; return t == null ? s : t; }
 
+/* --- Einmaliger Neustart: fragen, nicht einfach machen --- */
+function ladeNeustart() {
+  fetch('neustart', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (t) {
+      var karte = el('neustart-karte');
+      if (!karte) return;
+      if (!t || !t.noetig) { karte.hidden = true; return; }
+      karte.hidden = false;
+      if (karte.dataset.verdrahtet) return;
+      karte.dataset.verdrahtet = '1';
+      el('neustart-spaeter').addEventListener('click', function () {
+        karte.hidden = true;
+        var s = el('st-neustart');
+        if (s) s.textContent = wt('später — JoAmy lädt erst nach dem Neustart vollständig');
+      });
+      el('neustart-jetzt').addEventListener('click', function () {
+        var m = el('neustart-meldung');
+        el('neustart-jetzt').disabled = true;
+        if (m) m.textContent = wt('Home Assistant startet neu — das dauert etwa eine Minute.');
+        fetch('neustart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+          .then(function (r) { return r.json(); })
+          .then(function (a) {
+            if (m) m.textContent = a && a.ok
+              ? wt('Neustart läuft. Lade diese Seite in etwa einer Minute neu.')
+              : wt('Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.');
+            el('neustart-jetzt').disabled = false;
+          })
+          .catch(function () {
+            if (m) m.textContent = wt('Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.');
+            el('neustart-jetzt').disabled = false;
+          });
+      });
+    })
+    .catch(function () {});
+}
+
 /* --- Style-Auswahl (Frank 30.07.): global (Settings-Popup) oder einzeln --- */
 function ladeStilwahl() {
   fetch('stilwahl', { cache: 'no-store' })
@@ -1283,6 +1352,8 @@ function ladeKnopf() {
 }
 ladeKnopf();
 ladeStilwahl();
+ladeNeustart();
+setInterval(ladeNeustart, 20000);
 function elementRendern(e) {
   if (e.__i18nHtml === undefined) { e.__i18nHtml = e.innerHTML; e.__i18nKey = norm(e.textContent); }
   var ziel = e.__i18nHtml;
@@ -2508,6 +2579,20 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Knopf-Schalten fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e)}, status=500)
 
+    async def neustart_get(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.neustart_status())
+        except Exception as e:
+            LOG.error("Neustart-Status fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "noetig": False}, status=500)
+
+    async def neustart_post(request: web.Request) -> web.Response:
+        try:
+            return web.json_response(await installer.neustart_jetzt())
+        except Exception as e:
+            LOG.error("Neustart fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
     async def stilwahl_get(request: web.Request) -> web.Response:
         try:
             return web.json_response(await installer.stilwahl_status())
@@ -2551,6 +2636,8 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/wetter", wetter_get)
     app.router.add_get("/knopf", knopf_get)
     app.router.add_post("/knopf", knopf_post)
+    app.router.add_get("/neustart", neustart_get)
+    app.router.add_post("/neustart", neustart_post)
     app.router.add_get("/stilwahl", stilwahl_get)
     app.router.add_post("/stilwahl", stilwahl_post)
     app.router.add_get("/anleitung.mp4", anleitung)

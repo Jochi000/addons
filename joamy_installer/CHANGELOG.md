@@ -1,3 +1,9 @@
+## 0.1.45
+- Fragt beim ersten Mal nach: „Home Assistant einmal neu starten?" — mit einem
+  Klick erledigt, oder später. Ohne diesen einen Neustart kann Home Assistant
+  eine frisch hinzugekommene Integration nicht laden.
+- Das Add-on meldete dem Lizenz-Server bisher eine veraltete Versionsnummer.
+
 ## 0.1.44
 - Neue Karte „Gefällt dir JoAmy?" mit Buy-me-a-coffee-Knopf: Die Karten sind
   kostenlos — wer mag, gibt freiwillig einen Kaffee aus.
