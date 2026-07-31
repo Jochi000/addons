@@ -1,3 +1,9 @@
+## 0.1.47
+- Die Neustart-Karte verschwindet nach dem Neustart von selbst; die Statuszeile
+  dazu wird ausgeblendet, sobald nichts mehr aussteht.
+- Kürzere, natürlichere Texte; der Lizenz-Server zeigt nur noch seinen Zustand,
+  nicht mehr seine Adresse.
+
 ## 0.1.46
 - Der Neustart-Knopf meldete einen Fehler, obwohl Home Assistant längst neu
   startete: Beim Neustart bricht die Verbindung ab — das ist der Normalfall und

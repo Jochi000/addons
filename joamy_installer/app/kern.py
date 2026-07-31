@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.46"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.47"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -631,6 +631,12 @@ class Installer:
                 self.status["flow_ausstehend"].remove(domain)
                 self.status["flow_versuche"] = 0
                 geaendert = True
+                # Der Flow ging durch → die Integration IST geladen. Damit ist
+                # der Neustart erledigt: Merker löschen und den Hinweis in Home
+                # Assistant wegräumen (sonst stand die Karte für immer da).
+                if self.status.get("neustart_noetig") or self._neustart_gemeldet:
+                    self.status["neustart_noetig"] = False
+                    await self._neustart_erledigt()
             else:
                 # Der Core lädt neue Integrationen normalerweise im Betrieb. Klappt
                 # es nach mehreren Anläufen nicht, ist ein Neustart die letzte
@@ -735,9 +741,34 @@ class Installer:
     # ausgelöst wird ausschließlich dieser Klick, nichts läuft im Hintergrund.
     # Der Weg ist der Core-Dienst homeassistant.restart (homeassistant_api),
     # NICHT der Supervisor-Endpunkt; hassio_api/hassio_role bleiben draußen.
+    async def _neustart_erledigt(self) -> None:
+        """Merker löschen und den Hinweis in Home Assistant zurücknehmen."""
+        self._neustart_gemeldet = False
+        try:
+            await self._core_api("POST", "/services/persistent_notification/dismiss",
+                                 {"notification_id": "joamy_neustart"})
+        except Exception:
+            pass
+        LOG.info("Neustart erledigt — Hinweis zurückgenommen.")
+
     async def neustart_status(self) -> dict:
-        """Braucht dieses Home Assistant noch den einmaligen Neustart?"""
-        return {"ok": True, "noetig": bool(self._neustart_gemeldet)}
+        """Braucht dieses Home Assistant noch den einmaligen Neustart?
+
+        Nicht den Merker glauben, sondern NACHSEHEN: Ist die Integration
+        'joamy' inzwischen geladen, ist der Neustart gelaufen — egal wer ihn
+        ausgelöst hat. Genau daran hing Franks Ärgernis: Die Karte blieb nach
+        dem Neustart stehen, weil niemand den Merker zurücksetzte.
+        """
+        if not self._neustart_gemeldet:
+            return {"ok": True, "noetig": False}
+        eintraege = await self._core_api("GET", "/config/config_entries/entry?domain=joamy")
+        if isinstance(eintraege, list) and any(
+                (e or {}).get("state") == "loaded" for e in eintraege):
+            self.status["neustart_noetig"] = False
+            speichere_json(STATUS_DATEI, self.status)
+            await self._neustart_erledigt()
+            return {"ok": True, "noetig": False}
+        return {"ok": True, "noetig": True}
 
     async def neustart_jetzt(self) -> dict:
         """Startet Home Assistant — NUR auf ausdrücklichen Klick des Nutzers.

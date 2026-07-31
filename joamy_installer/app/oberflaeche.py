@@ -376,14 +376,14 @@ SEITE = """<!doctype html>
        Integration nur beim Start. Wir fragen — und starten nur auf Klick. -->
   <section class="karte neustart-karte" id="neustart-karte" hidden>
     <h2 data-i18n>Einmal neu starten</h2>
-    <p data-i18n>Home Assistant hat JoAmy gerade neu bekommen. Damit deine Karten geladen werden,
-       muss Home Assistant <b>einmalig</b> neu starten — danach nie wieder: spätere Bausteine
-       ziehen im laufenden Betrieb ein.</p>
+    <p data-i18n>JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es
+       <b>einmal</b> neu starten. Nur dieses eine Mal — spätere Bausteine erscheinen später
+       ganz ohne Neustart.</p>
     <div class="neustart-knoepfe">
       <button type="button" class="neustart-jetzt" id="neustart-jetzt" data-i18n>Jetzt neu starten</button>
       <button type="button" class="neustart-spaeter" id="neustart-spaeter" data-i18n>Später</button>
     </div>
-    <p class="neustart-klein" id="neustart-meldung" data-i18n>Der Neustart dauert etwa eine Minute. Danach die Seite einmal neu laden.</p>
+    <p class="neustart-klein" id="neustart-meldung" data-i18n>Der Neustart dauert etwa eine Minute.</p>
   </section>
 
   <section class="karte">
@@ -401,8 +401,7 @@ SEITE = """<!doctype html>
   <section class="karte kaffee-karte">
     <h2 data-i18n>Gefällt dir JoAmy?</h2>
     <p data-i18n>Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin.
-       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.
-       Freiwillig, einmalig, ohne Konto.</p>
+       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.</p>
     <a class="kaffee-btn" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
       <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Spendier mir einen Kaffee</span></a>
     <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
@@ -1051,8 +1050,11 @@ var UEB = {
   'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
     'Hidden applies everywhere and for all users. The modes themselves keep running — only the control disappears.',
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
+  'einmal nötig — wann, entscheidest du': 'needed once — you decide when',
   'Einmal neu starten': 'One restart needed',
-  'Home Assistant hat JoAmy gerade neu bekommen. Damit deine Karten geladen werden, muss Home Assistant einmalig neu starten — danach nie wieder: spätere Bausteine ziehen im laufenden Betrieb ein.': 'Home Assistant has just received JoAmy. To load your cards, Home Assistant needs to restart once — and never again: later building blocks arrive while it keeps running.',
+  'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — spätere Bausteine erscheinen später ganz ohne Neustart.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — later building blocks show up without any restart.',
+  'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
+  'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
   'Jetzt neu starten': 'Restart now',
   'Später': 'Later',
   'Der Neustart dauert etwa eine Minute. Danach die Seite einmal neu laden.': 'The restart takes about a minute. Reload this page afterwards.',
@@ -1061,7 +1063,7 @@ var UEB = {
   'Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.': 'The restart could not be triggered — please restart from Home Assistant under Developer tools.',
   'später — JoAmy lädt erst nach dem Neustart vollständig': 'later — JoAmy will only load fully after the restart',
   'Gefällt dir JoAmy?': 'Do you like JoAmy?',
-  'Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee. Freiwillig, einmalig, ohne Konto.': 'All cards are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee. Voluntary, one-off, no account needed.',
+  'Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.': 'All cards are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee.',
   'Spendier mir einen Kaffee': 'Buy me a coffee',
   'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
   'Style-Auswahl': 'Style selection',
@@ -1256,9 +1258,17 @@ function ladeNeustart() {
           .then(function (r) { return r.json(); })
           .then(function (a) {
             if (m) m.textContent = a && a.ok
-              ? wt('Neustart läuft. Lade diese Seite in etwa einer Minute neu.')
+              ? wt('Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.')
               : wt('Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.');
             el('neustart-jetzt').disabled = false;
+            // Nach dem Neustart öfter nachfragen, damit die Karte zügig verschwindet.
+            var bis = Date.now() + 240000;
+            var wacht = setInterval(function () {
+              if (Date.now() > bis) { clearInterval(wacht); return; }
+              fetch('neustart', { cache: 'no-store' }).then(function (r) { return r.json(); })
+                .then(function (t2) { if (t2 && !t2.noetig) { clearInterval(wacht); var k = el('neustart-karte'); if (k) k.hidden = true; } })
+                .catch(function () {});
+            }, 5000);
           })
           .catch(function () {
             if (m) m.textContent = wt('Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.');
@@ -1408,11 +1418,11 @@ function male(st) {
     || (st.server_ok === true ? 'ok' : st.server_ok === false ? 'weg' : 'unbekannt');
   var sv = el('st-server'); sv.textContent = '';
   sv.appendChild(punkt(zst === 'ok' ? true : zst === 'unbekannt' ? null : false));
+  // Nur der Zustand — die Serveradresse ist Technik und gehört nicht ins Bild.
   sv.appendChild(document.createTextNode(
-    (zst === 'ok' ? wt('erreichbar')
+    zst === 'ok' ? wt('erreichbar')
       : zst === 'abgelehnt' ? wt('antwortet, meldet ein Problem')
-      : zst === 'weg' ? wt('nicht erreichbar') : '…')
-    + ' (' + st.server_url + ')'));
+      : zst === 'weg' ? wt('nicht erreichbar') : '…'));
   var hw = el('server-hinweis');
   hw.textContent = st.server_hinweis ? wt(st.server_hinweis) : '';
   hw.hidden = !st.server_hinweis;
@@ -1422,10 +1432,12 @@ function male(st) {
   rg.appendChild(document.createTextNode(st.registriert ? wt('ja') : wt('noch nicht')));
 
   el('st-poll').textContent = st.letzter_poll || wt('noch keine');
-  // Wir starten Home Assistant NIE selbst — das steht hier auch so.
-  el('st-neustart').textContent = st.neustart_noetig
-    ? wt('einmal empfohlen — wann, entscheidest du')
-    : wt('wird von JoAmy nie ausgelöst');
+  // Steht kein Neustart mehr aus, verschwindet die ganze Zeile — ein Hinweis
+  // auf etwas Erledigtes ist nur Lärm (Frank 31.07.).
+  var nz = el('st-neustart');
+  var nzZeile = nz && nz.closest ? nz.closest('.zeile') : null;
+  if (nzZeile) nzZeile.hidden = !st.neustart_noetig;
+  nz.textContent = st.neustart_noetig ? wt('einmal nötig — wann, entscheidest du') : '';
   el('fehler').textContent = st.letzter_fehler ? wt('Zuletzt gemeldet: ') + st.letzter_fehler : '';
 
   var ul = el('bausteine'); ul.textContent = '';
