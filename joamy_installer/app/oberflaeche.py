@@ -399,8 +399,8 @@ SEITE = """<!doctype html>
        einfacher Link im Buy-me-a-coffee-Gelb. -->
   <section class="karte kaffee-karte">
     <h2 data-i18n>Gefällt dir JoAmy?</h2>
-    <p data-i18n>Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin.
-       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.</p>
+    <p data-i18n>In JoAmy steckt sehr viel Arbeit. Wenn es dir dein Zuhause schöner macht,
+       freue ich mich riesig über einen Kaffee.</p>
     <a class="kaffee-btn" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
       <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Spendier mir einen Kaffee</span></a>
     <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
@@ -1062,7 +1062,7 @@ var UEB = {
   'Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.': 'The restart could not be triggered — please restart from Home Assistant under Developer tools.',
   'später — JoAmy lädt erst nach dem Neustart vollständig': 'later — JoAmy will only load fully after the restart',
   'Gefällt dir JoAmy?': 'Do you like JoAmy?',
-  'Alle Karten sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.': 'All cards are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee.',
+  'In JoAmy steckt sehr viel Arbeit. Wenn es dir dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.': 'A lot of work went into JoAmy. If it makes your home nicer, I would be delighted about a coffee.',
   'Spendier mir einen Kaffee': 'Buy me a coffee',
   'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
   'Style-Auswahl': 'Style selection',

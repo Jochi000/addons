@@ -1,3 +1,7 @@
+## 0.1.49
+- Kaffee-Karte behauptete noch, alle Karten seien kostenlos — stimmt seit der
+  Preisumstellung nicht mehr.
+
 ## 0.1.48
 - Sprachliche Glättung im Neustart-Hinweis.
 
