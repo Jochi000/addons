@@ -1,3 +1,6 @@
+## 0.1.48
+- Sprachliche Glättung im Neustart-Hinweis.
+
 ## 0.1.47
 - Die Neustart-Karte verschwindet nach dem Neustart von selbst; die Statuszeile
   dazu wird ausgeblendet, sobald nichts mehr aussteht.

@@ -377,8 +377,7 @@ SEITE = """<!doctype html>
   <section class="karte neustart-karte" id="neustart-karte" hidden>
     <h2 data-i18n>Einmal neu starten</h2>
     <p data-i18n>JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es
-       <b>einmal</b> neu starten. Nur dieses eine Mal — spätere Bausteine erscheinen später
-       ganz ohne Neustart.</p>
+       <b>einmal</b> neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.</p>
     <div class="neustart-knoepfe">
       <button type="button" class="neustart-jetzt" id="neustart-jetzt" data-i18n>Jetzt neu starten</button>
       <button type="button" class="neustart-spaeter" id="neustart-spaeter" data-i18n>Später</button>
@@ -1052,7 +1051,7 @@ var UEB = {
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
   'einmal nötig — wann, entscheidest du': 'needed once — you decide when',
   'Einmal neu starten': 'One restart needed',
-  'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — spätere Bausteine erscheinen später ganz ohne Neustart.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — later building blocks show up without any restart.',
+  'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — everything after that arrives without a restart.',
   'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
   'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
   'Jetzt neu starten': 'Restart now',
