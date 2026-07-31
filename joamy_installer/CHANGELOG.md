@@ -1,3 +1,8 @@
+## 0.1.46
+- Der Neustart-Knopf meldete einen Fehler, obwohl Home Assistant längst neu
+  startete: Beim Neustart bricht die Verbindung ab — das ist der Normalfall und
+  gilt jetzt als Erfolg.
+
 ## 0.1.45
 - Fragt beim ersten Mal nach: „Home Assistant einmal neu starten?" — mit einem
   Klick erledigt, oder später. Ohne diesen einen Neustart kann Home Assistant

@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.45"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.46"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -740,12 +740,34 @@ class Installer:
         return {"ok": True, "noetig": bool(self._neustart_gemeldet)}
 
     async def neustart_jetzt(self) -> dict:
-        """Startet Home Assistant — NUR auf ausdrücklichen Klick des Nutzers."""
+        """Startet Home Assistant — NUR auf ausdrücklichen Klick des Nutzers.
+
+        WICHTIG (Frank 31.07.): Wer den Neustart auslöst, killt damit die eigene
+        Verbindung. Home Assistant fährt herunter, BEVOR es die Antwort schickt —
+        die Anfrage läuft also in einen Abbruch oder eine Zeitüberschreitung.
+        Genau das ist der NORMALFALL und darf nicht als Fehler gemeldet werden
+        (vorher stand "ließ sich nicht auslösen", während HA längst neu startete).
+        Als echter Fehler zählt nur eine ausdrückliche Absage (z. B. 401/403).
+        """
         LOG.info("Neustart vom Nutzer angefordert — homeassistant.restart wird aufgerufen.")
-        antwort = await self._core_api("POST", "/services/homeassistant/restart", {})
-        if antwort is None:
-            return {"ok": False, "fehler": "Home Assistant hat den Neustart nicht angenommen."}
-        return {"ok": True}
+        kopf = {"Authorization": f"Bearer {SUPERVISOR_TOKEN}", "Content-Type": "application/json"}
+        url = f"{SUPERVISOR_URL}/core/api/services/homeassistant/restart"
+        try:
+            async with self.session.post(url, headers=kopf, json={},
+                                         timeout=aiohttp.ClientTimeout(total=6)) as r:
+                if r.status in (401, 403, 404):
+                    text = (await r.text())[:160]
+                    LOG.warning("Neustart abgelehnt (%s): %s", r.status, text)
+                    return {"ok": False, "fehler": f"Home Assistant hat abgelehnt (HTTP {r.status})."}
+                LOG.info("Neustart angenommen (HTTP %s).", r.status)
+                return {"ok": True}
+        except (asyncio.TimeoutError, aiohttp.ClientError) as e:
+            # Verbindung weg = Home Assistant fährt herunter. Das ist Erfolg.
+            LOG.info("Verbindung brach beim Neustart ab (%s) — das ist der Normalfall.", type(e).__name__)
+            return {"ok": True}
+        except Exception as e:
+            LOG.warning("Neustart unerwartet gescheitert: %s", e)
+            return {"ok": False, "fehler": str(e)[:160]}
 
     async def _core_api(self, methode: str, pfad: str, json_daten=None):
         """Ein Aufruf der Core-API über den Supervisor-Proxy; None bei Fehler.
