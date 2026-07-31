@@ -393,10 +393,13 @@ SEITE = """<!doctype html>
     <p id="code-rest"></p>
   </section>
 
-  <!-- Freiwillige Unterstützung (Frank 30.07.): Die Karten gibt es kostenlos —
-       wer mag, gibt einen Kaffee aus. Bewusst KEIN CDN-Widget: Das Add-on läuft
-       im Ingress und soll ohne Internet-Skripte auskommen; der Knopf ist ein
-       einfacher Link im Buy-me-a-coffee-Gelb. -->
+  <!-- Freiwillige Unterstützung: Das Add-on selbst ist kostenlos, die Bausteine
+       kosten 0,89 € (siehe AGB und BAUSTEIN_KONFIG.PREIS) — der Kaffee ist ein
+       ZUSÄTZLICHES Trinkgeld, kein Ersatz für den Preis. Der Text darf deshalb
+       nicht behaupten, die Karten seien gratis; direkt darüber steht der
+       Kopplungscode „zum Kauf auf joamy.uk". Bewusst KEIN CDN-Widget: Das Add-on
+       läuft im Ingress und soll ohne Internet-Skripte auskommen; der Knopf ist
+       ein einfacher Link im Buy-me-a-coffee-Gelb. -->
   <section class="karte kaffee-karte">
     <h2 data-i18n>Gefällt dir JoAmy?</h2>
     <p data-i18n>In JoAmy steckt sehr viel Arbeit. Wenn es dir dein Zuhause schöner macht,
