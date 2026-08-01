@@ -224,7 +224,14 @@ class Installer:
     # Start / Registrierung
     # ------------------------------------------------------------------
     async def start(self) -> None:
-        self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60))
+        # 60 s Gesamt-Zeitlimit ist für einen PAKET-Download richtig, für die kleinen
+        # Status-Abfragen aber viel zu lang: Antwortete der Lizenz-Server nicht, blieb
+        # die Ingress-Seite bis zu einer Minute stehen und der Kunde hielt das Add-on
+        # für kaputt. Deshalb zusätzlich ein kurzes Limit bis zur ERSTEN Antwort
+        # (sock_connect/sock_read) — große Downloads laufen danach in Ruhe weiter.
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=60, sock_connect=8, sock_read=15)
+        )
         await self._hub_grundinstallation()
         await self.registrieren(erzwinge=True)
 
@@ -595,7 +602,31 @@ class Installer:
         else:
             shutil.move(quelle, ziel)
             LOG.info("Alte Version gesichert: /config/joamy_backup/%s/%s", ts, domain)
+        self._alte_sicherungen_aufraeumen()
         return True
+
+    # Jeder Kauf und jedes Update legt eine KOMPLETTE Kopie des Hubs ab. Beim
+    # Kochbuch sind das rund 16 MB pro Sicherung — nach ein paar Updates lagen so
+    # unbemerkt hunderte Megabyte auf der Home-Assistant-Platte, ohne dass sie je
+    # jemand angefasst hätte. Die letzten fünf reichen zum Zurückholen; ältere
+    # kommen weg.
+    SICHERUNGEN_BEHALTEN = 5
+
+    def _alte_sicherungen_aufraeumen(self) -> None:
+        wurzel = os.path.join(CONFIG_DIR, "joamy_backup")
+        try:
+            staende = sorted(
+                d for d in os.listdir(wurzel)
+                if os.path.isdir(os.path.join(wurzel, d))
+            )
+        except OSError:
+            return
+        for alt in staende[:-self.SICHERUNGEN_BEHALTEN]:
+            try:
+                shutil.rmtree(os.path.join(wurzel, alt))
+                LOG.info("Alte Sicherung entfernt: /config/joamy_backup/%s", alt)
+            except OSError as e:
+                LOG.warning("Alte Sicherung %s nicht entfernbar: %s", alt, e)
 
     # ------------------------------------------------------------------
     # Core-API: Config-Flow anstoßen + optionaler Neustart
