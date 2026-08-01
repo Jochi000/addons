@@ -1734,7 +1734,13 @@ function yamlEscape(s) {
     var wrap = el(ziel); wrap.innerHTML = '';
     liste.forEach(function (e, i) {
       var z = document.createElement('label'); z.className = 'kf-cam';
-      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 3;   // Voreinstellung bewusst klein: 8 Geraete ergaben eine 3,5-m-Karte cb.dataset.entity = e.entity;
+      // Voreinstellung bewusst klein: 8 Geraete ergaben eine 3,5 m lange Karte.
+      // ACHTUNG: Die Zuweisung der Entitaet MUSS eine eigene Zeile bleiben — sie war
+      // frueher ans Ende dieser Kommentarzeile gerutscht und wurde dadurch nie
+      // ausgefuehrt. Folge: jede Checkbox ohne Entitaet, der Konfigurator gab
+      // „- undefined" statt der Geraete aus.
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 3;
+      cb.dataset.entity = e.entity;
       var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
       z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
     });
