@@ -628,7 +628,7 @@ SEITE = """<!doctype html>
       <button id="bx-erzeugen" type="button" data-i18n>Codes anzeigen</button>
       <div id="bx-ergebnis" hidden>
         <div class="kf-abschnitt">
-          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell" einfügen</span>
+          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell“ einfügen</span>
           <pre id="bx-yaml-licht"></pre>
         </div>
         <div class="kf-abschnitt">
@@ -742,7 +742,7 @@ SEITE = """<!doctype html>
   <section class="karte" id="knopf-karte" hidden>
     <h2 data-i18n>JoAmy-Knopf</h2>
     <p class="kf-intro" data-i18n>Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi
-      (zum Beispiel „Karten werfen"). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist,
+      (zum Beispiel „Karten werfen“). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist,
       und lässt sich mit dem Finger frei verschieben.</p>
     <div class="kf-abschnitt">
       <label><input type="checkbox" id="knopf-schalter"> <b data-i18n>JoAmy-Knopf auf dem Dashboard anzeigen</b></label>
@@ -852,7 +852,7 @@ SEITE = """<!doctype html>
     <h2 data-i18n>Wetter-Atmosphäre einrichten</h2>
     <p class="kf-intro" data-i18n>Dein Dashboard lebt mit dem echten Wetter — Sonnenstand, Mondstand und
       Mondphase kommen aus deinem Standort, ganz ohne Zusatzinstallation. Hier holst du dir den Code für
-      die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe" am JoAmy-Knopf.</p>
+      die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe“ am JoAmy-Knopf.</p>
     <button id="wx-laden" type="button" data-i18n>Vorbereiten</button>
     <div id="wx-body" hidden>
       <div class="kf-abschnitt">
@@ -930,7 +930,7 @@ function el(id) { return document.getElementById(id); }
    Wahl in localStorage; ohne Wahl entscheidet die Browsersprache. ---------- */
 var UEB = {
   'Wetter-Atmosphäre einrichten': 'Set up the weather atmosphere',
-  'Dein Dashboard lebt mit dem echten Wetter — Sonnenstand, Mondstand und Mondphase kommen aus deinem Standort, ganz ohne Zusatzinstallation. Hier holst du dir den Code für die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe" am JoAmy-Knopf.':
+  'Dein Dashboard lebt mit dem echten Wetter — Sonnenstand, Mondstand und Mondphase kommen aus deinem Standort, ganz ohne Zusatzinstallation. Hier holst du dir den Code für die unsichtbare Karte; angeschaltet wird die Bühne unter „Hintergründe“ am JoAmy-Knopf.':
     'Your dashboard lives with the real weather — sun position, moon position and moon phase come from your location, without any extra installation. Grab the code for the invisible card here; the stage is switched on under "Backgrounds" on the JoAmy button.',
   'Vorbereiten': 'Prepare',
   'Wetter-Quelle': 'Weather source',
@@ -1047,7 +1047,7 @@ var UEB = {
   'Keine Szenen gefunden — in Home Assistant unter Einstellungen → Automatisierungen eine Szene anlegen.':
     'No scenes found — create a scene in Home Assistant under Settings → Automations.',
   'Mindestens eine Szene anhaken.': 'Tick at least one scene.',
-  'Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi (zum Beispiel „Karten werfen"). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist, und lässt sich mit dem Finger frei verschieben.':
+  'Der kleine runde Knopf auf dem Dashboard öffnet die JoAmy-Modi (zum Beispiel „Karten werfen“). Er ist automatisch da, sobald eine JoAmy-Karte geladen ist, und lässt sich mit dem Finger frei verschieben.':
     'The small round button on the dashboard opens the JoAmy modes (for example \u201cThrow cards\u201d). It appears automatically as soon as a JoAmy card is loaded and can be moved freely with your finger.',
   'JoAmy-Knopf auf dem Dashboard anzeigen': 'Show the JoAmy button on the dashboard',
   'Ausgeblendet gilt überall und für alle Nutzer. Die Modi selbst laufen unverändert weiter — nur die Bedienstelle verschwindet.':
@@ -1066,6 +1066,8 @@ var UEB = {
   'Der Neustart ließ sich nicht auslösen — bitte in Home Assistant unter Entwicklerwerkzeuge neu starten.': 'The restart could not be triggered — please restart from Home Assistant under Developer tools.',
   'später — JoAmy lädt erst nach dem Neustart vollständig': 'later — JoAmy will only load fully after the restart',
   'Gefällt dir JoAmy?': 'Do you like JoAmy?',
+  'Installer': 'Installer',
+  'Settings-Style (Vorgabe fürs J-Knopf-Popup): — SkizzeComic PinnwandFrost TerminalRiso AlmanachKeramik Pigment': 'Settings style (default for the J-button popup): — SketchComic Pin boardFrost TerminalRiso AlmanacCeramic Pigment',
   'Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.': 'All building blocks are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee.',
   'Spendier mir einen Kaffee': 'Buy me a coffee',
   'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
