@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.51"
+version: "0.1.52"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Käufe installieren sich von selbst
 url: https://joamy.uk
@@ -42,8 +42,12 @@ map:
 options:
   server_url: "https://lizenz.joamy.uk"
   poll_sekunden: 60
+  # Sprache der KARTEN (nicht dieser Oberfläche — die folgt Home Assistant).
+  # Nach einer Änderung liefert JoAmy alle Bausteine automatisch neu aus.
+  sprache: "de"
 schema:
   server_url: str
   poll_sekunden: int
+  sprache: "list(de|en|en-slang|es|fr|it|pt|nl|da|sv|no|fi|ru|zh)?"
 startup: services
 boot: auto

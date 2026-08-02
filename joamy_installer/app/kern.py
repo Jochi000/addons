@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.51"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.52"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -140,15 +140,30 @@ def lade_optionen() -> dict:
         poll = max(5, int(roh.get("poll_sekunden") or 60))
     except (TypeError, ValueError):
         poll = 60
+    # Sprache der Karten. Unbekanntes fällt auf Deutsch zurück — eine Karte ohne
+    # Text darf es nie geben.
+    ERLAUBT = ("de", "en", "en-slang", "es", "fr", "it", "pt", "nl",
+               "da", "sv", "no", "fi", "ru", "zh")
+    sprache = str(roh.get("sprache") or "de").strip()
+    if sprache not in ERLAUBT:
+        sprache = "de"
     return {
         "server_url": str(roh.get("server_url") or "https://lizenz.joamy.uk").rstrip("/"),
         "poll_sekunden": poll,
+        "sprache": sprache,
     }
 
 
-def _fingerabdruck(paket: dict) -> str:
-    """Erkennungsmerkmal eines Kaufs — ändert sich bei Theme-/Versions-Update."""
-    return "|".join(str(paket.get(k, "")) for k in ("kauf_id", "baustein", "theme", "version", "name", "titel"))
+def _fingerabdruck(paket: dict, sprache: str = "") -> str:
+    """Erkennungsmerkmal eines Kaufs — ändert sich bei Theme-/Versions-Update.
+
+    Die SPRACHE gehört dazu: Stellt der Nutzer sie um, ändert sich der
+    Fingerabdruck, und der Poll liefert alle Bausteine von selbst in der neuen
+    Sprache nach. Genau deshalb braucht der Sprachwechsel keinen eigenen
+    Mechanismus."""
+    teile = [str(paket.get(k, "")) for k in ("kauf_id", "baustein", "theme", "version", "name", "titel")]
+    teile.append(str(sprache or ""))
+    return "|".join(teile)
 
 
 class Installer:
@@ -336,6 +351,7 @@ class Installer:
             "instanz_id": self.instanz_id,
             "ha_version": ha_version,
             "addon_version": ADDON_VERSION,
+            "sprache": self.optionen.get("sprache", "de"),
         }
         # Selbstheilender Besitznachweis: ein aus der core.uuid abgeleiteter Hash
         # (überlebt /data-Verlust, Restore, Umzug). So bekommt das Add-on seinen
@@ -424,7 +440,7 @@ class Installer:
                 baustein = str(paket.get("baustein") or "").strip()
                 if not baustein:
                     continue
-                fp = _fingerabdruck(paket)
+                fp = _fingerabdruck(paket, self.optionen.get("sprache", "de"))
                 alt = self.status["installiert"].get(baustein)
                 if alt and alt.get("fingerabdruck") == fp:
                     continue
@@ -1110,6 +1126,7 @@ class Installer:
             "registriert": bool(self.instanz_token),
             "instanz_id": self.instanz_id,
             "addon_version": ADDON_VERSION,
+            "sprache": self.optionen.get("sprache", "de"),
             "poll_sekunden": self.optionen["poll_sekunden"],
             "neustart_noetig": bool(self.status.get("neustart_noetig")),
             "flow_ausstehend": list(self.status.get("flow_ausstehend") or []),
