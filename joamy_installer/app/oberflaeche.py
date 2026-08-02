@@ -369,7 +369,7 @@ SEITE = """<!doctype html>
     </div>
     <span class="eyebrow" data-i18n>Für Home Assistant</span>
     <h1 data-i18n>Installer</h1>
-    <p data-i18n>Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.</p>
+    <p data-i18n>Einmal koppeln — deine Bausteine ziehen ab dann von selbst bei dir ein.</p>
   </header>
 
   <!-- Einmaliger Neustart: Home Assistant lädt eine NEU hinzugekommene
@@ -388,7 +388,7 @@ SEITE = """<!doctype html>
   <section class="karte">
     <h2 data-i18n>Kopplungscode</h2>
     <div id="code">—</div>
-    <p class="code-hinweis" data-i18n>Diesen Code beim Kauf auf <b>joamy.uk</b> eingeben
+    <p class="code-hinweis" data-i18n>Diesen Code auf <b>joamy.uk</b> eingeben
        (oder auf <b>joamy.uk/verbinden</b>), um dein Zuhause mit JoAmy zu verbinden.</p>
     <p id="code-rest"></p>
   </section>
@@ -422,13 +422,13 @@ SEITE = """<!doctype html>
 
   <section class="karte">
     <h2 data-i18n>Installierte Bausteine</h2>
-    <p id="leer" data-i18n>Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Kauf hier von ganz allein.</p>
+    <p id="leer" data-i18n>Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Baustein hier von ganz allein.</p>
     <ul id="bausteine"></ul>
   </section>
 
   <section class="karte">
     <h2 data-i18n>Von Hand</h2>
-    <button id="suchen" data-i18n>Jetzt nach Käufen suchen</button>
+    <button id="suchen" data-i18n>Jetzt nach Bausteinen suchen</button>
     <div id="such-meldung"></div>
   </section>
 
@@ -764,7 +764,7 @@ SEITE = """<!doctype html>
           <option value="almanach">Almanach</option><option value="keramik">Keramik</option>
           <option value="pigment">Pigment</option>
         </select></label>
-      <span class="hinweis" data-i18n>Gilt sofort und für alle Nutzer. Nicht gekaufte Styles bleiben
+      <span class="hinweis" data-i18n>Gilt sofort und für alle Nutzer. Nicht vorhandene Styles bleiben
         in den Karten unberührt — angewendet wird nur, wo der Style lizenziert ist.</span>
     </div>
     <div id="knopf-meldung"></div>
@@ -1075,7 +1075,7 @@ var UEB = {
   'Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist': 'Global — pick the style once in the settings popup (J button); it applies to every card where that style is purchased',
   'Einzeln — jede Karte behält ihren eigenen Style-Knopf, die Auswahl im Settings-Popup entfällt': 'Per card — every card keeps its own style button; the settings popup entry disappears',
   'Settings-Style (Vorgabe fürs J-Knopf-Popup):': 'Settings style (default for the J-button popup):',
-  'Gilt sofort und für alle Nutzer. Nicht gekaufte Styles bleiben in den Karten unberührt — angewendet wird nur, wo der Style lizenziert ist.': 'Applies immediately and for all users. Styles you did not purchase stay untouched — the choice is only applied where the style is licensed.',
+  'Gilt sofort und für alle Nutzer. Nicht vorhandene Styles bleiben in den Karten unberührt — angewendet wird nur, wo der Style lizenziert ist.': 'Applies immediately and for all users. Styles you do not have stay untouched — the choice is only applied where the style is licensed.',
   'Einzeln — jede Karte zeigt wieder ihren Style-Knopf.': 'Per card — every card shows its own style button again.',
   'Global — die Style-Wahl liegt jetzt im Settings-Popup.': 'Global — the style choice now lives in the settings popup.',
   'Ausgeblendet — überall und sofort.': 'Hidden — everywhere, immediately.',
@@ -1110,7 +1110,7 @@ var UEB = {
   'Neu laden': 'Reload',
   '# Kein Licht angehakt.': '# No light ticked.',
   '# Kein Rollladen angehakt.': '# No blind ticked.',
-  'Hier stehen nach dem Kauf nur deine Styles.': 'After your purchase only your styles are listed here.',
+  'Sobald der Baustein da ist, stehen hier nur deine Styles.': 'Once the module is here, only your styles are listed.',
   'Wie füge ich den Code ins Dashboard ein? (kurzes Video)': 'How do I paste the code into my dashboard? (short video)',
   'Dashboard öffnen → Menü oben rechts → Dashboard bearbeiten': 'Open your dashboard → menu top right → Edit dashboard',
   'Auf + tippen → Reiter Nach Karte → nach Manuell suchen': 'Tap + → tab By card → search for Manual',
@@ -1128,11 +1128,11 @@ var UEB = {
   'Eigener Ordner': 'Your own folder',
   '(z. B. Reolink/FTP nach': '(e.g. Reolink/FTP into',
   'Für Home Assistant': 'For Home Assistant',
-  'Einmal koppeln — deine Käufe ziehen ab dann von selbst bei dir ein.':
-    'Pair once — from then on your purchases move in all by themselves.',
+  'Einmal koppeln — deine Bausteine ziehen ab dann von selbst bei dir ein.':
+    'Pair once — from then on your modules move in all by themselves.',
   'Kopplungscode': 'Pairing code',
-  'Diesen Code beim Kauf auf joamy.uk eingeben (oder auf joamy.uk/verbinden), um dein Zuhause mit JoAmy zu verbinden.':
-    'Enter this code when buying on <b>joamy.uk</b> (or at <b>joamy.uk/verbinden</b>) to connect your home with JoAmy.',
+  'Diesen Code auf joamy.uk eingeben (oder auf joamy.uk/verbinden), um dein Zuhause mit JoAmy zu verbinden.':
+    'Enter this code on <b>joamy.uk</b> (or at <b>joamy.uk/verbinden</b>) to connect your home with JoAmy.',
   'Status': 'Status',
   'Lizenz-Server': 'License server',
   'Registriert': 'Registered',
@@ -1140,13 +1140,13 @@ var UEB = {
   'Neustart von Home Assistant': 'Restarting Home Assistant',
   'wird von JoAmy nie ausgelöst': 'never triggered by JoAmy',
   'einmal empfohlen — wann, entscheidest du': 'recommended once — you decide when',
-  'Noch kein Kamera-Baustein gekauft — hier stehen später nur deine Styles.':
-    'No camera building block bought yet — later only your own styles appear here.',
+  'Noch kein Kamera-Baustein geholt — hier stehen später nur deine Styles.':
+    'No camera module yet — later only your own styles appear here.',
   'Installierte Bausteine': 'Installed building blocks',
-  'Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Kauf hier von ganz allein.':
-    'Nothing has moved in yet — after pairing, your first purchase shows up here all by itself.',
+  'Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Baustein hier von ganz allein.':
+    'Nothing has moved in yet — after pairing, your first module shows up here all by itself.',
   'Von Hand': 'By hand',
-  'Jetzt nach Käufen suchen': 'Check for purchases now',
+  'Jetzt nach Bausteinen suchen': 'Check for modules now',
   'Kamera-Karte einrichten': 'Set up the camera card',
   'Wähle deine Kameras — wir bauen dir den fertigen Code. Den fügst du beim Hinzufügen der Karte („Karte hinzufügen“ → ganz unten „Manuell“) einfach ein.':
     'Pick your cameras — we build the finished code for you. Just paste it when adding the card (“Add card” → “Manual” at the very bottom).',
@@ -1192,7 +1192,7 @@ var UEB = {
     'No code yet — the license server has not delivered one.',
   'Suche läuft …': 'Checking …',
   'Gefunden und installiert: ': 'Found and installed: ',
-  'Alles aktuell — kein neuer Kauf gefunden.': 'Everything up to date — no new purchase found.',
+  'Alles aktuell — nichts Neues gefunden.': 'Everything up to date — nothing new found.',
   'Das hat nicht geklappt: ': 'That did not work: ',
   'Das hat nicht geklappt — Verbindung prüfen.': 'That did not work — please check the connection.',
   'unbekannter Fehler': 'unknown error',
@@ -1220,8 +1220,8 @@ var UEB = {
   'Style': 'Style',
   'Keine media_player-Entitäten gefunden — richte zuerst Lautsprecher in Home Assistant ein.':
     'No media_player entities found — set up speakers in Home Assistant first.',
-  'Noch kein Musik-Baustein gekauft — hier stehen später nur deine Styles.':
-    'No music building block bought yet — later only your own styles appear here.',
+  'Noch kein Musik-Baustein geholt — hier stehen später nur deine Styles.':
+    'No music module yet — later only your own styles appear here.',
   '# Bitte mindestens einen Lautsprecher anhaken.': '# Please tick at least one speaker.',
   'links': 'left', 'rechts': 'right', 'oben': 'top', 'unten': 'bottom', 'mittig': 'middle',
   'Der Lizenz-Server hat gerade eine Störung. Das Add-on versucht es weiter.':
@@ -1510,7 +1510,7 @@ function stileAnbieten(st) {
   if (!sel.value) sel.value = liste[0];        // '' = kein Treffer ⇒ erster Style
   var hw = el('kf-stil-hinweis');
   if (hw) {
-    hw.textContent = gekauft.length ? '' : wt('Noch kein Kamera-Baustein gekauft — hier stehen später nur deine Styles.');
+    hw.textContent = gekauft.length ? '' : wt('Noch kein Kamera-Baustein geholt — hier stehen später nur deine Styles.');
     hw.hidden = !!gekauft.length;
   }
 }
@@ -1532,7 +1532,7 @@ el('suchen').addEventListener('click', function () {
       meldung.textContent = erg.ok
         ? (erg.neu_installiert && erg.neu_installiert.length
             ? wt('Gefunden und installiert: ') + erg.neu_installiert.join(', ') + '.'
-            : wt('Alles aktuell — kein neuer Kauf gefunden.'))
+            : wt('Alles aktuell — nichts Neues gefunden.'))
         : (wt('Das hat nicht geklappt: ') + (erg.fehler || wt('unbekannter Fehler')));
     })
     .catch(function () { meldung.textContent = wt('Das hat nicht geklappt — Verbindung prüfen.'); })
@@ -1708,7 +1708,7 @@ function yamlEscape(s) {
     liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; sel.appendChild(o); });
     sel.value = vorher; if (!sel.value) sel.value = liste[0];
     var hw = el('zs-stil-hinweis');
-    if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+    if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
   }
   window.__zsStile = stileZs;
   stileZs();
@@ -1761,7 +1761,7 @@ function yamlEscape(s) {
       var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
       liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
       var hw = el('bx-stil-hinweis');
-      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
       el('bx-body').hidden = false; geladen = true;
     }).catch(function () {
       var p = document.createElement('p'); p.style.color = 'var(--rot)';
@@ -2111,7 +2111,7 @@ function yamlEscape(s) {
       var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
       liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
       var hw = el('bk-stil-hinweis');
-      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
       el('bk-label').placeholder = wt('automatisch — Name des Geräts');
       baueGitter(); felder(); vorschau();
       el('bk-body').hidden = false; geladen = true;
@@ -2216,7 +2216,7 @@ function yamlEscape(s) {
       var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
       liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
       var hw = el('sz-stil-hinweis');
-      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
       el('sz-body').hidden = false; geladen = true;
     }).catch(function () {
       el('sz-meldung').style.color = 'var(--rot)';
@@ -2344,7 +2344,7 @@ function yamlEscape(s) {
       var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
       liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
       var hw = el('kl-stil-hinweis');
-      if (hw) { hw.textContent = gek.length ? '' : wt('Hier stehen nach dem Kauf nur deine Styles.'); hw.hidden = !!gek.length; }
+      if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
       el('kl-body').hidden = false; geladen = true;
     }).catch(function () {
       el('kl-meldung').style.color = 'var(--rot)';
@@ -2445,7 +2445,7 @@ function yamlEscape(s) {
     // dann steht das Feld LEER da und der erzeugte Code hätte kein Style.
     sel.value = vorher; if (!sel.value) sel.value = liste[0];
     var hw = el('mk-stil-hinweis');
-    hw.textContent = gekauft.length ? '' : wt('Noch kein Musik-Baustein gekauft — hier stehen später nur deine Styles.');
+    hw.textContent = gekauft.length ? '' : wt('Noch kein Musik-Baustein geholt — hier stehen später nur deine Styles.');
     hw.hidden = !!gekauft.length;
   }
 
