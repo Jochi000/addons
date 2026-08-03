@@ -1,3 +1,16 @@
+## 0.1.56
+- **Neu: „In mein Dashboard legen".** Neben jedem „Code kopieren" steht jetzt
+  ein Knopf, der die Karte direkt in dein Dashboard einträgt — du wählst nur
+  Dashboard und Ansicht. Kein Kopieren, kein „Manuell", kein Einfügen.
+  Verschieben kannst du die Karte dort anschließend wie jede andere.
+- Vor jedem Eintragen wird deine bisherige Dashboard-Konfiguration nach
+  /config/joamy_backup/ gesichert. Es wird nur angehängt, nie etwas ersetzt.
+- Bei Dashboards im YAML-Modus sagt das Add-on das klar, statt still zu
+  scheitern.
+- 14 Meldungen waren nur auf Deutsch — sie liefen über das JavaScript und
+  wurden von der Übersetzungsprüfung gar nicht erfasst. Jetzt alle
+  zweisprachig, und die Prüfung schaut künftig auch dort hin.
+
 ## 0.1.55
 - Die Add-on-Seite passt sich jetzt jedem Bildschirm an — vom kleinen Handy
   bis zum grossen Monitor. Vorher wurde sie auf schmalen Geraeten seitlich

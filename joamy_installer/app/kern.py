@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.55"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.56"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -811,6 +811,114 @@ class Installer:
         except Exception:
             pass
         LOG.info("Neustart erledigt — Hinweis zurückgenommen.")
+
+    # ------------------------------------------------------------------
+    # Dashboard: Karte eintragen (WebSocket — REST kennt Lovelace nicht)
+    # ------------------------------------------------------------------
+    async def _ws(self, nachrichten: list) -> list:
+        """Fuehrt WebSocket-Aufrufe gegen den Core aus und gibt die Ergebnisse.
+
+        Eine Verbindung, dann alle Nachrichten der Reihe nach — so bleibt die
+        Sitzung kurz und es gibt keine Dauerverbindung zu pflegen.
+        """
+        url = f"{SUPERVISOR_URL}/core/websocket"
+        token = os.environ.get("SUPERVISOR_TOKEN", SUPERVISOR_TOKEN)
+        raus = []
+        try:
+            async with self.session.ws_connect(url, heartbeat=30) as ws:
+                # 1) Der Core meldet sich mit auth_required, dann Token schicken.
+                erste = await ws.receive_json(timeout=10)
+                if erste.get("type") == "auth_required":
+                    await ws.send_json({"type": "auth", "access_token": token})
+                    antwort = await ws.receive_json(timeout=10)
+                    if antwort.get("type") != "auth_ok":
+                        LOG.warning("WebSocket-Anmeldung abgelehnt: %s", antwort)
+                        return []
+                # 2) Nachrichten durchreichen
+                nr = 0
+                for n in nachrichten:
+                    nr += 1
+                    await ws.send_json({"id": nr, **n})
+                    while True:
+                        a = await ws.receive_json(timeout=20)
+                        if a.get("id") == nr and a.get("type") == "result":
+                            raus.append(a)
+                            break
+        except Exception as e:
+            LOG.warning("WebSocket-Aufruf fehlgeschlagen: %s", e)
+        return raus
+
+    async def dashboards(self) -> dict:
+        """Welche Dashboards gibt es, und welche Ansichten haben sie?"""
+        erg = await self._ws([{"type": "lovelace/dashboards/list"}])
+        liste = []
+        if erg and erg[0].get("success"):
+            for d in erg[0].get("result") or []:
+                if d.get("mode") == "storage":
+                    liste.append({"url_path": d.get("url_path"), "titel": d.get("title") or d.get("url_path")})
+        # Das Standard-Dashboard hat keinen url_path und taucht in der Liste nicht auf.
+        liste.insert(0, {"url_path": None, "titel": "Übersicht (Standard)"})
+
+        # Ansichten je Dashboard dazuholen — der Nutzer soll waehlen koennen.
+        fragen = [{"type": "lovelace/config", "url_path": d["url_path"]} for d in liste]
+        antworten = await self._ws(fragen)
+        raus = []
+        for d, a in zip(liste, antworten):
+            if not a.get("success"):
+                # YAML-Dashboard o. ae. — ehrlich melden statt still weglassen.
+                raus.append({**d, "ansichten": [], "grund": "nicht über die Oberfläche änderbar"})
+                continue
+            cfg = a.get("result") or {}
+            ansichten = []
+            for i, v in enumerate(cfg.get("views") or []):
+                ansichten.append({"nr": i, "titel": v.get("title") or v.get("path") or f"Ansicht {i + 1}"})
+            raus.append({**d, "ansichten": ansichten})
+        return {"ok": True, "dashboards": raus}
+
+    async def karte_eintragen(self, url_path, ansicht: int, karte: dict) -> dict:
+        """Haengt EINE Karte an eine Ansicht an — nie ersetzen, nie loeschen."""
+        if not isinstance(karte, dict) or not karte.get("type"):
+            return {"ok": False, "fehler": "Keine gültige Karte übergeben."}
+
+        gelesen = await self._ws([{"type": "lovelace/config", "url_path": url_path}])
+        if not gelesen or not gelesen[0].get("success"):
+            return {"ok": False, "fehler": "Dieses Dashboard lässt sich nicht über die "
+                                           "Oberfläche ändern (YAML-Modus). Dort trägst du die Karte "
+                                           "weiterhin von Hand ein."}
+        cfg = gelesen[0].get("result") or {}
+        views = cfg.get("views") or []
+        if not views:
+            return {"ok": False, "fehler": "Dieses Dashboard hat noch keine Ansicht."}
+        if ansicht < 0 or ansicht >= len(views):
+            ansicht = 0
+
+        # SICHERUNG vor dem Schreiben — hier wird fremde Konfiguration angefasst.
+        try:
+            ordner = os.path.join(CONFIG_DIR, "joamy_backup")
+            os.makedirs(ordner, exist_ok=True)
+            name = "lovelace-" + (url_path or "standard") + "-" + datetime.now().strftime("%Y%m%d-%H%M%S") + ".json"
+            speichere_json(os.path.join(ordner, name), cfg)
+            LOG.info("Dashboard-Sicherung: %s", name)
+        except Exception as e:
+            return {"ok": False, "fehler": f"Sicherung nicht möglich ({e}) — es wurde nichts geändert."}
+
+        karten = list(views[ansicht].get("cards") or [])
+        # Schon drin? Dann nicht doppelt eintragen.
+        if any((k or {}).get("type") == karte.get("type") for k in karten):
+            return {"ok": True, "schon_da": True,
+                    "meldung": "Diese Karte liegt in dieser Ansicht bereits."}
+        karten.append(karte)
+        views[ansicht] = {**views[ansicht], "cards": karten}
+        cfg["views"] = views
+
+        geschrieben = await self._ws([{"type": "lovelace/config/save",
+                                       "url_path": url_path, "config": cfg}])
+        if not geschrieben or not geschrieben[0].get("success"):
+            return {"ok": False, "fehler": "Speichern abgelehnt — die Sicherung liegt in "
+                                           "/config/joamy_backup/, geändert wurde nichts."}
+        LOG.info("Karte %s in Dashboard %s, Ansicht %s eingetragen.",
+                 karte.get("type"), url_path or "(Standard)", ansicht)
+        return {"ok": True, "ansicht": views[ansicht].get("title") or f"Ansicht {ansicht + 1}"}
 
     async def neustart_status(self) -> dict:
         """Braucht dieses Home Assistant noch den einmaligen Neustart?

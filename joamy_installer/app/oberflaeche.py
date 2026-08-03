@@ -173,6 +173,14 @@ SEITE = """<!doctype html>
   .karte button:disabled { opacity: .45; cursor: wait; transform: none; }
   .karte button.ghost { background: transparent; color: var(--tinte-2); border-color: var(--nacht-linie); }
   .karte button.ghost:hover { background: transparent; color: var(--tinte-1); border-color: var(--akzent); }
+
+  /* „In mein Dashboard legen" */
+  .dbl-zeile { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  .dbl-zeile select { flex: 1 1 160px; min-width: 0; }
+  .dbl-knopf { background: var(--akzent); color: #14120c; border: none; border-radius: 999px;
+               padding: 11px 18px; font-weight: 600; cursor: pointer; }
+  .dbl-knopf:disabled { opacity: .55; cursor: default; }
+  .dbl-meldung { font-size: 14px; margin-top: 8px; min-height: 1.3em; }
   #such-meldung { text-align: center; margin-top: 10px; font-size: 14px; color: var(--tinte-3); min-height: 1.4em; }
   pre#logs {
     font: 12.5px/1.55 var(--mono); color: var(--tinte-3);
@@ -1077,6 +1085,20 @@ var UEB = {
   'Der Neustart dauert etwa eine Minute. Danach braucht Home Assistant noch einen kurzen Moment, bis alles geladen ist — dieser Hinweis verschwindet dann von selbst.': 'The restart takes about a minute. After that Home Assistant needs a short moment until everything is loaded — this notice then disappears on its own.',
   'Du findest deine Karten unter „Karte hinzufügen“ im Dashboard. Taucht eine neue Karte dort nicht auf, lade die Seite einmal neu (F5) — Home Assistant liest die Liste der Karten nur beim Laden.': 'You will find your cards under “Add card” in the dashboard. If a new card does not show up there, reload the page once (F5) — Home Assistant only reads the list of cards when the page loads.',
   'Lade jetzt dein Dashboard einmal neu (F5) — erst dann kennt Home Assistant die neue Karte und du findest sie unter „Karte hinzufügen".': 'Now reload your dashboard once (F5) — only then does Home Assistant know the new card, and you will find it under “Add card”.',
+  'Dashboard und Ansicht': 'Dashboard and view',
+  'In mein Dashboard legen': 'Put it in my dashboard',
+  'Dashboards werden geladen …': 'Loading dashboards …',
+  'Kein änderbares Dashboard gefunden': 'No editable dashboard found',
+  'Deine Dashboards sind in YAML angelegt — dort trägst du die Karte weiterhin von Hand ein.': 'Your dashboards are defined in YAML — there you still add the card by hand.',
+  'Es ist noch kein Code erzeugt — bitte erst oben auf „Code anzeigen" tippen.': 'No code has been generated yet — please tap “Show code” above first.',
+  'Wird eingetragen …': 'Adding it …',
+  'Diese Karte liegt dort schon.': 'That card is already there.',
+  'Erledigt — die Karte liegt in deinem Dashboard. Lade es einmal neu (F5), dann siehst du sie. Verschieben kannst du sie dort wie jede andere Karte.': 'Done — the card is in your dashboard. Reload it once (F5) and you will see it. You can move it around there like any other card.',
+  'Das hat nicht geklappt.': 'That did not work.',
+  'oben': 'top',
+  'unten': 'bottom',
+  'mittig': 'centre',
+  'rechts': 'right',
   'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — everything after that arrives without a restart.',
   'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
   'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
@@ -1561,6 +1583,160 @@ el('suchen').addEventListener('click', function () {
     .catch(function () { meldung.textContent = wt('Das hat nicht geklappt — Verbindung prüfen.'); })
     .finally(function () { knopf.disabled = false; lade(); });
 });
+
+
+/* ============ „In mein Dashboard legen" ============
+   Haengt sich an jeden Kopieren-Knopf und bietet daneben den direkten Weg an.
+   Der Kunde waehlt Dashboard und Ansicht; eingetragen wird ANGEHAENGT, nie
+   ersetzt — verschieben kann er die Karte danach im Dashboard selbst. */
+(function dashboardLeger() {
+  var geladen = null;
+
+  function yamlZuKarte(text) {
+    /* Die Konfiguratoren erzeugen einfaches YAML (type:, entities:, …). Statt
+       eine YAML-Bibliothek mitzuschleppen, wird genau diese Form gelesen:
+       Schluessel/Wert, Listen mit „- ", eine Verschachtelungsebene. Was der
+       Konfigurator nicht erzeugt, muss hier auch nicht verstanden werden. */
+    /* String.fromCharCode(10) statt '\\n': Diese Seite steht in einem
+       Python-Textblock, und Python ersetzt ein \\n darin BEIM AUSLIEFERN durch
+       einen echten Zeilenumbruch — die JavaScript-Zeichenkette waere dann
+       mitten im Code aufgebrochen. Der Bestand macht es an drei Stellen
+       genauso; ich bin erst hineingelaufen. */
+    var UMBRUCH = String.fromCharCode(10);
+    var karte = {}, listeFuer = null, zeilen = String(text || '').split(UMBRUCH);
+    for (var i = 0; i < zeilen.length; i++) {
+      var z = zeilen[i];
+      if (!z.trim() || z.trim().charAt(0) === '#') continue;
+      var einzug = z.length - z.replace(/^\s+/, '').length;
+      var t = z.trim();
+      if (t.indexOf('- ') === 0) {
+        if (!listeFuer) continue;
+        var w = t.slice(2).trim();
+        karte[listeFuer].push(wert(w));
+        continue;
+      }
+      var p = t.indexOf(':');
+      if (p < 0) continue;
+      var k = t.slice(0, p).trim(), v = t.slice(p + 1).trim();
+      if (einzug > 0 && listeFuer) continue;      // tiefere Ebenen ignorieren
+      if (!v) { karte[k] = []; listeFuer = k; continue; }
+      listeFuer = null;
+      karte[k] = wert(v);
+    }
+    return karte;
+  }
+  function wert(v) {
+    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    if ((v.charAt(0) === '"' && v.slice(-1) === '"') || (v.charAt(0) === "'" && v.slice(-1) === "'")) return v.slice(1, -1);
+    return v;
+  }
+
+  function baueZeile(nachKnopf, holeYaml) {
+    var zeile = document.createElement('div');
+    zeile.className = 'dbl-zeile';
+    var wahl = document.createElement('select');
+    wahl.setAttribute('aria-label', wt('Dashboard und Ansicht'));
+    var knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.className = 'dbl-knopf';
+    knopf.textContent = wt('In mein Dashboard legen');
+    var meldung = document.createElement('div');
+    meldung.className = 'dbl-meldung';
+    zeile.appendChild(wahl); zeile.appendChild(knopf);
+    nachKnopf.parentNode.insertBefore(zeile, nachKnopf.nextSibling);
+    nachKnopf.parentNode.insertBefore(meldung, zeile.nextSibling);
+
+    function fuelle() {
+      wahl.innerHTML = '<option>' + wt('Dashboards werden geladen …') + '</option>';
+      knopf.disabled = true;
+      fetch('dashboards', { cache: 'no-store' }).then(function (r) { return r.json(); })
+        .then(function (a) {
+          geladen = a;
+          wahl.innerHTML = '';
+          var n = 0;
+          (a.dashboards || []).forEach(function (d) {
+            if (!d.ansichten || !d.ansichten.length) return;
+            d.ansichten.forEach(function (v) {
+              var o = document.createElement('option');
+              o.value = JSON.stringify({ url_path: d.url_path, ansicht: v.nr });
+              o.textContent = d.titel + ' · ' + v.titel;
+              wahl.appendChild(o); n++;
+            });
+          });
+          if (!n) {
+            wahl.innerHTML = '<option>' + wt('Kein änderbares Dashboard gefunden') + '</option>';
+            meldung.style.color = 'var(--tinte-3)';
+            meldung.textContent = wt('Deine Dashboards sind in YAML angelegt — dort trägst du die Karte weiterhin von Hand ein.');
+            return;
+          }
+          knopf.disabled = false;
+        })
+        .catch(function () {
+          wahl.innerHTML = '<option>' + wt('nicht erreichbar') + '</option>';
+        });
+    }
+    fuelle();
+
+    knopf.addEventListener('click', function () {
+      var karte = yamlZuKarte(holeYaml());
+      if (!karte.type) {
+        meldung.style.color = 'var(--rot)';
+        meldung.textContent = wt('Es ist noch kein Code erzeugt — bitte erst oben auf „Code anzeigen" tippen.');
+        return;
+      }
+      var ziel;
+      try { ziel = JSON.parse(wahl.value); } catch (e) { return; }
+      knopf.disabled = true;
+      meldung.style.color = 'var(--tinte-2)';
+      meldung.textContent = wt('Wird eingetragen …');
+      fetch('dashboards', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url_path: ziel.url_path, ansicht: ziel.ansicht, karte: karte }) })
+        .then(function (r) { return r.json(); })
+        .then(function (a) {
+          knopf.disabled = false;
+          if (a && a.ok) {
+            meldung.style.color = 'var(--gruen)';
+            meldung.textContent = a.schon_da
+              ? wt('Diese Karte liegt dort schon.')
+              : wt('Erledigt — die Karte liegt in deinem Dashboard. Lade es einmal neu (F5), dann siehst du sie. Verschieben kannst du sie dort wie jede andere Karte.');
+          } else {
+            meldung.style.color = 'var(--rot)';
+            meldung.textContent = (a && a.fehler) || wt('Das hat nicht geklappt.');
+          }
+        })
+        .catch(function () {
+          knopf.disabled = false;
+          meldung.style.color = 'var(--rot)';
+          meldung.textContent = wt('Das hat nicht geklappt — Verbindung prüfen.');
+        });
+    });
+  }
+
+  /* An jeden Kopieren-Knopf anhaengen. Der zugehoerige Code steht im <pre>
+     mit demselben Praefix (kf-kopieren → kf-yaml). */
+  function verdrahte() {
+    var knoepfe = document.querySelectorAll('button[id$="-kopieren"], button[id$="-kopieren-licht"], button[id$="-kopieren-jal"]');
+    for (var i = 0; i < knoepfe.length; i++) {
+      var b = knoepfe[i];
+      if (b.dataset.dblFertig) continue;
+      b.dataset.dblFertig = '1';
+      var id = b.id;
+      var yamlId = id.replace('-kopieren', '-yaml');
+      (function (bb, yid) {
+        var pre = document.getElementById(yid);
+        if (!pre) return;
+        baueZeile(bb, function () { return pre.textContent; });
+      })(b, yamlId);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verdrahte);
+  else verdrahte();
+  // Konfiguratoren bauen Knoepfe teils spaeter ein.
+  setTimeout(verdrahte, 1500);
+  setTimeout(verdrahte, 5000);
+})();
 
 // YAML-Werte sicher quoten — von beiden Konfiguratoren genutzt.
 function yamlEscape(s) {
@@ -2625,6 +2801,28 @@ def baue_web_app(installer: Installer) -> web.Application:
             LOG.error("Knopf-Schalten fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e)}, status=500)
 
+
+    async def dashboards_get(request: web.Request) -> web.Response:
+        """Welche Dashboards und Ansichten gibt es?"""
+        try:
+            return web.json_response(await installer.dashboards())
+        except Exception as e:
+            LOG.error("Dashboard-Liste fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
+    async def dashboards_post(request: web.Request) -> web.Response:
+        """Karte in eine Ansicht eintragen — haengt nur an, ersetzt nie."""
+        try:
+            b = await request.json()
+        except Exception:
+            return web.json_response({"ok": False, "fehler": "Ungültige Anfrage"}, status=400)
+        try:
+            return web.json_response(await installer.karte_eintragen(
+                b.get("url_path"), int(b.get("ansicht") or 0), b.get("karte") or {}))
+        except Exception as e:
+            LOG.error("Karte eintragen fehlgeschlagen: %s", e)
+            return web.json_response({"ok": False, "fehler": str(e)}, status=500)
+
     async def neustart_get(request: web.Request) -> web.Response:
         try:
             return web.json_response(await installer.neustart_status())
@@ -2682,6 +2880,8 @@ def baue_web_app(installer: Installer) -> web.Application:
     app.router.add_get("/wetter", wetter_get)
     app.router.add_get("/knopf", knopf_get)
     app.router.add_post("/knopf", knopf_post)
+    app.router.add_get("/dashboards", dashboards_get)
+    app.router.add_post("/dashboards", dashboards_post)
     app.router.add_get("/neustart", neustart_get)
     app.router.add_post("/neustart", neustart_post)
     app.router.add_get("/stilwahl", stilwahl_get)
