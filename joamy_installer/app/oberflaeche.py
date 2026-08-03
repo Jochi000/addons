@@ -70,6 +70,12 @@ SEITE = """<!doctype html>
   }
   input, select, textarea, button { font-family: inherit; font-size: 16px; }  /* < 16px ⇒ iOS-Zoom */
   .rahmen { max-width: 720px; margin: 0 auto; display: grid; gap: 16px; }
+  /* Grid-Kinder haben von Haus aus min-width:auto und weigern sich, unter ihre
+     Inhaltsbreite zu schrumpfen. Auf schmalen Geraeten (320/360 px) schob das
+     die ganze Seite ueber den Rand — sichtbar als seitliches Wischen. */
+  .rahmen > *, .karte, .karte > *, .bk-zeilen > *, .bk-buehne > * { min-width: 0; }
+  /* Nichts darf breiter werden als sein Platz — unabhaengig vom Geraet. */
+  img, video, canvas, svg, pre, table, iframe { max-width: 100%; }
   /* Wortmarke wie in der Website-Nav: Haus-Icon + fetter Schriftzug */
   .wortmarke { display: inline-flex; align-items: center; gap: 9px; text-decoration: none;
                color: var(--tinte-1); font-weight: 600; font-size: 21px; letter-spacing: -.02em; }
@@ -123,7 +129,10 @@ SEITE = """<!doctype html>
     color: var(--akzent); margin-bottom: 12px;
   }
   #code {
-    font: 600 2.6rem/1.1 var(--mono); letter-spacing: .1em;
+    /* Mitwachsend statt fest: Der Code ist das breiteste Element der Seite.
+       Bei 2.6rem fest brauchte er ueber 300 px und zwang alles andere breit. */
+    font: 600 clamp(1.5rem, 8vw, 2.6rem)/1.1 var(--mono); letter-spacing: .08em;
+    overflow-wrap: anywhere;
     color: var(--tinte-1); text-align: center; padding: 6px 0 2px;
   }
   .code-hinweis { text-align: center; color: var(--tinte-2); font-size: 14.5px; }
@@ -265,12 +274,15 @@ SEITE = """<!doctype html>
   .bx-extra-code { display: grid; gap: 8px; margin-top: 12px; }
   .bx-extra-code pre { font: 13px/1.6 var(--mono); color: var(--tinte-2); background: var(--nacht-vertieft);
     border: 1px solid var(--nacht-linie); border-radius: var(--r-12); padding: 13px 15px; overflow-x: auto; white-space: pre; }
-  .bk-zeilen { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: start; }
-  @media (max-width: 640px) { .bk-zeilen { grid-template-columns: 1fr; } }
+  /* auto-fit statt fester Spalte: bricht von selbst um, sobald es eng wird —
+     ohne auf einen Schwellwert angewiesen zu sein, der im Ingress-Rahmen
+     womoeglich nie erreicht wird. */
+  .bk-zeilen { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr));
+               gap: 20px; align-items: start; }
   .bk-buehne { display: grid; gap: 10px; justify-items: center; }
   /* Groß zum BEARBEITEN (Drag-and-drop braucht Fläche) — die echte Karte
      im Dashboard bleibt in ihrer normalen Größe. */
-  .bk-knopf { position: relative; width: 310px; max-width: 100%; min-height: 220px; border-radius: 20px;
+  .bk-knopf { position: relative; width: min(310px, 100%); max-width: 100%; min-height: 220px; border-radius: 20px;
     cursor: pointer; background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie);
     display: grid; place-items: center; align-content: center; gap: 8px; padding: 40px 14px 24px;
     user-select: none; touch-action: manipulation; }
@@ -925,6 +937,7 @@ SEITE = """<!doctype html>
 </div>
 
 <script>
+
 // Erststand kommt server-seitig mit — der Code steht damit schon im HTML.
 var stand = __STATUS_JSON__;
 

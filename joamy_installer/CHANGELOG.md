@@ -1,3 +1,11 @@
+## 0.1.55
+- Die Add-on-Seite passt sich jetzt jedem Bildschirm an — vom kleinen Handy
+  bis zum grossen Monitor. Vorher wurde sie auf schmalen Geraeten seitlich
+  abgeschnitten: Man musste wischen, und alles wirkte zu gross.
+- Der Kopplungscode waechst mit der Bildschirmbreite mit, statt eine feste
+  Groesse zu erzwingen.
+- Auf dem Rechner sieht alles unveraendert aus.
+
 ## 0.1.54
 - Nach dem einmaligen Neustart verschwindet der Hinweis „Einmal neu starten"
   jetzt sofort, sobald du die Add-on-Seite öffnest — vorher konnte er noch bis
