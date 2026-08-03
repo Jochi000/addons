@@ -39,7 +39,7 @@ import aiohttp
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.53"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.54"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -419,7 +419,21 @@ class Installer:
             except Exception as e:                       # nie crashen
                 self.letzter_fehler = str(e)
                 LOG.error("Poll-Durchlauf fehlgeschlagen: %s", e)
-            await asyncio.sleep(self.optionen["poll_sekunden"])
+            await asyncio.sleep(self._naechster_takt())
+
+    def _naechster_takt(self) -> int:
+        """Wie lange bis zum naechsten Durchlauf?
+
+        Im Normalbetrieb der eingestellte Wert (60 s). Solange aber noch etwas
+        offen ist — eine Integration einzurichten, ein Reload, ein gemeldeter
+        Neustart —, waeren 60 s Wartezeit fuer den Kunden reine Leerzeit: Er
+        sieht einen Hinweis, der laengst erledigt sein koennte. In dieser Phase
+        also alle 8 Sekunden nachfassen.
+        """
+        offen = (self.status.get("flow_ausstehend")
+                 or self.status.get("reload_ausstehend")
+                 or self.status.get("neustart_noetig"))
+        return 8 if offen else int(self.optionen["poll_sekunden"])
 
     async def suche_kaeufe(self) -> dict:
         """Ein Poll-Durchlauf; auch vom UI-Knopf „Jetzt nach Käufen suchen"."""
@@ -815,6 +829,30 @@ class Installer:
             speichere_json(STATUS_DATEI, self.status)
             await self._neustart_erledigt()
             return {"ok": True, "noetig": False}
+
+        # Die Integration ist noch nicht geladen. Statt nur zu MELDEN, jetzt
+        # auch etwas TUN: Der Config-Flow wird sonst erst beim naechsten
+        # Poll-Durchlauf angestossen — bis zu 60 s spaeter. Genau daran hingen
+        # Franks "2 Minuten nach dem Neustart": Home Assistant war laengst
+        # oben, aber niemand hat die Integration eingerichtet.
+        #
+        # Der Flow ist gefahrlos wiederholbar: Er sieht zuerst nach, ob es
+        # schon einen Eintrag gibt, und bricht bei Einzel-Instanz-Flows sauber
+        # ab. Laeuft gerade ein Poll-Durchlauf, wird NICHT gewartet (sonst
+        # haengt die Oberflaeche) — dann meldet sie eben noch einmal "gleich".
+        if eintraege is not None and not self._such_lock.locked():
+            try:
+                async with self._such_lock:
+                    if await self._stosse_flow_an("joamy"):
+                        self.status["neustart_noetig"] = False
+                        for d in list(self.status.get("flow_ausstehend") or []):
+                            if d == "joamy":
+                                self.status["flow_ausstehend"].remove(d)
+                        speichere_json(STATUS_DATEI, self.status)
+                        await self._neustart_erledigt()
+                        return {"ok": True, "noetig": False}
+            except Exception as e:                        # nie die Seite kippen
+                LOG.debug("Flow beim Statusabruf nicht moeglich: %s", e)
         return {"ok": True, "noetig": True}
 
     async def neustart_jetzt(self) -> dict:

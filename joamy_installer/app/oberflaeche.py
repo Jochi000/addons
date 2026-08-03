@@ -382,7 +382,7 @@ SEITE = """<!doctype html>
       <button type="button" class="neustart-jetzt" id="neustart-jetzt" data-i18n>Jetzt neu starten</button>
       <button type="button" class="neustart-spaeter" id="neustart-spaeter" data-i18n>Später</button>
     </div>
-    <p class="neustart-klein" id="neustart-meldung" data-i18n>Der Neustart dauert etwa eine Minute.</p>
+    <p class="neustart-klein" id="neustart-meldung" data-i18n>Der Neustart dauert etwa eine Minute. Danach braucht Home Assistant noch einen kurzen Moment, bis alles geladen ist — dieser Hinweis verschwindet dann von selbst.</p>
   </section>
 
   <section class="karte">
@@ -424,6 +424,12 @@ SEITE = """<!doctype html>
     <h2 data-i18n>Installierte Bausteine</h2>
     <p id="leer" data-i18n>Noch nichts eingezogen — nach dem Koppeln erscheint dein erster Baustein hier von ganz allein.</p>
     <ul id="bausteine"></ul>
+    <!-- DAUERHAFT sichtbar, sobald ein Baustein da ist. Home Assistant meldet
+         eine neue Karte ueber add_extra_js_url an — diese Liste liest der
+         Browser NUR beim Laden der Seite. Ohne Neuladen taucht die Karte nie
+         im Kartenwaehler auf, egal wie lange man wartet. Genau daran hat
+         Frank 3,4 Minuten verloren, weil es nirgends stand. -->
+    <p class="hinweis" id="dashboard-hinweis" hidden data-i18n>Du findest deine Karten unter „Karte hinzufügen“ im Dashboard. Taucht eine neue Karte dort nicht auf, lade die Seite einmal neu (F5) — Home Assistant liest die Liste der Karten nur beim Laden.</p>
   </section>
 
   <section class="karte">
@@ -1055,6 +1061,9 @@ var UEB = {
   'Der Knopf ist wieder da — überall.': 'The button is back — everywhere.',
   'einmal nötig — wann, entscheidest du': 'needed once — you decide when',
   'Einmal neu starten': 'One restart needed',
+  'Der Neustart dauert etwa eine Minute. Danach braucht Home Assistant noch einen kurzen Moment, bis alles geladen ist — dieser Hinweis verschwindet dann von selbst.': 'The restart takes about a minute. After that Home Assistant needs a short moment until everything is loaded — this notice then disappears on its own.',
+  'Du findest deine Karten unter „Karte hinzufügen“ im Dashboard. Taucht eine neue Karte dort nicht auf, lade die Seite einmal neu (F5) — Home Assistant liest die Liste der Karten nur beim Laden.': 'You will find your cards under “Add card” in the dashboard. If a new card does not show up there, reload the page once (F5) — Home Assistant only reads the list of cards when the page loads.',
+  'Lade jetzt dein Dashboard einmal neu (F5) — erst dann kennt Home Assistant die neue Karte und du findest sie unter „Karte hinzufügen".': 'Now reload your dashboard once (F5) — only then does Home Assistant know the new card, and you will find it under “Add card”.',
   'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — everything after that arrives without a restart.',
   'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
   'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
@@ -1459,6 +1468,7 @@ function male(st) {
     var m = document.createElement('div'); m.className = 'meta';
     m.textContent = wt('Version ') + (b.version || '?')
       + (b.installiert_am ? wt(' · installiert ') + b.installiert_am.replace('T', ' ') : '');
+    var dh = el('dashboard-hinweis'); if (dh) dh.hidden = false;
     li.appendChild(t); if (b.name) li.appendChild(f); li.appendChild(m);
     ul.appendChild(li);
   });
@@ -1531,7 +1541,7 @@ el('suchen').addEventListener('click', function () {
     .then(function (erg) {
       meldung.textContent = erg.ok
         ? (erg.neu_installiert && erg.neu_installiert.length
-            ? wt('Gefunden und installiert: ') + erg.neu_installiert.join(', ') + '.'
+            ? wt('Gefunden und installiert: ') + erg.neu_installiert.join(', ') + '. ' + wt('Lade jetzt dein Dashboard einmal neu (F5) — erst dann kennt Home Assistant die neue Karte und du findest sie unter „Karte hinzufügen".')
             : wt('Alles aktuell — nichts Neues gefunden.'))
         : (wt('Das hat nicht geklappt: ') + (erg.fehler || wt('unbekannter Fehler')));
     })
