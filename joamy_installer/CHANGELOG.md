@@ -1,3 +1,14 @@
+## 0.1.59
+- **Auf dem Handy lief die Seite seitlich aus dem Bild.** Schuld war die
+  Style-Angabe bei den installierten Bausteinen: Sie stand als eine einzige
+  lange Kette („almanach,comic,frost,…") in einer Zeile, die nirgends umbrach,
+  und hat die ganze Seite auf 654 Pixel aufgezogen — deutlich breiter als
+  jedes Handy. Jetzt bricht sie um, und die Seite passt sich wieder von
+  selbst an jede Bildschirmbreite an.
+- Auch die Geräteliste in den Konfiguratoren passt jetzt auf sehr schmale
+  Geräte: Entitäts-Namen wie „light.wohnzimmer_deckenspots_hinten" sind ein
+  einziges langes Wort und schoben die Seite auf 320-Pixel-Displays hinaus.
+
 ## 0.1.58
 - **Auf Englisch stand an einigen Stellen Deutsch.** Alles, was erst beim
   Bedienen entsteht, wurde einmal übersetzt und danach nie wieder — wer

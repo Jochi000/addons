@@ -151,12 +151,26 @@ SEITE = """<!doctype html>
     border: 1px solid var(--nacht-linie); border-radius: var(--r-12); padding: 12px 14px;
     display: grid; gap: 3px; background: var(--nacht-vertieft);
   }
-  ul#bausteine .titel { font-size: 16px; font-weight: 600; }
+  /* Der Style-Chip trug die GANZE Liste in einer Zeile
+     ("almanach,comic,frost,keramik,…") und brach nirgends um — er hat die
+     Seite auf jedem Handy auf 654 px aufgezogen, also weit über den
+     Bildschirm hinaus. Frank sah das Ergebnis, mein Geräte-Tor nicht: Es
+     maß eine leere Seite, und ohne Bausteine gibt es keinen Chip.
+     Jetzt eine umbrechende Zeile, und der Chip darf auch INNEN umbrechen —
+     ohne Leerzeichen zwischen den Namen findet der Browser sonst keine
+     Stelle dafür. */
+  ul#bausteine .titel {
+    font-size: 16px; font-weight: 600;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0;
+  }
   ul#bausteine .titel .theme {
     font: 12px/1.6 var(--mono); color: var(--akzent);
     border: 1px solid var(--nacht-linie); border-radius: var(--r-pill);
-    padding: 1px 9px; margin-left: 8px; vertical-align: middle;
+    padding: 1px 9px; vertical-align: middle;
+    max-width: 100%; min-width: 0; white-space: normal; overflow-wrap: anywhere;
   }
+  /* Auch die Versionszeile ist Schreibmaschinenschrift und wurde zu lang. */
+  ul#bausteine .meta, ul#bausteine .fuer { min-width: 0; overflow-wrap: anywhere; }
   ul#bausteine .fuer { color: var(--tinte-2); font-size: 14px; }
   ul#bausteine .meta { font: 12.5px/1.5 var(--mono); color: var(--tinte-3); }
   #leer { color: var(--tinte-3); font-size: 14.5px; }
@@ -210,6 +224,10 @@ SEITE = """<!doctype html>
             padding: 10px 12px; background: var(--nacht-vertieft); }
   .kf-cam .eid { font: 12.5px/1.4 var(--mono); color: var(--tinte-3); min-width: 0;
                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Die Geräte-Zeile der Baustein-Konfiguratoren trägt "Name (entity.id)" —
+     und eine Entitäts-ID ist ein einziges langes Wort ohne Trennstelle.
+     Auf schmalen Geräten (320 px) schob sie die Seite 36 px hinaus. */
+  .kf-cam > span { min-width: 0; overflow-wrap: anywhere; }
   .kf-cam input[type=text] { width: 100%; min-width: 0; }
   input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--akzent); flex: 0 0 auto; }
   .kf-abschnitt label { display: flex; align-items: center; gap: 9px; min-width: 0; font-size: 15px; }
