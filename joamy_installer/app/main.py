@@ -33,9 +33,12 @@ PORT = int(os.environ.get("INGRESS_PORT", "8321"))
 
 async def haupt() -> None:
     optionen = lade_optionen()
-    LOG.info("JoAmy Installer startet (Server %s, Poll alle %d s). "
+    # Die Adresse des Lizenz-Servers steht bewusst NICHT im Protokoll: Kunden
+    # geben ihr Protokoll bei Problemen weiter, und wohin dieses Add-on spricht,
+    # geht Dritte nichts an. Für die Fehlersuche genügt „erreichbar oder nicht".
+    LOG.info("JoAmy Installer startet (Abfrage alle %d s). "
              "Home Assistant wird von diesem Add-on NIE neu gestartet.",
-             optionen["server_url"], optionen["poll_sekunden"])
+             optionen["poll_sekunden"])
 
     installer = Installer(optionen)
     await installer.start()

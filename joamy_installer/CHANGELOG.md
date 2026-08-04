@@ -1,3 +1,9 @@
+## 0.1.65
+- **Im Protokoll steht nichts Persönliches mehr.** Es enthielt bisher die
+  Adresse des Lizenz-Servers, die Kennung deines Zuhauses und den Namen aus
+  dem Kauf. Dein Protokoll gibst du bei Fragen weiter — dort hat all das
+  nichts verloren. Ob der Server erreichbar ist, steht weiterhin drin.
+
 ## 0.1.64
 - Die alten Einstellungen (Lizenz-Server, Abfragetakt) werden beim Start
   einmalig aus deiner gespeicherten Konfiguration entfernt. Sie standen dort

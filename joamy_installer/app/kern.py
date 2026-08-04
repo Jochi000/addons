@@ -41,7 +41,7 @@ from dashboard_karten import alle_karten, karte_anhaengen
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.64"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.65"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -205,7 +205,9 @@ class Installer:
             quelle = "aus HA core.uuid (restore-fest)" if neue.startswith("jha_") else "zufällig (core.uuid nicht lesbar)"
             inst = {"instanz_id": neue, "instanz_token": None}
             speichere_json(INSTANZ_DATEI, inst)
-            LOG.info("Instanz-ID erzeugt %s.", quelle)
+            # Die Kennung selbst NICHT protokollieren — sie erkennt das Zuhause
+            # wieder. Dass eine erzeugt wurde und woher, genügt zur Fehlersuche.
+            LOG.info("Instanz-Kennung erzeugt (Quelle: %s).", quelle)
         self.instanz_id: str = inst["instanz_id"]
         self.instanz_token: str | None = inst.get("instanz_token") or None
 
@@ -453,8 +455,7 @@ class Installer:
     # Poll-Loop
     # ------------------------------------------------------------------
     async def poll_schleife(self) -> None:
-        LOG.info("Poll-Loop läuft (alle %d s, Server %s).",
-                 self.optionen["poll_sekunden"], self.optionen["server_url"])
+        LOG.info("Abfrage läuft (alle %d s).", self.optionen["poll_sekunden"])
         while True:
             try:
                 await self.suche_kaeufe()
@@ -542,8 +543,11 @@ class Installer:
     async def installiere(self, paket: dict, fp: str) -> None:
         kauf_id = paket.get("kauf_id")
         baustein = str(paket.get("baustein") or "")
-        LOG.info("Neuer Kauf erkannt: Baustein '%s' (Theme %s, Version %s, für %s) — lade Paket …",
-                 baustein, paket.get("theme"), paket.get("version"), paket.get("name"))
+        # Ohne den Namen: Er steht als Wasserzeichen in der Karte, im Protokoll
+        # ist er nur ein personenbezogenes Datum, das mitwandert, wenn jemand
+        # sein Protokoll weitergibt.
+        LOG.info("Neuer Baustein erkannt: '%s' (Style %s, Version %s) — lade Paket …",
+                 baustein, paket.get("theme"), paket.get("version"))
 
         zip_bytes = await self._lade_zip(kauf_id)
         zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
