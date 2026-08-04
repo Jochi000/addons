@@ -37,9 +37,11 @@ from datetime import datetime
 
 import aiohttp
 
+from dashboard_karten import alle_karten, karte_anhaengen
+
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.56"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.57"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -882,6 +884,14 @@ class Installer:
 
         gelesen = await self._ws([{"type": "lovelace/config", "url_path": url_path}])
         if not gelesen or not gelesen[0].get("success"):
+            fehler = (gelesen[0].get("error") or {}) if gelesen else {}
+            if fehler.get("code") == "config_not_found":
+                # Kein Fehler des Kunden: Dieses Dashboard baut Home Assistant
+                # bei jedem Aufruf selbst zusammen, es gibt nichts zu ergaenzen.
+                return {"ok": False, "fehler": "Dieses Dashboard erzeugt Home Assistant automatisch — "
+                                               "darin lässt sich keine Karte dauerhaft ablegen. Leg dir "
+                                               "ein eigenes Dashboard an (Einstellungen → Dashboards → "
+                                               "Dashboard hinzufügen), dann steht es hier zur Auswahl."}
             return {"ok": False, "fehler": "Dieses Dashboard lässt sich nicht über die "
                                            "Oberfläche ändern (YAML-Modus). Dort trägst du die Karte "
                                            "weiterhin von Hand ein."}
@@ -900,15 +910,21 @@ class Installer:
             speichere_json(os.path.join(ordner, name), cfg)
             LOG.info("Dashboard-Sicherung: %s", name)
         except Exception as e:
-            return {"ok": False, "fehler": f"Sicherung nicht möglich ({e}) — es wurde nichts geändert."}
+            # Wortlaut ohne eingesetzte Fehlermeldung: Die Oberflaeche dreht
+            # diesen Satz durch die Uebersetzung, und ein eingebauter Text
+            # findet dort keinen Schluessel mehr.
+            LOG.error("Dashboard-Sicherung fehlgeschlagen: %s", e)
+            return {"ok": False, "fehler": "Sicherung nicht möglich — es wurde nichts geändert."}
 
-        karten = list(views[ansicht].get("cards") or [])
-        # Schon drin? Dann nicht doppelt eintragen.
-        if any((k or {}).get("type") == karte.get("type") for k in karten):
+        # Schon drin? Dann nicht doppelt eintragen — aber verglichen wird die
+        # GANZE Karte, nicht nur ihr Typ. Vorher genuegte eine beliebige
+        # Lichtkarte in der Ansicht, damit jede weitere still abgelehnt wurde:
+        # Wer eine zweite Lichtkarte mit anderen Lampen wollte, bekam „liegt
+        # dort schon" und nichts passierte.
+        if any(k == karte for k in alle_karten(views[ansicht])):
             return {"ok": True, "schon_da": True,
                     "meldung": "Diese Karte liegt in dieser Ansicht bereits."}
-        karten.append(karte)
-        views[ansicht] = {**views[ansicht], "cards": karten}
+        views[ansicht] = karte_anhaengen(views[ansicht], karte)
         cfg["views"] = views
 
         geschrieben = await self._ws([{"type": "lovelace/config/save",

@@ -197,7 +197,7 @@ SEITE = """<!doctype html>
   /* Zeitschaltuhr hat keinen Body-Wrapper — gleicher Rhythmus per Margin. */
   #zs-karte > .kf-abschnitt, #kal-karte > .kf-abschnitt { margin: 16px 0; }
   #zs-karte > button, #kal-karte > button { margin-top: 18px; }
-  #kf-laden, #mk-laden, #bx-laden, #bk-laden, #zs-laden, #kl-laden { margin: 14px 0 2px; }
+  #kf-laden, #mk-laden, #bl-laden, #ja-laden, #bk-laden, #zs-laden, #kl-laden { margin: 14px 0 2px; }
   /* Hinweise überall leise und klein — nicht nur im Ereignis-Block. */
   .hinweis { color: var(--tinte-3); font-size: 13px; line-height: 1.55; }
   .kf-abschnitt { display: grid; gap: 8px; min-width: 0; }
@@ -251,7 +251,7 @@ SEITE = """<!doctype html>
   .kf-quellen button.gewaehlt { border-color: var(--gruen); color: var(--tinte); }
   .kf-quellen button b { display: block; font-size: 14px; }
   .kf-quellen button span { color: var(--tinte-2); font: 11.5px var(--mono); word-break: break-all; }
-  pre#kf-yaml, pre#mk-yaml, pre#bx-yaml-licht, pre#bx-yaml-jal, pre#zs-yaml, pre#bk-yaml, pre#kl-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
+  pre#kf-yaml, pre#mk-yaml, pre#bl-yaml, pre#ja-yaml, pre#zs-yaml, pre#bk-yaml, pre#kl-yaml { font: 13px/1.6 var(--mono); color: var(--tinte-2);
     background: var(--nacht-vertieft); border: 1px solid var(--nacht-linie); border-radius: var(--r-12);
     padding: 13px 15px; overflow-x: auto; white-space: pre; }
   #kf-meldung { text-align: center; font-size: 14px; color: var(--gruen); min-height: 1.3em; }
@@ -413,9 +413,12 @@ SEITE = """<!doctype html>
     <p id="code-rest"></p>
   </section>
 
-  <!-- Freiwillige Unterstützung (Frank 02.08.: ALLE Bausteine sind kostenlos,
-       der Kaffee ist der einzige Weg, die Arbeit zu unterstützen — deshalb darf
-       diese Karte auffallen und sagt das auch klar). Wenn der Shop je wieder auf
+  <!-- Freiwilliges Trinkgeld (Frank 02.08.: ALLE Bausteine sind kostenlos,
+       das Trinkgeld ist der einzige Weg, die Arbeit zu würdigen — deshalb darf
+       diese Karte auffallen und sagt das auch klar). WORTWAHL IST VORGABE:
+       Stripe verlangt für freiwillige Zahlungen an Content-Ersteller den
+       Begriff „Trinkgeld"; „Spende" ist registrierten gemeinnützigen
+       Organisationen vorbehalten (Auflage vom 04.08.2026). Wenn der Shop je wieder auf
        bezahlt umgestellt wird (BAUSTEIN_KONFIG.BEZAHLUNG/GRATIS_MODUS), MUSS
        dieser Text mitwandern — die Oberfläche kennt den Bezahlmodus nicht.
        Bewusst KEIN CDN-Widget: Das Add-on läuft im Ingress und soll ohne
@@ -424,9 +427,9 @@ SEITE = """<!doctype html>
   <section class="karte kaffee-karte">
     <h2 data-i18n>Gefällt dir JoAmy?</h2>
     <p data-i18n>Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin.
-       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.</p>
+       Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über ein Trinkgeld.</p>
     <a class="kaffee-btn" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
-      <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Spendier mir einen Kaffee</span></a>
+      <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Trinkgeld geben</span></a>
     <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
   </section>
 
@@ -603,36 +606,27 @@ SEITE = """<!doctype html>
     </div>
   </section>
 
-  <section class="karte" id="basics-karte" hidden>
-    <h2 data-i18n>Basics einrichten — Beleuchtung &amp; Jalousie</h2>
-    <p class="kf-intro" data-i18n>Zwei Karten in einem Baustein: Licht und Rollläden. Beide erkennen
-      selbst, was dein Gerät kann — dimmen, Weißton, Farbe, Lamellen. Wähle unten aus, was auf die
-      Karten soll, und füge den fertigen Code in dein Dashboard ein.</p>
-    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre Lampe oder Rollladen in
-      deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer
-      Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten.
-      Jedes Gerät hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
-    <button id="bx-laden" type="button" data-i18n>Meine Lichter &amp; Rollläden laden</button>
-    <div id="bx-body" hidden>
+  <section class="karte" id="licht-karte" hidden>
+    <h2 data-i18n>Beleuchtung einrichten</h2>
+    <p class="kf-intro" data-i18n>Deine Lampen als fertige Karte. Sie erkennt von selbst, was jedes Gerät kann — dimmen, Weißton, Farbe. Häkchen setzen, Code anzeigen, und mit einem Klick liegt die Karte in deinem Dashboard.</p>
+    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre eine Lampe in deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten. Jede Lampe hat ihren eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
+    <button id="bl-laden" type="button" data-i18n>Meine Lichter laden</button>
+    <div id="bl-body" hidden>
       <div class="kf-abschnitt">
-        <span class="kf-titel" data-i18n>Lichter für die Beleuchtungs-Karte</span>
-        <div id="bx-lights"></div>
+        <span class="kf-titel" data-i18n>Lichter für die Karte</span>
+        <div id="bl-geraete"></div>
       </div>
       <div class="kf-abschnitt">
-        <span class="kf-titel" data-i18n>Rollläden für die Jalousie-Karte</span>
-        <div id="bx-covers"></div>
-      </div>
-      <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-rahmen" data-i18n>Darstellung</label>
-        <select id="bx-rahmen">
+        <label class="kf-titel" for="bl-rahmen" data-i18n>Darstellung</label>
+        <select id="bl-rahmen">
           <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
-          <option value="frei" data-i18n>Jede Lampe / jeder Rollladen als freie Einzelkarte</option>
+          <option value="frei" data-i18n>Jede Lampe als freie Einzelkarte</option>
         </select>
         <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
       </div>
       <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-spalten" data-i18n>Nebeneinander</label>
-        <select id="bx-spalten">
+        <label class="kf-titel" for="bl-spalten" data-i18n>Nebeneinander</label>
+        <select id="bl-spalten">
           <option value="1" data-i18n>Untereinander (Standard)</option>
           <option value="2" data-i18n>2 nebeneinander</option>
           <option value="3" data-i18n>3 nebeneinander</option>
@@ -640,33 +634,81 @@ SEITE = """<!doctype html>
         <span class="hinweis" data-i18n>Wähle dafür mindestens so viele Geräte aus — die Karten skalieren sich automatisch kleiner, damit sie in eine Reihe passen (höchstens 3).</span>
       </div>
       <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-groesse" data-i18n>Größe</label>
-        <select id="bx-groesse">
+        <label class="kf-titel" for="bl-groesse" data-i18n>Größe</label>
+        <select id="bl-groesse">
           <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
           <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
         </select>
       </div>
       <div class="kf-abschnitt">
-        <label class="kf-titel" for="bx-stil" data-i18n>Style</label>
-        <span id="bx-stil-hinweis" class="hinweis" hidden></span>
-        <select id="bx-stil"></select>
+        <label class="kf-titel" for="bl-stil" data-i18n>Style</label>
+        <span id="bl-stil-hinweis" class="hinweis" hidden></span>
+        <select id="bl-stil"></select>
       </div>
-      <button id="bx-erzeugen" type="button" data-i18n>Codes anzeigen</button>
-      <div id="bx-ergebnis" hidden>
+      <button id="bl-erzeugen" type="button" data-i18n>Code anzeigen</button>
+      <div id="bl-ergebnis" hidden>
         <div class="kf-abschnitt">
-          <span class="kf-titel" data-i18n>Beleuchtungs-Karte — beim Hinzufügen unter „Manuell“ einfügen</span>
-          <pre id="bx-yaml-licht"></pre>
+          <span class="kf-titel" data-i18n>Deine Beleuchtungs-Karte</span>
+          <pre id="bl-yaml"></pre>
         </div>
-        <div class="kf-abschnitt">
-          <span class="kf-titel" data-i18n>Jalousie-Karte — als zweite Karte genauso einfügen</span>
-          <pre id="bx-yaml-jal"></pre>
-        </div>
-        <button id="bx-kopieren-licht" type="button" data-i18n>Licht-Code kopieren</button>
-        <button id="bx-kopieren-jal" type="button" data-i18n>Jalousie-Code kopieren</button>
-        <div id="bx-meldung"></div>
+        <button id="bl-kopieren" type="button" data-i18n>Code kopieren</button>
+        <div id="bl-meldung"></div>
       </div>
     </div>
-    <div class="bk-trenn"></div>
+  </section>
+
+  <section class="karte" id="jalousie-karte" hidden>
+    <h2 data-i18n>Jalousie einrichten</h2>
+    <p class="kf-intro" data-i18n>Deine Rollläden als fertige Karte. Sie erkennt von selbst, was jeder Rollladen kann — fahren, Position, Lamellen. Häkchen setzen, Code anzeigen, und mit einem Klick liegt die Karte in deinem Dashboard.</p>
+    <div class="mk-hinweis"><b data-i18n>Favoritenstellung:</b> <span data-i18n>Fahre einen Rollladen in deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten. Jeder Rollladen hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.</span></div>
+    <button id="ja-laden" type="button" data-i18n>Meine Rollläden laden</button>
+    <div id="ja-body" hidden>
+      <div class="kf-abschnitt">
+        <span class="kf-titel" data-i18n>Rollläden für die Karte</span>
+        <div id="ja-geraete"></div>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="ja-rahmen" data-i18n>Darstellung</label>
+        <select id="ja-rahmen">
+          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
+          <option value="frei" data-i18n>Jeder Rollladen als freie Einzelkarte</option>
+        </select>
+        <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="ja-spalten" data-i18n>Nebeneinander</label>
+        <select id="ja-spalten">
+          <option value="1" data-i18n>Untereinander (Standard)</option>
+          <option value="2" data-i18n>2 nebeneinander</option>
+          <option value="3" data-i18n>3 nebeneinander</option>
+        </select>
+        <span class="hinweis" data-i18n>Wähle dafür mindestens so viele Geräte aus — die Karten skalieren sich automatisch kleiner, damit sie in eine Reihe passen (höchstens 3).</span>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="ja-groesse" data-i18n>Größe</label>
+        <select id="ja-groesse">
+          <option value="normal" data-i18n>Normal — wie im JoAmy-Vorbild</option>
+          <option value="kompakt" data-i18n>Kompakt — eine Stufe kleiner</option>
+        </select>
+      </div>
+      <div class="kf-abschnitt">
+        <label class="kf-titel" for="ja-stil" data-i18n>Style</label>
+        <span id="ja-stil-hinweis" class="hinweis" hidden></span>
+        <select id="ja-stil"></select>
+      </div>
+      <button id="ja-erzeugen" type="button" data-i18n>Code anzeigen</button>
+      <div id="ja-ergebnis" hidden>
+        <div class="kf-abschnitt">
+          <span class="kf-titel" data-i18n>Deine Jalousie-Karte</span>
+          <pre id="ja-yaml"></pre>
+        </div>
+        <button id="ja-kopieren" type="button" data-i18n>Code kopieren</button>
+        <div id="ja-meldung"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="karte" id="basics-karte" hidden>
     <h2 data-i18n>Button-Karte — dein Baukasten</h2>
     <p class="kf-intro" data-i18n>Bau deinen Button hier visuell zusammen: Zieh ein Gerät in die Mitte der Vorschau,
       Werte dorthin, wo du sie haben willst, tippe ein Symbol an. Ein Klick — der fertige Code ist kopiert.</p>
@@ -1099,6 +1141,29 @@ var UEB = {
   'unten': 'bottom',
   'mittig': 'centre',
   'rechts': 'right',
+  'Du hast noch kein eigenes Dashboard — das Standard-Dashboard erzeugt Home Assistant bei jedem Aufruf neu, dort bleibt nichts liegen. Leg unter Einstellungen → Dashboards eines an, dann steht es hier zur Auswahl.': 'You do not have your own dashboard yet — Home Assistant rebuilds the default one on every visit, so nothing stays there. Create one under Settings → Dashboards and it will show up here.',
+  'Die Dashboard-Liste ließ sich nicht laden — bitte die Seite neu laden.': 'The dashboard list could not be loaded — please reload the page.',
+  'Dieses Dashboard erzeugt Home Assistant automatisch — darin lässt sich keine Karte dauerhaft ablegen. Leg dir ein eigenes Dashboard an (Einstellungen → Dashboards → Dashboard hinzufügen), dann steht es hier zur Auswahl.': 'Home Assistant generates this dashboard automatically — no card can be stored in it permanently. Create your own dashboard (Settings → Dashboards → Add dashboard) and it will show up here.',
+  'Dieses Dashboard lässt sich nicht über die Oberfläche ändern (YAML-Modus). Dort trägst du die Karte weiterhin von Hand ein.': 'This dashboard cannot be changed from the interface (YAML mode). There you still add the card by hand.',
+  'Dieses Dashboard hat noch keine Ansicht.': 'This dashboard has no view yet.',
+  'Keine gültige Karte übergeben.': 'No valid card was submitted.',
+  'Speichern abgelehnt — die Sicherung liegt in /config/joamy_backup/, geändert wurde nichts.': 'Saving was refused — the backup is in /config/joamy_backup/, nothing was changed.',
+  'Sicherung nicht möglich — es wurde nichts geändert.': 'Backup not possible — nothing was changed.',
+  'Beleuchtung einrichten': 'Set up lighting',
+  'Jalousie einrichten': 'Set up blinds',
+  'Deine Lampen als fertige Karte. Sie erkennt von selbst, was jedes Gerät kann — dimmen, Weißton, Farbe. Häkchen setzen, Code anzeigen, und mit einem Klick liegt die Karte in deinem Dashboard.': 'Your lamps as a finished card. It detects by itself what each device can do — dimming, white tone, colour. Tick the boxes, show the code, and one click puts the card in your dashboard.',
+  'Deine Rollläden als fertige Karte. Sie erkennt von selbst, was jeder Rollladen kann — fahren, Position, Lamellen. Häkchen setzen, Code anzeigen, und mit einem Klick liegt die Karte in deinem Dashboard.': 'Your blinds as a finished card. It detects by itself what each blind can do — move, position, slats. Tick the boxes, show the code, and one click puts the card in your dashboard.',
+  'Fahre eine Lampe in deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten. Jede Lampe hat ihren eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.': 'Set a lamp to your favourite setting and hold the star for 2 seconds — it locks in. From then on a short press on the star goes straight back to it. Holding for 2 seconds again clears the favourite. Every lamp has its own favourite, and Home Assistant remembers them across restarts.',
+  'Fahre einen Rollladen in deine Lieblingsstellung und halte den Stern 2 Sekunden — er rastet ein. Ab dann fährt ein kurzer Druck auf den Stern genau diese Stellung an. Nochmal 2 Sekunden halten löscht den Favoriten. Jeder Rollladen hat seinen eigenen Favoriten, und Home Assistant merkt sie sich auch über Neustarts.': 'Set a blind to your favourite position and hold the star for 2 seconds — it locks in. From then on a short press on the star goes straight back to it. Holding for 2 seconds again clears the favourite. Every blind has its own favourite, and Home Assistant remembers them across restarts.',
+  'Meine Lichter laden': 'Load my lights',
+  'Meine Rollläden laden': 'Load my blinds',
+  'Lichter für die Karte': 'Lights for the card',
+  'Rollläden für die Karte': 'Blinds for the card',
+  'Jede Lampe als freie Einzelkarte': 'Every lamp as its own free-standing card',
+  'Jeder Rollladen als freie Einzelkarte': 'Every blind as its own free-standing card',
+  'Deine Beleuchtungs-Karte': 'Your lighting card',
+  'Deine Jalousie-Karte': 'Your blind card',
+  'Code anzeigen': 'Show code',
   'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — everything after that arrives without a restart.',
   'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
   'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
@@ -1112,8 +1177,9 @@ var UEB = {
   'Gefällt dir JoAmy?': 'Do you like JoAmy?',
   'Installer': 'Installer',
   'Settings-Style (Vorgabe fürs J-Knopf-Popup): — SkizzeComic PinnwandFrost TerminalRiso AlmanachKeramik Pigment': 'Settings style (default for the J-button popup): — SketchComic Pin boardFrost TerminalRiso AlmanacCeramic Pigment',
-  'Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über einen Kaffee.': 'All building blocks are free — but a lot of work went into them. If JoAmy makes your home nicer, I would be delighted about a coffee.',
-  'Spendier mir einen Kaffee': 'Buy me a coffee',
+  'Trinkgeld geben': 'Leave a tip',
+  'Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über ein Trinkgeld.':
+    'Every module is free — but a great deal of work went into it. If JoAmy makes your home nicer, a tip would make my day.',
   'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
   'Style-Auswahl': 'Style selection',
   'Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist': 'Global — pick the style once in the settings popup (J button); it applies to every card where that style is purchased',
@@ -1437,7 +1503,7 @@ function setzeSprache(l) {
   male(letzterStand);                                  // Status-Zeilen neu beschriften
   // STANDING RULE (Frank 28.07.): Der Sprachwechsel MUSS jede Sektion erreichen —
   // auch alles, was per JavaScript gesetzt wurde (Platzhalter, Listen, Statuszeilen).
-  ['__kfSprache', '__mkSprache', '__bxSprache', '__bkSprache', '__klSprache', '__zsSprache', '__szSprache', '__wxSprache']
+  ['__kfSprache', '__mkSprache', '__blSprache', '__jaSprache', '__bkSprache', '__klSprache', '__zsSprache', '__szSprache', '__wxSprache']
     .forEach(function (n) { if (window[n]) { try { window[n](); } catch (e) {} } });
 }
 (function () {
@@ -1515,7 +1581,11 @@ function male(st) {
   var gekauftB = {};
   (st.bausteine || []).forEach(function (b) { gekauftB[b.baustein] = true; });
   if (el('konfig-karte')) el('konfig-karte').hidden = !gekauftB.kamera;
-  if (el('basics-karte')) el('basics-karte').hidden = !gekauftB.basics;
+  /* Beleuchtung, Jalousie und der Button-Baukasten kommen alle aus dem
+     Baustein „Basics" — drei Abschnitte, eine Freischaltung. */
+  ['licht-karte', 'jalousie-karte', 'basics-karte'].forEach(function (x) {
+    if (el(x)) el(x).hidden = !gekauftB.basics;
+  });
   if (el('zs-karte')) el('zs-karte').hidden = !gekauftB.zeitschaltuhr;
   if (el('kal-karte')) el('kal-karte').hidden = !gekauftB.kalender;
   if (el('media-karte')) el('media-karte').hidden = !gekauftB.media;
@@ -1586,54 +1656,29 @@ el('suchen').addEventListener('click', function () {
 
 
 /* ============ „In mein Dashboard legen" ============
-   Haengt sich an jeden Kopieren-Knopf und bietet daneben den direkten Weg an.
+   Haengt unter JEDEN angezeigten Kartencode den direkten Weg ins Dashboard.
    Der Kunde waehlt Dashboard und Ansicht; eingetragen wird ANGEHAENGT, nie
-   ersetzt — verschieben kann er die Karte danach im Dashboard selbst. */
+   ersetzt — verschieben kann er die Karte danach im Dashboard selbst.
+
+   Gelesen wird der Code auf dem Server mit einer richtigen YAML-Bibliothek.
+   Der erste Anlauf zaehlte im Browser Zeilen und Einzuege selbst; das ging
+   bei den flachen Codes gut und haette bei jedem verschachtelten still
+   Unsinn erzeugt. */
 (function dashboardLeger() {
-  var geladen = null;
 
-  function yamlZuKarte(text) {
-    /* Die Konfiguratoren erzeugen einfaches YAML (type:, entities:, …). Statt
-       eine YAML-Bibliothek mitzuschleppen, wird genau diese Form gelesen:
-       Schluessel/Wert, Listen mit „- ", eine Verschachtelungsebene. Was der
-       Konfigurator nicht erzeugt, muss hier auch nicht verstanden werden. */
-    /* String.fromCharCode(10) statt '\\n': Diese Seite steht in einem
-       Python-Textblock, und Python ersetzt ein \\n darin BEIM AUSLIEFERN durch
-       einen echten Zeilenumbruch — die JavaScript-Zeichenkette waere dann
-       mitten im Code aufgebrochen. Der Bestand macht es an drei Stellen
-       genauso; ich bin erst hineingelaufen. */
-    var UMBRUCH = String.fromCharCode(10);
-    var karte = {}, listeFuer = null, zeilen = String(text || '').split(UMBRUCH);
-    for (var i = 0; i < zeilen.length; i++) {
-      var z = zeilen[i];
-      if (!z.trim() || z.trim().charAt(0) === '#') continue;
-      var einzug = z.length - z.replace(/^\s+/, '').length;
-      var t = z.trim();
-      if (t.indexOf('- ') === 0) {
-        if (!listeFuer) continue;
-        var w = t.slice(2).trim();
-        karte[listeFuer].push(wert(w));
-        continue;
-      }
-      var p = t.indexOf(':');
-      if (p < 0) continue;
-      var k = t.slice(0, p).trim(), v = t.slice(p + 1).trim();
-      if (einzug > 0 && listeFuer) continue;      // tiefere Ebenen ignorieren
-      if (!v) { karte[k] = []; listeFuer = k; continue; }
-      listeFuer = null;
-      karte[k] = wert(v);
+  /* Die Dashboard-Liste EINMAL holen, nicht je Code-Block. Es haengen jetzt
+     an die zehn Bloecke auf der Seite; zehn Abfragen waeren zehnmal dieselbe
+     Antwort und zehnmal der Weg ueber den WebSocket. */
+  var listeVersprochen = null;
+  function holeListe() {
+    if (!listeVersprochen) {
+      listeVersprochen = fetch('dashboards', { cache: 'no-store' })
+        .then(function (r) { return r.json(); });
     }
-    return karte;
-  }
-  function wert(v) {
-    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
-    if (v === 'true') return true;
-    if (v === 'false') return false;
-    if ((v.charAt(0) === '"' && v.slice(-1) === '"') || (v.charAt(0) === "'" && v.slice(-1) === "'")) return v.slice(1, -1);
-    return v;
+    return listeVersprochen;
   }
 
-  function baueZeile(nachKnopf, holeYaml) {
+  function baueZeile(nachElement, holeYaml) {
     var zeile = document.createElement('div');
     zeile.className = 'dbl-zeile';
     var wahl = document.createElement('select');
@@ -1645,15 +1690,14 @@ el('suchen').addEventListener('click', function () {
     var meldung = document.createElement('div');
     meldung.className = 'dbl-meldung';
     zeile.appendChild(wahl); zeile.appendChild(knopf);
-    nachKnopf.parentNode.insertBefore(zeile, nachKnopf.nextSibling);
-    nachKnopf.parentNode.insertBefore(meldung, zeile.nextSibling);
+    nachElement.parentNode.insertBefore(zeile, nachElement.nextSibling);
+    nachElement.parentNode.insertBefore(meldung, zeile.nextSibling);
 
     function fuelle() {
       wahl.innerHTML = '<option>' + wt('Dashboards werden geladen …') + '</option>';
       knopf.disabled = true;
-      fetch('dashboards', { cache: 'no-store' }).then(function (r) { return r.json(); })
+      holeListe()
         .then(function (a) {
-          geladen = a;
           wahl.innerHTML = '';
           var n = 0;
           (a.dashboards || []).forEach(function (d) {
@@ -1666,22 +1710,41 @@ el('suchen').addEventListener('click', function () {
             });
           });
           if (!n) {
+            /* Der haeufigste Grund ist NICHT YAML, sondern ein Home Assistant,
+               das noch ganz beim Auslieferungszustand steht: Das Standard-
+               Dashboard „Übersicht" baut es bei jedem Aufruf selbst zusammen,
+               es gibt darin keinen Platz, an dem etwas dauerhaft liegen bleibt.
+               Wer das nicht weiss, sucht den Fehler bei sich. */
             wahl.innerHTML = '<option>' + wt('Kein änderbares Dashboard gefunden') + '</option>';
             meldung.style.color = 'var(--tinte-3)';
-            meldung.textContent = wt('Deine Dashboards sind in YAML angelegt — dort trägst du die Karte weiterhin von Hand ein.');
+            meldung.textContent = wt('Du hast noch kein eigenes Dashboard — das Standard-Dashboard erzeugt Home Assistant bei jedem Aufruf neu, dort bleibt nichts liegen. Leg unter Einstellungen → Dashboards eines an, dann steht es hier zur Auswahl.');
             return;
           }
           knopf.disabled = false;
         })
         .catch(function () {
           wahl.innerHTML = '<option>' + wt('nicht erreichbar') + '</option>';
+          meldung.style.color = 'var(--rot)';
+          meldung.textContent = wt('Die Dashboard-Liste ließ sich nicht laden — bitte die Seite neu laden.');
         });
     }
     fuelle();
 
     knopf.addEventListener('click', function () {
-      var karte = yamlZuKarte(holeYaml());
-      if (!karte.type) {
+      /* Gelesen wird der Code auf dem Server mit einer richtigen YAML-
+         Bibliothek. Hier wird nur geprueft, ob ueberhaupt ein Kartencode
+         dasteht — im leeren Fall steht dort ein Hinweis als Kommentar
+         („# Kein Licht angehakt."). */
+      /* Zeilenweise statt mit einem Ausdruck ueber den ganzen Text: Ein \\n
+         im Regex-Literal waere hier fatal — die Seite steht in einem
+         Python-Textblock, der daraus BEIM AUSLIEFERN einen echten Umbruch
+         macht. Der Ausdruck waere dann mitten im Code aufgebrochen. */
+      var text = String(holeYaml() || '');
+      var hatKarte = false, zeilen = text.split(String.fromCharCode(10));
+      for (var zi = 0; zi < zeilen.length; zi++) {
+        if (/^\s*type:\s*\S/.test(zeilen[zi])) { hatKarte = true; break; }
+      }
+      if (!hatKarte) {
         meldung.style.color = 'var(--rot)';
         meldung.textContent = wt('Es ist noch kein Code erzeugt — bitte erst oben auf „Code anzeigen" tippen.');
         return;
@@ -1692,7 +1755,7 @@ el('suchen').addEventListener('click', function () {
       meldung.style.color = 'var(--tinte-2)';
       meldung.textContent = wt('Wird eingetragen …');
       fetch('dashboards', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url_path: ziel.url_path, ansicht: ziel.ansicht, karte: karte }) })
+        body: JSON.stringify({ url_path: ziel.url_path, ansicht: ziel.ansicht, yaml: text }) })
         .then(function (r) { return r.json(); })
         .then(function (a) {
           knopf.disabled = false;
@@ -1702,8 +1765,11 @@ el('suchen').addEventListener('click', function () {
               ? wt('Diese Karte liegt dort schon.')
               : wt('Erledigt — die Karte liegt in deinem Dashboard. Lade es einmal neu (F5), dann siehst du sie. Verschieben kannst du sie dort wie jede andere Karte.');
           } else {
+            /* Die Begruendung kommt vom Server und ist auf Deutsch verfasst —
+               durch wt() gedreht, damit die englische Oberflaeche nicht
+               mittendrin ins Deutsche kippt. */
             meldung.style.color = 'var(--rot)';
-            meldung.textContent = (a && a.fehler) || wt('Das hat nicht geklappt.');
+            meldung.textContent = (a && a.fehler) ? wt(a.fehler) : wt('Das hat nicht geklappt.');
           }
         })
         .catch(function () {
@@ -1714,28 +1780,36 @@ el('suchen').addEventListener('click', function () {
     });
   }
 
-  /* An jeden Kopieren-Knopf anhaengen. Der zugehoerige Code steht im <pre>
-     mit demselben Praefix (kf-kopieren → kf-yaml). */
+  /* An JEDEN Code-Block anhaengen — nicht an Kopieren-Knoepfe.
+
+     Der erste Anlauf hing am Knopf `…-kopieren`. Den gibt es aber nur bei
+     dreien der Konfiguratoren; die uebrigen kopieren direkt aus
+     „Code anzeigen und kopieren" und haben gar keinen zweiten Knopf. Damit
+     stand „In mein Dashboard legen" nur bei Beleuchtung und Jalousie —
+     ueberall sonst fehlte es kommentarlos.
+
+     Der verlaessliche Anker ist der Code selbst: jedes <pre>, in dem ein
+     Kartencode steht. Das trifft alle Bausteine, auch die Zusatzkarten, die
+     erst beim Klick entstehen. */
   function verdrahte() {
-    var knoepfe = document.querySelectorAll('button[id$="-kopieren"], button[id$="-kopieren-licht"], button[id$="-kopieren-jal"]');
-    for (var i = 0; i < knoepfe.length; i++) {
-      var b = knoepfe[i];
-      if (b.dataset.dblFertig) continue;
-      b.dataset.dblFertig = '1';
-      var id = b.id;
-      var yamlId = id.replace('-kopieren', '-yaml');
-      (function (bb, yid) {
-        var pre = document.getElementById(yid);
-        if (!pre) return;
-        baueZeile(bb, function () { return pre.textContent; });
-      })(b, yamlId);
+    var bloecke = document.querySelectorAll('pre[id*="yaml"], .bx-extra-code pre');
+    for (var i = 0; i < bloecke.length; i++) {
+      var pre = bloecke[i];
+      if (pre.dataset.dblFertig) continue;
+      pre.dataset.dblFertig = '1';
+      (function (p) { baueZeile(p, function () { return p.textContent; }); })(pre);
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verdrahte);
   else verdrahte();
-  // Konfiguratoren bauen Knoepfe teils spaeter ein.
-  setTimeout(verdrahte, 1500);
-  setTimeout(verdrahte, 5000);
+  /* Die Konfiguratoren bauen ihre Code-Bloecke erst beim Klick — und zwar
+     jeder zu seiner eigenen Zeit. Feste Wartezeiten waeren geraten; der
+     Beobachter meldet sich, sobald wirklich etwas dazukommt. */
+  var wartet = null;
+  new MutationObserver(function () {
+    if (wartet) return;
+    wartet = setTimeout(function () { wartet = null; verdrahte(); }, 120);
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 
 // YAML-Werte sicher quoten — von beiden Konfiguratoren genutzt.
@@ -1928,75 +2002,90 @@ function yamlEscape(s) {
   });
 })();
 
-/* ---- Basics: Lichter + Rollläden wählen → zwei fertige Codes ---- */
-(function () {
-  if (!document.getElementById('bx-laden')) return;
+/* ---- Beleuchtung und Jalousie: je ein EIGENER Konfigurator ----
+
+   Beide hingen frueher in einer Maske: eine Geraeteliste fuer Lampen, eine
+   fuer Rollaeden, ein Knopf, zwei Codes. Fuer den Kunden war das der einzige
+   Baustein, bei dem er zwei Dinge auf einmal einrichtet — jeder andere hat
+   seinen eigenen Abschnitt. Jetzt auch diese beiden: gleicher Bauplan,
+   zweimal aufgerufen, getrennte Auswahl und getrennter Code. */
+function basicsKonfigurator(o) {
+  if (!document.getElementById(o.p + '-laden')) return;
   var geladen = false;
-  function kaesten(ziel, liste, prefix) {
-    var wrap = el(ziel); wrap.innerHTML = '';
-    liste.forEach(function (e, i) {
+  var istLicht = o.quelle === 'lights';
+  function e2(x) { return el(o.p + '-' + x); }
+  function ladeBeschriftung() {
+    return wt(geladen ? 'Neu laden' : (istLicht ? 'Meine Lichter laden' : 'Meine Rollläden laden'));
+  }
+
+  function kaesten(liste) {
+    var wrap = e2('geraete'); wrap.innerHTML = '';
+    liste.forEach(function (g, i) {
       var z = document.createElement('label'); z.className = 'kf-cam';
       // Voreinstellung bewusst klein: 8 Geraete ergaben eine 3,5 m lange Karte.
-      // ACHTUNG: Die Zuweisung der Entitaet MUSS eine eigene Zeile bleiben — sie war
-      // frueher ans Ende dieser Kommentarzeile gerutscht und wurde dadurch nie
-      // ausgefuehrt. Folge: jede Checkbox ohne Entitaet, der Konfigurator gab
-      // „- undefined" statt der Geraete aus.
       var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = i < 3;
-      cb.dataset.entity = e.entity;
-      var sp = document.createElement('span'); sp.textContent = e.name + ' (' + e.entity + ')';
+      cb.dataset.entity = g.entity;
+      var sp = document.createElement('span'); sp.textContent = g.name + ' (' + g.entity + ')';
       z.appendChild(cb); z.appendChild(sp); wrap.appendChild(z);
     });
-    if (!liste.length) { var p = document.createElement('p'); p.className = 'hinweis';
-      p.textContent = wt('Keine gefunden.'); wrap.appendChild(p); }
+    if (!liste.length) {
+      var p = document.createElement('p'); p.className = 'hinweis';
+      p.textContent = wt('Keine gefunden.'); wrap.appendChild(p);
+    }
   }
-  el('bx-laden').addEventListener('click', function () {
+
+  el(o.p + '-laden').addEventListener('click', function () {
     var b = this; b.disabled = true; b.textContent = wt('Lade …');
     fetch('entities', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
-      kaesten('bx-lights', d.lights || [], 'l');
-      kaesten('bx-covers', d.covers || [], 'c');
-      var stil = el('bx-stil'); stil.innerHTML = '';
+      kaesten(d[o.quelle] || []);
+      var stil = e2('stil'); stil.innerHTML = '';
       var bb = ((letzterStand && letzterStand.bausteine) || []).filter(function (x) { return x.baustein === 'basics'; })[0];
       var gek = (bb && bb.themes && bb.themes.length) ? bb.themes.filter(function (t2) { return STIL_NAMEN[t2]; }) : [];
       var liste = gek.length ? gek : Object.keys(STIL_NAMEN);
-      liste.forEach(function (t2) { var o = document.createElement('option'); o.value = t2; o.textContent = STIL_NAMEN[t2]; stil.appendChild(o); });
-      var hw = el('bx-stil-hinweis');
+      liste.forEach(function (t2) { var op = document.createElement('option'); op.value = t2; op.textContent = STIL_NAMEN[t2]; stil.appendChild(op); });
+      var hw = e2('stil-hinweis');
       if (hw) { hw.textContent = gek.length ? '' : wt('Sobald der Baustein da ist, stehen hier nur deine Styles.'); hw.hidden = !!gek.length; }
-      el('bx-body').hidden = false; geladen = true;
+      e2('body').hidden = false; geladen = true;
     }).catch(function () {
       var p = document.createElement('p'); p.style.color = 'var(--rot)';
       p.textContent = wt('Konnte Home Assistant nicht erreichen.');
-      el('bx-lights').innerHTML = ''; el('bx-lights').appendChild(p); el('bx-body').hidden = false;
-    }).finally(function () { b.disabled = false; b.textContent = wt(geladen ? 'Neu laden' : 'Meine Lichter & Rollläden laden'); });
+      e2('geraete').innerHTML = ''; e2('geraete').appendChild(p); e2('body').hidden = false;
+    }).finally(function () { b.disabled = false; b.textContent = ladeBeschriftung(); });
   });
-  function angehakte(ziel) {
-    return Array.prototype.slice.call(el(ziel).querySelectorAll('input:checked')).map(function (c) { return c.dataset.entity; });
+
+  function angehakte() {
+    return Array.prototype.slice.call(e2('geraete').querySelectorAll('input:checked'))
+      .map(function (c) { return c.dataset.entity; });
   }
-  function baueYaml(typ, entities) {
-    var frei = el('bx-rahmen') && el('bx-rahmen').value === 'frei';
-    var kompakt = el('bx-groesse').value === 'kompakt';
-    var spalten = el('bx-spalten') ? parseInt(el('bx-spalten').value, 10) || 1 : 1;
-    function eine(liste) {
-      var L = ['type: custom:' + typ, 'stil: ' + el('bx-stil').value];
+
+  function baueYaml(entities) {
+    var frei = e2('rahmen') && e2('rahmen').value === 'frei';
+    var kompakt = e2('groesse').value === 'kompakt';
+    var spalten = e2('spalten') ? parseInt(e2('spalten').value, 10) || 1 : 1;
+    var UMBRUCH = String.fromCharCode(10);
+    function eine(auswahl) {
+      var L = ['type: custom:' + o.typ, 'stil: ' + e2('stil').value];
       if (frei) L.push('rahmen: frei');
       // Immer mitschreiben: spalten: 1 erzwingt „wirklich untereinander" —
       // ohne die Angabe verteilt die Karte automatisch (2 je Reihe am Handy).
       L.push('spalten: ' + Math.min(3, Math.max(1, spalten)));
       if (kompakt) L.push('groesse: kompakt');
       L.push('entities:');
-      liste.forEach(function (e2) { L.push('  - ' + e2); });
-      return L.join('\\n');
+      auswahl.forEach(function (x) { L.push('  - ' + x); });
+      return L.join(UMBRUCH);
     }
-    // Nebeneinander braucht die Geräte in EINEM Code — sonst stünden sie
-    // nie in einer Reihe. Nur frei OHNE Spalten trennt je Gerät.
+    // Nebeneinander braucht die Geraete in EINEM Code — sonst stuenden sie
+    // nie in einer Reihe. Nur frei OHNE Spalten trennt je Geraet.
     if (!frei || spalten > 1) return [eine(entities)];
-    // Mehrere Einzelkarten: NIE am Stück ausgeben — zusammen eingefügt lehnt
+    // Mehrere Einzelkarten: NIE am Stueck ausgeben — zusammen eingefuegt lehnt
     // Home Assistant sie ab („duplicated mapping key"). Je Karte ein eigener
     // Block mit eigenem Kopierknopf (28.07.).
-    return entities.map(function (e2) { return eine([e2]); });
+    return entities.map(function (x) { return eine([x]); });
   }
+
   // Zeigt einen oder mehrere Codes an; ab dem zweiten je ein eigener Kopierknopf.
-  function zeigeCodes(pre, codes, leerText) {
-    var halter = pre.parentNode;
+  function zeigeCodes(codes, leerText) {
+    var pre = e2('yaml'), halter = pre.parentNode;
     var alt = halter.querySelectorAll('.bx-extra-code');
     for (var i = 0; i < alt.length; i++) halter.removeChild(alt[i]);
     if (!codes.length) { pre.textContent = leerText; return; }
@@ -2017,24 +2106,32 @@ function yamlEscape(s) {
       halter.insertBefore(hin, halter.firstChild);
     }
   }
-  el('bx-erzeugen').addEventListener('click', function () {
-    var li = angehakte('bx-lights'), co = angehakte('bx-covers');
-    el('bx-ergebnis').hidden = false; el('bx-meldung').textContent = '';
-    zeigeCodes(el('bx-yaml-licht'), li.length ? baueYaml('joamy-licht-card', li) : [], wt('# Kein Licht angehakt.'));
-    zeigeCodes(el('bx-yaml-jal'), co.length ? baueYaml('joamy-jalousie-card', co) : [], wt('# Kein Rollladen angehakt.'));
+
+  el(o.p + '-erzeugen').addEventListener('click', function () {
+    var gewaehlt = angehakte();
+    e2('ergebnis').hidden = false; e2('meldung').textContent = '';
+    zeigeCodes(gewaehlt.length ? baueYaml(gewaehlt) : [],
+      wt(istLicht ? '# Kein Licht angehakt.' : '# Kein Rollladen angehakt.'));
   });
-  function kopiere(quelle) { kopiereText(el(quelle).textContent); }
+
   function kopiereText(t2) {
-    var fertig = function () { el('bx-meldung').style.color = 'var(--gruen)'; el('bx-meldung').textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
-    var fallback = function () { var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select(); var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); if (ok2) { fertig(); } else { el('bx-meldung').style.color = 'var(--rot)'; el('bx-meldung').textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); } };
+    var m = e2('meldung');
+    var fertig = function () { m.style.color = 'var(--gruen)'; m.textContent = wt('Kopiert! Jetzt beim „Karte hinzufügen“ → „Manuell“ einfügen.'); };
+    var fallback = function () {
+      var ta = document.createElement('textarea'); ta.value = t2; document.body.appendChild(ta); ta.select();
+      var ok2 = false; try { ok2 = document.execCommand('copy'); } catch (e3) {} document.body.removeChild(ta);
+      if (ok2) { fertig(); } else { m.style.color = 'var(--rot)'; m.textContent = wt('Kopieren hat nicht geklappt — bitte den Code oben markieren und von Hand kopieren.'); }
+    };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t2).then(fertig).catch(fallback); } else { fallback(); }
   }
-  window.__bxSprache = function () {
-    var b = el('bx-laden'); if (b) b.textContent = wt(geladen ? 'Neu laden' : 'Meine Lichter & Rollläden laden');
+  el(o.p + '-kopieren').addEventListener('click', function () { kopiereText(e2('yaml').textContent); });
+
+  window[o.sprachHaken] = function () {
+    var b = el(o.p + '-laden'); if (b) b.textContent = ladeBeschriftung();
   };
-  el('bx-kopieren-licht').addEventListener('click', function () { kopiere('bx-yaml-licht'); });
-  el('bx-kopieren-jal').addEventListener('click', function () { kopiere('bx-yaml-jal'); });
-})();
+}
+basicsKonfigurator({ p: 'bl', quelle: 'lights', typ: 'joamy-licht-card', sprachHaken: '__blSprache' });
+basicsKonfigurator({ p: 'ja', quelle: 'covers', typ: 'joamy-jalousie-card', sprachHaken: '__jaSprache' });
 
 /* ---- Button-Baukasten: visuell zusammenbauen, Code mit einem Klick ----
    Vorschau = schematischer Button (Add-on-Optik, nicht der Karten-Style);
@@ -2811,14 +2908,35 @@ def baue_web_app(installer: Installer) -> web.Application:
             return web.json_response({"ok": False, "fehler": str(e)}, status=500)
 
     async def dashboards_post(request: web.Request) -> web.Response:
-        """Karte in eine Ansicht eintragen — haengt nur an, ersetzt nie."""
+        """Karte in eine Ansicht eintragen — haengt nur an, ersetzt nie.
+
+        Die Oberflaeche schickt den erzeugten Code als TEXT. Gelesen wird er
+        hier mit einer richtigen YAML-Bibliothek statt mit selbstgestrickter
+        Zeilenzaehlerei im Browser: Die Konfiguratoren erzeugen auch
+        verschachtelte Angaben (Listen von Zuordnungen, Ebenen darunter), und
+        ein Parser, der nur „Schluessel: Wert" kann, macht daraus stillschweigend
+        Unsinn — die Karte landet dann kaputt im Dashboard statt gar nicht.
+        """
         try:
             b = await request.json()
         except Exception:
             return web.json_response({"ok": False, "fehler": "Ungültige Anfrage"}, status=400)
+        karte = b.get("karte") or {}
+        text = b.get("yaml")
+        if isinstance(text, str) and text.strip():
+            try:
+                import yaml  # in der Add-on-Umgebung vorhanden (siehe Dockerfile)
+                gelesen = yaml.safe_load(text)
+                if isinstance(gelesen, dict) and gelesen.get("type"):
+                    karte = gelesen
+            except ImportError:
+                LOG.warning("PyYAML fehlt — nehme die im Browser gelesene Fassung.")
+            except Exception as e:
+                return web.json_response({"ok": False,
+                                          "fehler": f"Der Code ließ sich nicht lesen ({e})."})
         try:
             return web.json_response(await installer.karte_eintragen(
-                b.get("url_path"), int(b.get("ansicht") or 0), b.get("karte") or {}))
+                b.get("url_path"), int(b.get("ansicht") or 0), karte))
         except Exception as e:
             LOG.error("Karte eintragen fehlgeschlagen: %s", e)
             return web.json_response({"ok": False, "fehler": str(e)}, status=500)

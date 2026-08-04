@@ -1,3 +1,28 @@
+## 0.1.57
+- **„In mein Dashboard legen" hat nicht funktioniert — behoben.** Die Karte
+  wurde eingetragen, gespeichert, und im Dashboard war trotzdem nichts.
+  Grund: In den neueren Ansichten mit Abschnitten („Sections") zeigt Home
+  Assistant nur, was in einem Abschnitt liegt — die Karte lag daneben und
+  war damit unsichtbar. Sie kommt jetzt in den Abschnitt.
+- **Der Knopf steht jetzt bei JEDEM Baustein.** Vorher hing er an einem
+  Kopieren-Knopf, den nur drei Konfiguratoren haben — sichtbar war er
+  dadurch nur bei Beleuchtung und Jalousie. Jetzt hängt er unter jedem
+  angezeigten Code.
+- **Beleuchtung und Jalousie werden getrennt eingerichtet.** Bisher waren
+  beide in einer Maske: eine Liste für Lampen, eine für Rollläden, ein
+  Knopf, zwei Codes. Jetzt hat jedes seinen eigenen Abschnitt mit eigener
+  Auswahl, eigenem Style und eigenem Code — wie jeder andere Baustein auch.
+- Wird ein Dashboard automatisch von Home Assistant erzeugt (das ist bei
+  „Übersicht" der Normalfall), sagt das Add-on das jetzt klar, statt von
+  YAML zu reden. Darin lässt sich nichts dauerhaft ablegen — ein eigenes
+  Dashboard schon.
+- Eine zweite Karte derselben Art lässt sich wieder eintragen. Vorher
+  genügte irgendeine Lichtkarte in der Ansicht, damit jede weitere still
+  abgelehnt wurde („liegt dort schon").
+- Der fertige Code wird jetzt serverseitig mit einer richtigen
+  YAML-Bibliothek gelesen statt im Browser Zeile für Zeile — verschachtelte
+  Angaben (etwa beim Button-Baukasten) kamen dabei verstümmelt an.
+
 ## 0.1.56
 - **Neu: „In mein Dashboard legen".** Neben jedem „Code kopieren" steht jetzt
   ein Knopf, der die Karte direkt in dein Dashboard einträgt — du wählst nur
