@@ -462,7 +462,7 @@ SEITE = """<!doctype html>
          (Frank 04.08.). Der href bleibt als Rückfalltür ohne Internet. -->
     <a class="kaffee-btn trinkgeld-knopf" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
       <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Trinkgeld geben</span></a>
-    <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
+    <p class="kaffee-klein" data-i18n>Öffnet sich hier — du bleibst im Add-on.</p>
   </section>
 
   <section class="karte">
@@ -1212,7 +1212,7 @@ var UEB = {
   'Trinkgeld geben': 'Leave a tip',
   'Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin. Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über ein Trinkgeld.':
     'Every module is free — but a great deal of work went into it. If JoAmy makes your home nicer, a tip would make my day.',
-  'Öffnet buymeacoffee.com in einem neuen Tab.': 'Opens buymeacoffee.com in a new tab.',
+  'Öffnet sich hier — du bleibst im Add-on.': 'Opens right here — you stay in the add-on.',
   'Style-Auswahl': 'Style selection',
   'Global — der Style wird einmal im Settings-Popup (J-Knopf) gewählt und gilt für alle Karten, bei denen er gekauft ist': 'Global — pick the style once in the settings popup (J button); it applies to every card where that style is purchased',
   'Einzeln — jede Karte behält ihren eigenen Style-Knopf, die Auswahl im Settings-Popup entfällt': 'Per card — every card keeps its own style button; the settings popup entry disappears',

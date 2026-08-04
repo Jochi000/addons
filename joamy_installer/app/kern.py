@@ -41,7 +41,7 @@ from dashboard_karten import alle_karten, karte_anhaengen
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.61"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.62"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")

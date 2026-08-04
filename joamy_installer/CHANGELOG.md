@@ -1,3 +1,7 @@
+## 0.1.62
+- Der Hinweis unter dem Trinkgeld-Knopf stimmte nicht mehr: Es öffnet sich
+  kein neuer Tab, das Fenster geht hier auf.
+
 ## 0.1.61
 - **Trinkgeld geht jetzt direkt im Add-on** — ohne dass sich eine fremde
   Seite öffnet. Ein Tippen auf den gelben Knopf blendet das Fenster von Buy
