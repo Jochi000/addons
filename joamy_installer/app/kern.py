@@ -41,7 +41,7 @@ from dashboard_karten import alle_karten, karte_anhaengen
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.63"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.64"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -253,8 +253,44 @@ class Installer:
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=60, sock_connect=8, sock_read=15)
         )
+        await self._alte_optionen_aufraeumen()
         await self._hub_grundinstallation()
         await self.registrieren(erzwinge=True)
+
+    async def _alte_optionen_aufraeumen(self) -> None:
+        """Nicht mehr vorhandene Einstellungen aus den gespeicherten Optionen werfen.
+
+        `server_url` und `poll_sekunden` sind seit 0.1.63 keine Optionen mehr.
+        Aus dem Schema entfernt zu sein heisst aber NICHT, dass sie
+        verschwinden: Bei jedem, der das Add-on vorher hatte, stehen sie
+        weiterhin gespeichert. Die Maske zeigt sie nicht mehr — im YAML-Modus
+        aber sehr wohl, und dort liest sie jemand als „das kann ich also doch
+        einstellen". Deshalb raeumt das Add-on einmalig hinter sich auf.
+
+        Scheitert das, ist nichts verloren: Der Code liest die alten Werte
+        ohnehin nicht mehr. Ein Fehler hier darf den Start nie aufhalten.
+        """
+        if not SUPERVISOR_TOKEN:
+            return
+        kopf = {"Authorization": f"Bearer {SUPERVISOR_TOKEN}", "Content-Type": "application/json"}
+        try:
+            async with self.session.get(f"{SUPERVISOR_URL}/addons/self/info", headers=kopf) as a:
+                if a.status != 200:
+                    return
+                gespeichert = ((await a.json()).get("data") or {}).get("options") or {}
+            fremd = [k for k in gespeichert if k != "sprache"]
+            if not fremd:
+                return
+            neu = {"sprache": gespeichert.get("sprache") or "de"}
+            async with self.session.post(f"{SUPERVISOR_URL}/addons/self/options",
+                                         headers=kopf, json={"options": neu}) as a:
+                if a.status == 200:
+                    LOG.info("Alte Einstellungen entfernt: %s — einstellbar ist nur noch die Sprache.",
+                             ", ".join(sorted(fremd)))
+                else:
+                    LOG.debug("Aufräumen der Optionen abgelehnt (%s) — unkritisch.", a.status)
+        except Exception as e:
+            LOG.debug("Aufräumen der Optionen nicht möglich (%s) — unkritisch.", e)
 
     async def _hub_grundinstallation(self) -> None:
         """Den JoAmy-Grundbaustein (Hub-Integration) beim Einrichten hinlegen.
