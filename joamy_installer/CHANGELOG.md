@@ -1,3 +1,13 @@
+## 0.1.61
+- **Trinkgeld geht jetzt direkt im Add-on** — ohne dass sich eine fremde
+  Seite öffnet. Ein Tippen auf den gelben Knopf blendet das Fenster von Buy
+  me a coffee über der Seite ein; Betrag eingeben, fertig. Der schwebende
+  Knopf unten rechts ist dafür verschwunden, alles läuft über den Knopf in
+  der Trinkgeld-Karte.
+- Der Knopf leuchtet dezent gelb, damit man ihn findet.
+- Ohne Internet bleibt er ein gewöhnlicher Link auf buymeacoffee.com —
+  lieber die Seite öffnen als gar nichts tun.
+
 ## 0.1.60
 - **Der Trinkgeld-Knopf unten rechts war da, aber unsichtbar.** Er wurde erst
   nachträglich eingehängt — und das Widget baut nur dann etwas, wenn es beim

@@ -122,6 +122,18 @@ SEITE = """<!doctype html>
   }
   .kaffee-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -8px rgba(255,221,0,.9); }
   .kaffee-btn:active { transform: translateY(1px); box-shadow: 0 3px 10px -6px rgba(255,221,0,.8); }
+  /* Gelber Schein: langsam atmend statt blinkend — einladen, nicht drängeln. */
+  .kaffee-btn { animation: kaffeeAtem 3.6s ease-in-out infinite; }
+  .kaffee-btn:hover { animation: none; }
+  @keyframes kaffeeAtem {
+    0%, 100% { box-shadow: 0 0 22px -8px rgba(255,221,0,.7); }
+    50%      { box-shadow: 0 0 42px -3px rgba(255,221,0,1); }
+  }
+  @media (prefers-reduced-motion: reduce) { .kaffee-btn { animation: none; } }
+  /* Der schwebende Auslöser des Widgets bleibt geladen — er trägt das Popup —
+     aber er soll nicht unten rechts kleben. Unsichtbar und nicht anklickbar
+     statt display:none: So bleibt er für den ausgelösten Klick erreichbar. */
+  #bmc-wbtn { opacity: 0 !important; pointer-events: none !important; }
   .kaffee-tasse { font-size: 18px; }
   .kaffee-klein { margin-top: 9px; font-size: 12px; color: var(--tinte-2); }
   .karte h2 {
@@ -446,7 +458,9 @@ SEITE = """<!doctype html>
     <h2 data-i18n>Gefällt dir JoAmy?</h2>
     <p data-i18n>Alle Bausteine sind kostenlos — es steckt aber sehr viel Arbeit darin.
        Wenn dir JoAmy dein Zuhause schöner macht, freue ich mich riesig über ein Trinkgeld.</p>
-    <a class="kaffee-btn" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
+    <!-- Löst das Popup des Widgets aus, statt buymeacoffee.com zu öffnen
+         (Frank 04.08.). Der href bleibt als Rückfalltür ohne Internet. -->
+    <a class="kaffee-btn trinkgeld-knopf" href="https://buymeacoffee.com/joamy" target="_blank" rel="noopener">
       <span class="kaffee-tasse" aria-hidden="true">☕</span><span data-i18n>Trinkgeld geben</span></a>
     <p class="kaffee-klein" data-i18n>Öffnet buymeacoffee.com in einem neuen Tab.</p>
   </section>
@@ -2888,6 +2902,30 @@ setInterval(lade, 5000);
       + ' src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"'
       + ' data-id="joamy" data-description="' + text + '" data-message=""'
       + ' data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"><\/scr' + 'ipt>');
+  })();
+</script>
+<script>
+  /* Trinkgeld ohne Seitenwechsel: Der schwebende Auslöser des Widgets ist
+     unsichtbar (siehe CSS), unser Knopf löst ihn aus. Ist das Widget nicht
+     da, bleibt der Knopf ein normaler Link — lieber die Seite öffnen als gar
+     nichts tun. */
+  (function () {
+    function wirkt(ev) {
+      var w = document.getElementById('bmc-wbtn');
+      if (!w) return;                       // Widget nicht geladen → Link greift
+      ev.preventDefault();
+      w.click();
+    }
+    function verdrahte() {
+      var k = document.querySelectorAll('.trinkgeld-knopf');
+      for (var i = 0; i < k.length; i++) {
+        if (k[i].dataset.tgFertig) continue;
+        k[i].dataset.tgFertig = '1';
+        k[i].addEventListener('click', wirkt);
+      }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verdrahte);
+    else verdrahte();
   })();
 </script>
 </body>
