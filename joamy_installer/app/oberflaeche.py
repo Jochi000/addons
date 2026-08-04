@@ -619,8 +619,8 @@ SEITE = """<!doctype html>
       <div class="kf-abschnitt">
         <label class="kf-titel" for="bl-rahmen" data-i18n>Darstellung</label>
         <select id="bl-rahmen">
-          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
           <option value="frei" data-i18n>Jede Lampe als freie Einzelkarte</option>
+          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
         </select>
         <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
       </div>
@@ -670,8 +670,8 @@ SEITE = """<!doctype html>
       <div class="kf-abschnitt">
         <label class="kf-titel" for="ja-rahmen" data-i18n>Darstellung</label>
         <select id="ja-rahmen">
-          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
           <option value="frei" data-i18n>Jeder Rollladen als freie Einzelkarte</option>
+          <option value="karte" data-i18n>Eine Karte mit Überschrift und Hintergrund</option>
         </select>
         <span class="hinweis" data-i18n>„Frei“ erzeugt einen eigenen Code je Gerät — jede Karte lässt sich einzeln im Dashboard platzieren.</span>
       </div>
@@ -1485,9 +1485,44 @@ function elementRendern(e) {
   if (sprache === 'en') { var v = LOOKUP[e.__i18nKey]; if (v != null) ziel = v; }
   if (e.innerHTML !== ziel) e.innerHTML = ziel;   // Deutsch = Default ⇒ DOM unangetastet
 }
+/* Beschriftungen, die man nicht SIEHT, aber hört: aria-label und title.
+   Sie tragen kein data-i18n und blieben deshalb immer deutsch. Ohne
+   Opt-in-Attribut, damit es beim nächsten neuen Knopf nicht wieder vergessen
+   wird: Kennt das Wörterbuch den Text, wird übersetzt, sonst bleibt er. */
+var BESCHRIFTUNGS_ATTRIBUTE = ['aria-label', 'title', 'placeholder'];
+function beschriftungenRendern() {
+  var els = document.querySelectorAll('[aria-label],[title],[placeholder]');
+  for (var i = 0; i < els.length; i++) {
+    var e = els[i];
+    for (var a = 0; a < BESCHRIFTUNGS_ATTRIBUTE.length; a++) {
+      var name = BESCHRIFTUNGS_ATTRIBUTE[a];
+      if (!e.hasAttribute(name)) continue;
+      var merker = '__i18nAttr_' + name;
+      if (e[merker] === undefined) e[merker] = e.getAttribute(name) || '';
+      var ziel = wt(e[merker]);
+      if (e.getAttribute(name) !== ziel) e.setAttribute(name, ziel);
+    }
+  }
+}
+
+/* Ein frisch gebautes Element in die Übersetzung einhängen.
+
+   Wichtig für alles, was erst zur Laufzeit entsteht: `wt('…')` einmal beim
+   Bauen aufzurufen reicht NICHT — schaltet der Kunde danach die Sprache um,
+   bleibt der Text stehen, wie er war. Genau das ist meinen neuen
+   Dashboard-Knöpfen passiert. Mit data-i18n trägt jede spätere Umschaltung
+   sie mit; der deutsche Text ist dabei der Schlüssel. */
+function i18nAnhaengen(e, deutsch) {
+  e.textContent = deutsch;
+  e.setAttribute('data-i18n', '');
+  elementRendern(e);
+  return e;
+}
+
 function spracheAnwenden() {
   var t = document.querySelectorAll('[data-i18n]');
   for (var i = 0; i < t.length; i++) elementRendern(t[i]);
+  beschriftungenRendern();
   document.documentElement.setAttribute('lang', sprache);
   var o = document.querySelectorAll('.lang-opt');
   for (var j = 0; j < o.length; j++) {
@@ -1682,16 +1717,17 @@ el('suchen').addEventListener('click', function () {
     var zeile = document.createElement('div');
     zeile.className = 'dbl-zeile';
     var wahl = document.createElement('select');
-    wahl.setAttribute('aria-label', wt('Dashboard und Ansicht'));
+    wahl.setAttribute('aria-label', 'Dashboard und Ansicht');
     var knopf = document.createElement('button');
     knopf.type = 'button';
     knopf.className = 'dbl-knopf';
-    knopf.textContent = wt('In mein Dashboard legen');
+    i18nAnhaengen(knopf, 'In mein Dashboard legen');
     var meldung = document.createElement('div');
     meldung.className = 'dbl-meldung';
     zeile.appendChild(wahl); zeile.appendChild(knopf);
     nachElement.parentNode.insertBefore(zeile, nachElement.nextSibling);
     nachElement.parentNode.insertBefore(meldung, zeile.nextSibling);
+    beschriftungenRendern();
 
     function fuelle() {
       wahl.innerHTML = '<option>' + wt('Dashboards werden geladen …') + '</option>';
@@ -2819,6 +2855,29 @@ basicsKonfigurator({ p: 'ja', quelle: 'covers', typ: 'joamy-jalousie-card', spra
 spracheAnwenden();
 male(stand);
 setInterval(lade, 5000);
+</script>
+<script>
+  /* Buy-me-a-coffee-Widget: der schwebende Trinkgeld-Knopf unten rechts.
+     Wird von Hand nachgeladen, damit die Beschriftung zur Sprache passt —
+     das fremde Skript liest seine Attribute nur EIN einziges Mal, beim Start. */
+  (function () {
+    var sprache = (function(){ try { return localStorage.getItem('joamy-addon-lang') === 'en' ? 'en' : 'de'; } catch (e) { return 'de'; } })();
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js';
+    s.setAttribute('data-name', 'BMC-Widget');
+    s.setAttribute('data-cfasync', 'false');
+    s.setAttribute('data-id', 'joamy');
+    s.setAttribute('data-description', sprache === 'en'
+      ? 'Leave a tip for JoAmy' : 'Trinkgeld für JoAmy');
+    s.setAttribute('data-message', '');
+    s.setAttribute('data-color', '#FF813F');
+    s.setAttribute('data-position', 'Right');
+    s.setAttribute('data-x_margin', '18');
+    s.setAttribute('data-y_margin', '18');
+    /* Ohne Internet passiert schlicht nichts — kein Fehler, keine Lücke. */
+    s.onerror = function () {};
+    document.body.appendChild(s);
+  })();
 </script>
 </body>
 </html>

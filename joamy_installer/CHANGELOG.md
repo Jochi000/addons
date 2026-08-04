@@ -1,3 +1,15 @@
+## 0.1.58
+- **Auf Englisch stand an einigen Stellen Deutsch.** Alles, was erst beim
+  Bedienen entsteht, wurde einmal übersetzt und danach nie wieder — wer
+  hinterher auf Englisch umschaltete, behielt deutsche Knöpfe. Ebenso die
+  Beschriftungen, die man nicht sieht, aber hört (Vorlesehilfen), und die
+  grauen Beispieltexte in Eingabefeldern. Jetzt wandert alles mit.
+- **Beleuchtung und Jalousie: „als freie Einzelkarte" ist jetzt die
+  Voreinstellung.** Wer lieber eine Kachel mit Überschrift und Hintergrund
+  möchte, stellt das weiterhin um.
+- **Trinkgeld-Knopf unten rechts.** Wem JoAmy gefällt, kann von jeder Seite
+  aus etwas dalassen — die Bausteine bleiben kostenlos.
+
 ## 0.1.57
 - **„In mein Dashboard legen" hat nicht funktioniert — behoben.** Die Karte
   wurde eingetragen, gespeichert, und im Dashboard war trotzdem nichts.
