@@ -1,3 +1,8 @@
+## 0.1.60
+- **Der Trinkgeld-Knopf unten rechts war da, aber unsichtbar.** Er wurde erst
+  nachträglich eingehängt — und das Widget baut nur dann etwas, wenn es beim
+  Aufbau der Seite dabei ist. Jetzt erscheint er wirklich.
+
 ## 0.1.59
 - **Auf dem Handy lief die Seite seitlich aus dem Bild.** Schuld war die
   Style-Angabe bei den installierten Bausteinen: Sie stand als eine einzige

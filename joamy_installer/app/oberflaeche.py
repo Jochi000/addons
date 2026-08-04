@@ -2876,25 +2876,18 @@ setInterval(lade, 5000);
 </script>
 <script>
   /* Buy-me-a-coffee-Widget: der schwebende Trinkgeld-Knopf unten rechts.
-     Wird von Hand nachgeladen, damit die Beschriftung zur Sprache passt —
-     das fremde Skript liest seine Attribute nur EIN einziges Mal, beim Start. */
+
+     Geschrieben statt eingehängt: Das fremde Skript baut nur dann etwas, wenn
+     es beim Seitenaufbau dabei ist (nachgemessen 04.08.). document.write fügt
+     hier während des Parsens ein — der Tag zählt damit als fest eingebaut, und
+     die Beschriftung passt trotzdem zur gewählten Sprache. */
   (function () {
     var sprache = (function(){ try { return localStorage.getItem('joamy-addon-lang') === 'en' ? 'en' : 'de'; } catch (e) { return 'de'; } })();
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js';
-    s.setAttribute('data-name', 'BMC-Widget');
-    s.setAttribute('data-cfasync', 'false');
-    s.setAttribute('data-id', 'joamy');
-    s.setAttribute('data-description', sprache === 'en'
-      ? 'Leave a tip for JoAmy' : 'Trinkgeld für JoAmy');
-    s.setAttribute('data-message', '');
-    s.setAttribute('data-color', '#FF813F');
-    s.setAttribute('data-position', 'Right');
-    s.setAttribute('data-x_margin', '18');
-    s.setAttribute('data-y_margin', '18');
-    /* Ohne Internet passiert schlicht nichts — kein Fehler, keine Lücke. */
-    s.onerror = function () {};
-    document.body.appendChild(s);
+    var text = sprache === 'en' ? 'Leave a tip for JoAmy' : 'Trinkgeld f\u00fcr JoAmy';
+    document.write('<scr' + 'ipt data-name="BMC-Widget" data-cfasync="false"'
+      + ' src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"'
+      + ' data-id="joamy" data-description="' + text + '" data-message=""'
+      + ' data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"><\/scr' + 'ipt>');
   })();
 </script>
 </body>
