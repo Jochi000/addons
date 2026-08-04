@@ -41,7 +41,7 @@ from dashboard_karten import alle_karten, karte_anhaengen
 
 LOG = logging.getLogger("joamy.installer")
 
-ADDON_VERSION = "0.1.62"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
+ADDON_VERSION = "0.1.63"   # MUSS zur config.yaml passen (pruefe-alles wacht darüber)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/config")
@@ -138,8 +138,12 @@ def lade_optionen() -> dict:
     roh = lade_json(OPTIONS_DATEI, {})
     if not isinstance(roh, dict):
         roh = {}
+    # Lizenz-Server und Takt sind NICHT mehr einstellbar (Frank 04.08.): Sie
+    # standen in der Konfiguration, gehörten dort aber nie hin — wer sie
+    # verstellt, bekommt still keine Bausteine mehr. Für die Entwicklung
+    # bleiben sie über die Umgebung setzbar; ein Kunde sieht davon nichts.
     try:
-        poll = max(5, int(roh.get("poll_sekunden") or 60))
+        poll = max(5, int(os.environ.get("JOAMY_POLL_SEKUNDEN") or 60))
     except (TypeError, ValueError):
         poll = 60
     # Sprache der Karten. Unbekanntes fällt auf Deutsch zurück — eine Karte ohne
@@ -150,7 +154,7 @@ def lade_optionen() -> dict:
     if sprache not in ERLAUBT:
         sprache = "de"
     return {
-        "server_url": str(roh.get("server_url") or "https://lizenz.joamy.uk").rstrip("/"),
+        "server_url": str(os.environ.get("JOAMY_SERVER_URL") or "https://lizenz.joamy.uk").rstrip("/"),
         "poll_sekunden": poll,
         "sprache": sprache,
     }

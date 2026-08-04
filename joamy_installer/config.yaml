@@ -7,7 +7,7 @@
 # Home Assistant neu. Der Kopplungscode steht im Log (Zeile "KOPPLUNGSCODE: …")
 # und groß auf der Ingress-Seite des Add-ons.
 name: JoAmy Installer
-version: "0.1.62"
+version: "0.1.63"
 slug: joamy_installer
 description: Verbindet dein Home Assistant mit joamy.uk — Bausteine installieren sich von selbst
 url: https://joamy.uk
@@ -39,15 +39,16 @@ map:
   - homeassistant_config:rw
 # Die Option `auto_neustart` gibt es nicht mehr (0.1.14) — es gibt nichts mehr
 # einzustellen: neu gestartet wird nie.
+# EINZIGE Einstellung für den Kunden: die Sprache seiner Karten.
+# Lizenz-Server und Abfragetakt sind fest verdrahtet (siehe kern.py) — daran
+# gibt es nichts einzustellen, und wer sie verstellt, bekommt keine Bausteine
+# mehr. Für die Entwicklung lassen sie sich über Umgebungsvariablen setzen
+# (JOAMY_SERVER_URL, JOAMY_POLL_SEKUNDEN), siehe DEPLOY-LOKAL.md.
 options:
-  server_url: "https://lizenz.joamy.uk"
-  poll_sekunden: 60
   # Sprache der KARTEN (nicht dieser Oberfläche — die folgt Home Assistant).
   # Nach einer Änderung liefert JoAmy alle Bausteine automatisch neu aus.
   sprache: "de"
 schema:
-  server_url: str
-  poll_sekunden: int
   sprache: "list(de|en|en-slang|es|fr|it|pt|nl|da|sv|no|fi|ru|zh)?"
 startup: services
 boot: auto

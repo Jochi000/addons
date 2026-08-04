@@ -395,6 +395,12 @@ SEITE = """<!doctype html>
   .bk-farben { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; color: var(--tinte-2); }
   .bk-farben input[type="color"] { width: 46px; height: 30px; padding: 2px; border: 1px solid var(--nacht-linie);
     border-radius: 8px; background: var(--nacht-vertieft); }
+  /* Auffällig genug zum Finden, ruhig genug, um nicht zu stören. */
+  .sprach-hinweis {
+    margin-top: 10px; font-size: 13.5px; line-height: 1.55; color: var(--tinte-2);
+    border-left: 2px solid var(--akzent); padding: 2px 0 2px 12px;
+  }
+  .sprach-hinweis b { color: var(--tinte-1); font-weight: 600; }
   footer { text-align: center; color: var(--tinte-3); font-size: 13px; padding-top: 4px; }
   footer a { color: var(--akzent); text-decoration: none; }
 </style>
@@ -420,6 +426,13 @@ SEITE = """<!doctype html>
     <span class="eyebrow" data-i18n>Für Home Assistant</span>
     <h1 data-i18n>Installer</h1>
     <p data-i18n>Einmal koppeln — deine Bausteine ziehen ab dann von selbst bei dir ein.</p>
+    <!-- Der Schalter oben ändert NUR diese Oberfläche. Ohne diesen Hinweis
+         sucht man die Kartensprache dort — und hält sie für kaputt, wenn die
+         Karten weiter deutsch bleiben. -->
+    <p class="sprach-hinweis" data-i18n>Der Schalter oben ändert nur diese Oberfläche.
+       Die Sprache deiner <b>Karten</b> stellst du in der Konfiguration dieses Add-ons ein:
+       Einstellungen → Add-ons → JoAmy Installer → Konfiguration → <b>sprache</b>.
+       Danach kommen alle Bausteine automatisch in der neuen Sprache zu dir — 14 stehen zur Wahl.</p>
   </header>
 
   <!-- Einmaliger Neustart: Home Assistant lädt eine NEU hinzugekommene
@@ -1196,6 +1209,8 @@ var UEB = {
   'Deine Beleuchtungs-Karte': 'Your lighting card',
   'Deine Jalousie-Karte': 'Your blind card',
   'Code anzeigen': 'Show code',
+  'Der Schalter oben ändert nur diese Oberfläche. Die Sprache deiner Karten stellst du in der Konfiguration dieses Add-ons ein: Einstellungen → Add-ons → JoAmy Installer → Konfiguration → sprache. Danach kommen alle Bausteine automatisch in der neuen Sprache zu dir — 14 stehen zur Wahl.':
+    'The switch above only changes this interface. The language of your <b>cards</b> is set in the configuration of this add-on: Settings → Add-ons → JoAmy Installer → Configuration → <b>sprache</b>. After that every module arrives in the new language automatically — 14 are available.',
   'JoAmy ist installiert. Damit Home Assistant die neuen Karten lädt, muss es einmal neu starten. Nur dieses eine Mal — alles Weitere kommt ohne Neustart bei dir an.': 'JoAmy is installed. For Home Assistant to load the new cards, it needs one restart. Just this once — everything after that arrives without a restart.',
   'Der Neustart dauert etwa eine Minute.': 'The restart takes about a minute.',
   'Home Assistant startet neu. Diese Karte verschwindet von selbst, sobald alles wieder läuft.': 'Home Assistant is restarting. This card disappears by itself once everything is back.',
